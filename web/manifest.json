@@ -1,11 +1,11 @@
 {
-    "name": "idea_scout",
-    "short_name": "idea_scout",
+    "name": "Idea Scout",
+    "short_name": "IdeaScout",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#FFFFFF",
+    "theme_color": "#1565C0",
+    "description": "Scan FT50/UTD24 top journals for research idea migration",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
