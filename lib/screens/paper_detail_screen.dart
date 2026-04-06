@@ -12,179 +12,397 @@ class PaperDetailScreen extends StatelessWidget {
     required this.showChinese,
   });
 
+  static const _tierColors = {
+    1: Color(0xFFEF4444),
+    2: Color(0xFFF59E0B),
+    3: Color(0xFF10B981),
+  };
+
+  static const _tierBgColors = {
+    1: Color(0xFFFEF2F2),
+    2: Color(0xFFFFFBEB),
+    3: Color(0xFFECFDF5),
+  };
+
   @override
   Widget build(BuildContext context) {
+    final tierColor = _tierColors[paper.tier] ?? _tierColors[3]!;
+    final tierBg = _tierBgColors[paper.tier] ?? _tierBgColors[3]!;
+
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: Text(paper.journalId),
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new,
+              size: 18, color: Color(0xFF475569)),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          paper.journalName,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Color(0xFF64748B),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Journal + Tier badge
-            Row(
-              children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _tierColor,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    '${paper.journalId} · T${paper.tier}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(paper.date,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 14)),
-                if (paper.isOa) ...[
-                  const SizedBox(width: 8),
-                  const Chip(
-                    label: Text('OA', style: TextStyle(fontSize: 11)),
-                    padding: EdgeInsets.zero,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                ],
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Chinese title
-            if (paper.titleCn.isNotEmpty) ...[
-              Text(
-                paper.titleCn,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  height: 1.4,
-                ),
+            // Header card
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
-              const SizedBox(height: 8),
-            ],
-
-            // English title
-            Text(
-              paper.title,
-              style: TextStyle(
-                fontSize: paper.titleCn.isNotEmpty ? 15 : 20,
-                fontWeight: paper.titleCn.isNotEmpty
-                    ? FontWeight.normal
-                    : FontWeight.bold,
-                color: paper.titleCn.isNotEmpty ? Colors.grey[700] : null,
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // DOI
-            if (paper.doi.isNotEmpty)
-              GestureDetector(
-                onTap: () => launchUrl(Uri.parse(paper.doi)),
-                child: Text(
-                  paper.doi,
-                  style: const TextStyle(
-                    color: Colors.blue,
-                    decoration: TextDecoration.underline,
-                    fontSize: 13,
-                  ),
-                ),
-              ),
-
-            const Divider(height: 32),
-
-            // Abstract header
-            const Text(
-              '摘要',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-
-            // Chinese abstract
-            if (paper.abstractCn.isNotEmpty) ...[
-              Text(
-                paper.abstractCn,
-                style: const TextStyle(fontSize: 15, height: 1.7),
-              ),
-              const SizedBox(height: 16),
-              ExpansionTile(
-                title: const Text('English Abstract',
-                    style: TextStyle(fontSize: 13)),
-                initiallyExpanded: false,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: SelectableText(
-                      paper.abstract_,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey[700],
-                        height: 1.6,
+                  // Badges row
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: tierBg,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                              color: tierColor.withValues(alpha: 0.3)),
+                        ),
+                        child: Text(
+                          '${paper.journalId} · Tier ${paper.tier}',
+                          style: TextStyle(
+                            color: tierColor,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          paper.date,
+                          style: const TextStyle(
+                            color: Color(0xFF64748B),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      if (paper.isOa)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFECFDF5),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.lock_open,
+                                  size: 14, color: Color(0xFF059669)),
+                              SizedBox(width: 4),
+                              Text(
+                                'Open Access',
+                                style: TextStyle(
+                                  color: Color(0xFF059669),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      if (paper.citedBy > 0)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.format_quote,
+                                  size: 14, color: Color(0xFF64748B)),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Cited ${paper.citedBy}',
+                                style: const TextStyle(
+                                  color: Color(0xFF64748B),
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Chinese title
+                  if (paper.titleCn.isNotEmpty) ...[
+                    Text(
+                      paper.titleCn,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        height: 1.4,
+                        color: Color(0xFF0F172A),
                       ),
                     ),
+                    const SizedBox(height: 10),
+                  ],
+
+                  // English title
+                  Text(
+                    paper.title,
+                    style: TextStyle(
+                      fontSize: paper.titleCn.isNotEmpty ? 14 : 20,
+                      fontWeight: paper.titleCn.isNotEmpty
+                          ? FontWeight.w400
+                          : FontWeight.w700,
+                      color: paper.titleCn.isNotEmpty
+                          ? const Color(0xFF64748B)
+                          : const Color(0xFF0F172A),
+                      height: 1.5,
+                    ),
                   ),
+
+                  // DOI
+                  if (paper.doi.isNotEmpty) ...[
+                    const SizedBox(height: 14),
+                    GestureDetector(
+                      onTap: () => launchUrl(Uri.parse(paper.doi)),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0F9FF),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                              color: const Color(0xFFBAE6FD)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.link,
+                                size: 16, color: Color(0xFF0284C7)),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                paper.doi,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF0284C7),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const Icon(Icons.open_in_new,
+                                size: 14, color: Color(0xFF0284C7)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
-            ] else ...[
-              SelectableText(
-                paper.abstract_,
-                style: const TextStyle(fontSize: 15, height: 1.7),
+            ),
+
+            // Abstract card
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
-            ],
-
-            const SizedBox(height: 16),
-
-            // Topics
-            if (paper.topics.isNotEmpty) ...[
-              const Divider(),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 6,
-                children: paper.topics
-                    .where((t) => t.isNotEmpty)
-                    .map(
-                      (t) => Chip(
-                        label: Text(t, style: const TextStyle(fontSize: 12)),
-                        materialTapTargetSize:
-                            MaterialTapTargetSize.shrinkWrap,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.subject,
+                          size: 18, color: Color(0xFF6366F1)),
+                      SizedBox(width: 8),
+                      Text(
+                        'Abstract',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF1E293B),
+                        ),
                       ),
-                    )
-                    .toList(),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  if (paper.abstractCn.isNotEmpty) ...[
+                    SelectableText(
+                      paper.abstractCn,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        height: 1.8,
+                        color: Color(0xFF334155),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(12),
+                        border:
+                            Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: ExpansionTile(
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        title: const Text(
+                          'English Abstract',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF64748B),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                            child: SelectableText(
+                              paper.abstract_,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF64748B),
+                                height: 1.7,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ] else ...[
+                    SelectableText(
+                      paper.abstract_,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        height: 1.8,
+                        color: Color(0xFF334155),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            // Topics card
+            if (paper.topics.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.label_outline,
+                            size: 18, color: Color(0xFF6366F1)),
+                        SizedBox(width: 8),
+                        Text(
+                          'Topics',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1E293B),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: paper.topics
+                          .where((t) => t.isNotEmpty)
+                          .map(
+                            (t) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEEF2FF),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                t,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Color(0xFF4338CA),
+                                ),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ],
+                ),
               ),
             ],
 
-            // PDF link
+            // PDF button
             if (paper.pdfUrl != null) ...[
               const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: () => launchUrl(Uri.parse(paper.pdfUrl!)),
-                icon: const Icon(Icons.picture_as_pdf),
-                label: const Text('查看 PDF'),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => launchUrl(Uri.parse(paper.pdfUrl!)),
+                    icon: const Icon(Icons.picture_as_pdf),
+                    label: const Text('View PDF'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6366F1),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ],
 
-            const SizedBox(height: 32),
+            const SizedBox(height: 40),
           ],
         ),
       ),
     );
-  }
-
-  Color get _tierColor {
-    switch (paper.tier) {
-      case 1:
-        return const Color(0xFFE53935);
-      case 2:
-        return const Color(0xFFFF9800);
-      default:
-        return const Color(0xFF4CAF50);
-    }
   }
 }

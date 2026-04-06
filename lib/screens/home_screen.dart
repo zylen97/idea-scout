@@ -1,13 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../data/journals.dart';
-import '../models/journal.dart';
 import '../models/paper.dart';
-import '../services/openalex_service.dart';
-import '../services/translation_service.dart';
 import '../widgets/paper_card.dart';
-import 'settings_screen.dart';
 import 'paper_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -20,61 +17,79 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<Paper> _papers = [];
   List<Paper> _filteredPapers = [];
-  bool _isLoading = false;
-  bool _isTranslating = false;
+  bool _isLoading = true;
   String _statusText = '';
   bool _showChinese = true;
-  int _translateProgress = 0;
-  int _translateTotal = 0;
+  String _scanDate = '';
+  bool _showSelectedOnly = false;
 
-  // Filters
   String _searchQuery = '';
   String? _selectedJournalId;
   int? _selectedTier;
   final _searchController = TextEditingController();
 
-  late TranslationService _translationService;
-
   @override
   void initState() {
     super.initState();
-    _translationService = TranslationService();
-    _loadSavedData();
+    _loadData();
   }
 
-  Future<void> _loadSavedData() async {
-    final prefs = await SharedPreferences.getInstance();
+  Future<void> _loadData() async {
+    setState(() {
+      _isLoading = true;
+      _statusText = '';
+    });
 
-    // Load API config
-    final apiKey = prefs.getString('api_key') ?? '';
-    final baseUrl =
-        prefs.getString('api_base_url') ?? 'https://api.chatanywhere.tech/v1';
-    final model = prefs.getString('api_model') ?? 'gpt-4o-mini';
-    _translationService.updateConfig(
-        apiKey: apiKey, baseUrl: baseUrl, model: model);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedSelections = prefs.getStringList('selected_ids') ?? [];
 
-    // Load cached papers
-    final cached = prefs.getString('cached_papers');
-    if (cached != null) {
-      try {
-        final list = jsonDecode(cached) as List;
-        setState(() {
-          _papers = list.map((j) => Paper.fromJson(j)).toList();
-          _applyFilters();
-          _statusText = '已加载 ${_papers.length} 篇论文（缓存）';
-        });
-      } catch (_) {}
+      final resp = await http.get(Uri.parse('data/latest.json'));
+      if (resp.statusCode != 200) {
+        throw Exception('HTTP ${resp.statusCode}');
+      }
+
+      final list = jsonDecode(resp.body) as List;
+      final papers = list.map((j) => Paper.fromJson(j)).toList();
+
+      for (final p in papers) {
+        if (savedSelections.contains(p.doi)) {
+          p.isSelected = true;
+        }
+      }
+
+      if (papers.isNotEmpty) {
+        final dates =
+            papers.map((p) => p.date).where((d) => d.isNotEmpty).toList();
+        if (dates.isNotEmpty) {
+          dates.sort();
+          _scanDate = '${dates.first} ~ ${dates.last}';
+        }
+      }
+
+      setState(() {
+        _papers = papers;
+        _applyFilters();
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _statusText = 'Load failed: $e';
+      });
     }
   }
 
-  Future<void> _savePapers() async {
+  Future<void> _saveSelections() async {
     final prefs = await SharedPreferences.getInstance();
-    final json = _papers.map((p) => p.toJson()).toList();
-    await prefs.setString('cached_papers', jsonEncode(json));
+    final selectedIds =
+        _papers.where((p) => p.isSelected).map((p) => p.doi).toList();
+    await prefs.setStringList('selected_ids', selectedIds);
   }
 
   void _applyFilters() {
     _filteredPapers = _papers.where((p) {
+      if (_showSelectedOnly && !p.isSelected) return false;
       if (_selectedTier != null && p.tier != _selectedTier) return false;
       if (_selectedJournalId != null && p.journalId != _selectedJournalId) {
         return false;
@@ -91,175 +106,297 @@ class _HomeScreenState extends State<HomeScreen> {
     }).toList();
   }
 
-  Future<void> _fetchPapers({List<Journal>? targetJournals}) async {
-    setState(() {
-      _isLoading = true;
-      _statusText = '正在从 OpenAlex 获取论文...';
-    });
-
-    try {
-      final targets = targetJournals ?? journals;
-      final papers = await OpenAlexService.fetchMultipleJournals(
-        targets,
-        months: 3,
-        onProgress: (id, count) {
-          setState(() {
-            if (count >= 0) {
-              _statusText = '已获取 $id: $count 篇';
-            } else {
-              _statusText = '$id 获取失败';
-            }
-          });
-        },
-      );
-
-      // Filter out papers without abstracts
-      final withAbstract = papers.where((p) => p.abstract_.isNotEmpty).toList();
-
-      setState(() {
-        _papers = withAbstract;
-        _applyFilters();
-        _statusText = '获取完成：${withAbstract.length} 篇论文（${papers.length - withAbstract.length} 篇无摘要已过滤）';
-      });
-
-      await _savePapers();
-    } catch (e) {
-      setState(() {
-        _statusText = '获取失败: $e';
-      });
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _translatePapers() async {
-    if (!_translationService.isConfigured) {
-      _showMessage('请先在设置中配置 API Key');
-      return;
-    }
-
-    // Find papers that need translation
-    final needTranslation =
-        _papers.where((p) => p.titleCn.isEmpty && p.title.isNotEmpty).toList();
-
-    if (needTranslation.isEmpty) {
-      _showMessage('所有论文已翻译');
-      return;
-    }
-
-    setState(() {
-      _isTranslating = true;
-      _translateProgress = 0;
-      _translateTotal = needTranslation.length;
-      _statusText = '正在翻译 0/$_translateTotal...';
-    });
-
-    try {
-      // Translate titles
-      final titles = needTranslation.map((p) => p.title).toList();
-      final translatedTitles = await _translationService.translateBatch(
-        titles,
-        concurrency: 30,
-        onProgress: (done, total) {
-          setState(() {
-            _translateProgress = done;
-            _statusText = '翻译标题 $done/$total...';
-          });
-        },
-      );
-
-      for (int i = 0; i < needTranslation.length; i++) {
-        needTranslation[i].titleCn = translatedTitles[i];
-      }
-
-      // Translate abstracts
-      setState(() {
-        _translateProgress = 0;
-        _statusText = '翻译摘要 0/$_translateTotal...';
-      });
-
-      final abstracts = needTranslation.map((p) => p.abstract_).toList();
-      final translatedAbstracts = await _translationService.translateBatch(
-        abstracts,
-        concurrency: 30,
-        onProgress: (done, total) {
-          setState(() {
-            _translateProgress = done;
-            _statusText = '翻译摘要 $done/$total...';
-          });
-        },
-      );
-
-      for (int i = 0; i < needTranslation.length; i++) {
-        needTranslation[i].abstractCn = translatedAbstracts[i];
-      }
-
-      setState(() {
-        _statusText = '翻译完成：${needTranslation.length} 篇';
-        _applyFilters();
-      });
-
-      await _savePapers();
-    } catch (e) {
-      setState(() {
-        _statusText = '翻译出错: $e';
-      });
-    } finally {
-      setState(() {
-        _isTranslating = false;
-      });
-    }
-  }
-
-  void _showMessage(String msg) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(msg)));
-  }
-
   void _exportSelected() {
     final selected = _papers.where((p) => p.isSelected).toList();
     if (selected.isEmpty) {
-      _showMessage('未选择任何论文');
+      _showMessage('No papers selected');
       return;
     }
 
-    final buffer = StringBuffer();
-    for (final p in selected) {
-      buffer.writeln('## ${p.titleCn.isNotEmpty ? p.titleCn : p.title}');
-      buffer.writeln('**${p.title}**');
-      buffer.writeln('${p.journalId} (T${p.tier}) | ${p.date}');
-      if (p.doi.isNotEmpty) buffer.writeln(p.doi);
-      buffer.writeln();
-      if (p.abstractCn.isNotEmpty) {
-        buffer.writeln(p.abstractCn);
-      } else {
-        buffer.writeln(p.abstract_);
-      }
-      buffer.writeln();
-      buffer.writeln('---');
-      buffer.writeln();
-    }
+    final exportData = selected
+        .map((p) => {
+              'journal_id': p.journalId,
+              'journal_name': p.journalName,
+              'title': p.title,
+              'title_cn': p.titleCn,
+              'doi': p.doi,
+              'date': p.date,
+              'abstract': p.abstract_,
+              'abstract_cn': p.abstractCn,
+              'topics': p.topics,
+              'tier': p.tier,
+            })
+        .toList();
+
+    final jsonStr = const JsonEncoder.withIndent('  ').convert(exportData);
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('已选 ${selected.length} 篇'),
-        content: SizedBox(
-          width: double.maxFinite,
-          height: 400,
-          child: SingleChildScrollView(
-            child: SelectableText(
-              buffer.toString(),
-              style: const TextStyle(fontSize: 13),
-            ),
+      builder: (ctx) => Dialog(
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEEF2FF),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.file_copy_outlined,
+                        size: 18, color: Color(0xFF6366F1)),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    '${selected.length} papers',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1E293B),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Copy JSON → save as selected.json\nin idea_scout folder',
+                style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                height: 320,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                padding: const EdgeInsets.all(14),
+                child: SingleChildScrollView(
+                  child: SelectableText(
+                    jsonStr,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontFamily: 'monospace',
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6366F1),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text('Close'),
+                ),
+              ),
+            ],
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('关闭'),
+      ),
+    );
+  }
+
+  void _showMessage(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final selectedCount = _papers.where((p) => p.isSelected).length;
+
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(),
+
+            if (!_isLoading && _papers.isNotEmpty)
+              Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                color: const Color(0xFFF0FDF4),
+                child: Row(
+                  children: [
+                    const Icon(Icons.check_circle_outline,
+                        size: 14, color: Color(0xFF16A34A)),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        '${_papers.length} papers  ·  $_scanDate',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF166534),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.7),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        '${_filteredPapers.length}/${_papers.length}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            if (_statusText.isNotEmpty)
+              Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                color: const Color(0xFFFEF2F2),
+                child: Text(
+                  _statusText,
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF991B1B)),
+                ),
+              ),
+
+            if (!_isLoading) _buildFilterBar(),
+
+            Expanded(
+              child: _isLoading
+                  ? const Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircularProgressIndicator(color: Color(0xFF6366F1)),
+                          SizedBox(height: 16),
+                          Text('Loading papers...',
+                              style: TextStyle(color: Color(0xFF94A3B8))),
+                        ],
+                      ),
+                    )
+                  : _filteredPapers.isEmpty
+                      ? _buildEmptyState()
+                      : ListView.builder(
+                          padding:
+                              const EdgeInsets.only(top: 4, bottom: 100),
+                          itemCount: _filteredPapers.length,
+                          itemBuilder: (ctx, i) {
+                            final paper = _filteredPapers[i];
+                            return PaperCard(
+                              paper: paper,
+                              showChinese: _showChinese,
+                              onToggleSelect: () {
+                                setState(() =>
+                                    paper.isSelected = !paper.isSelected);
+                                _saveSelections();
+                              },
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => PaperDetailScreen(
+                                    paper: paper,
+                                    showChinese: _showChinese,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: _buildBottomBar(selectedCount),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 12, 12, 8),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+              ),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child:
+                const Icon(Icons.explore, color: Colors.white, size: 20),
+          ),
+          const SizedBox(width: 12),
+          const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Idea Scout',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF1E293B),
+                  letterSpacing: -0.5,
+                ),
+              ),
+              Text(
+                'FT50 / UTD24 Journal Scanner',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Color(0xFF94A3B8),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          const Spacer(),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: () => setState(() => _showChinese = !_showChinese),
+              child: Container(
+                width: 40,
+                height: 40,
+                alignment: Alignment.center,
+                child: Icon(
+                  _showChinese ? Icons.translate : Icons.abc,
+                  size: 22,
+                  color: const Color(0xFF64748B),
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -268,23 +405,22 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildFilterBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
       child: Column(
         children: [
-          // Search bar
           TextField(
             controller: _searchController,
+            style: const TextStyle(fontSize: 14),
             decoration: InputDecoration(
-              hintText: '搜索标题、摘要、期刊...',
-              prefixIcon: const Icon(Icons.search, size: 20),
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 10),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(24),
-              ),
+              hintText: 'Search titles, abstracts, journals...',
+              hintStyle:
+                  const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+              prefixIcon: const Icon(Icons.search,
+                  size: 20, color: Color(0xFF94A3B8)),
               suffixIcon: _searchQuery.isNotEmpty
                   ? IconButton(
-                      icon: const Icon(Icons.clear, size: 18),
+                      icon: const Icon(Icons.clear,
+                          size: 18, color: Color(0xFF94A3B8)),
                       onPressed: () {
                         _searchController.clear();
                         setState(() {
@@ -302,60 +438,29 @@ class _HomeScreenState extends State<HomeScreen> {
               });
             },
           ),
-          const SizedBox(height: 8),
-          // Filter chips
+          const SizedBox(height: 10),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                // Tier filter
-                ...[1, 2, 3].map(
-                  (tier) => Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: FilterChip(
-                      label: Text('T$tier'),
-                      selected: _selectedTier == tier,
-                      onSelected: (selected) {
-                        setState(() {
-                          _selectedTier = selected ? tier : null;
-                          _applyFilters();
-                        });
-                      },
-                    ),
-                  ),
-                ),
+                ...[1, 2, 3].map((tier) => _buildTierChip(tier)),
                 const SizedBox(width: 8),
-                // Journal dropdown
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey[400]!),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: DropdownButton<String?>(
-                    value: _selectedJournalId,
-                    hint: const Text('期刊', style: TextStyle(fontSize: 13)),
-                    underline: const SizedBox(),
-                    isDense: true,
-                    items: [
-                      const DropdownMenuItem(
-                          value: null, child: Text('全部期刊')),
-                      ...journals.map(
-                        (j) => DropdownMenuItem(
-                          value: j.id,
-                          child: Text('${j.id} (T${j.tier})',
-                              style: const TextStyle(fontSize: 13)),
-                        ),
-                      ),
-                    ],
-                    onChanged: (v) {
+                _buildJournalDropdown(),
+                if (_papers.any((p) => p.isSelected)) ...[
+                  const SizedBox(width: 8),
+                  _buildToggleChip(
+                    label: 'Selected',
+                    icon: Icons.star,
+                    isActive: _showSelectedOnly,
+                    activeColor: const Color(0xFF6366F1),
+                    onTap: () {
                       setState(() {
-                        _selectedJournalId = v;
+                        _showSelectedOnly = !_showSelectedOnly;
                         _applyFilters();
                       });
                     },
                   ),
-                ),
+                ],
               ],
             ),
           ),
@@ -364,173 +469,294 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final selectedCount = _papers.where((p) => p.isSelected).length;
+  Widget _buildTierChip(int tier) {
+    final isSelected = _selectedTier == tier;
+    final colors = {
+      1: const Color(0xFFEF4444),
+      2: const Color(0xFFF59E0B),
+      3: const Color(0xFF10B981),
+    };
+    final color = colors[tier]!;
+    final count = _papers.where((p) => p.tier == tier).length;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Idea Scout'),
-        centerTitle: true,
-        actions: [
-          // Language toggle
-          IconButton(
-            icon: Icon(_showChinese ? Icons.translate : Icons.abc),
-            tooltip: _showChinese ? '显示英文' : '显示中文',
-            onPressed: () => setState(() => _showChinese = !_showChinese),
+    return Padding(
+      padding: const EdgeInsets.only(right: 6),
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _selectedTier = isSelected ? null : tier;
+            _applyFilters();
+          });
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
+            color: isSelected ? color : Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isSelected ? color : const Color(0xFFE2E8F0),
+            ),
           ),
-          // Settings
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => const SettingsScreen()),
-              );
-              // Reload config after settings change
-              _loadSavedData();
-            },
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Status bar
-          if (_statusText.isNotEmpty)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              color: Colors.grey[100],
-              child: Row(
-                children: [
-                  if (_isLoading || _isTranslating)
-                    const SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  if (_isLoading || _isTranslating) const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _statusText,
-                      style: TextStyle(fontSize: 12, color: Colors.grey[700]),
-                    ),
-                  ),
-                  Text(
-                    '${_filteredPapers.length}/${_papers.length}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                  ),
-                ],
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'T$tier',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color:
+                      isSelected ? Colors.white : const Color(0xFF475569),
+                ),
               ),
-            ),
-          if (_isTranslating && _translateTotal > 0)
-            LinearProgressIndicator(
-              value: _translateProgress / _translateTotal,
-            ),
-
-          // Filters
-          _buildFilterBar(),
-
-          // Paper list
-          Expanded(
-            child: _filteredPapers.isEmpty
-                ? Center(
-                    child: _papers.isEmpty
-                        ? Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.article_outlined,
-                                  size: 64, color: Colors.grey[400]),
-                              const SizedBox(height: 16),
-                              Text(
-                                '点击下方按钮获取最新论文',
-                                style: TextStyle(color: Colors.grey[600]),
-                              ),
-                            ],
-                          )
-                        : Text(
-                            '无匹配结果',
-                            style: TextStyle(color: Colors.grey[600]),
-                          ),
-                  )
-                : ListView.builder(
-                    itemCount: _filteredPapers.length,
-                    itemBuilder: (ctx, i) {
-                      final paper = _filteredPapers[i];
-                      return PaperCard(
-                        paper: paper,
-                        showChinese: _showChinese,
-                        onToggleSelect: () {
-                          setState(() {
-                            paper.isSelected = !paper.isSelected;
-                          });
-                          _savePapers();
-                        },
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => PaperDetailScreen(
-                                paper: paper,
-                                showChinese: _showChinese,
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    },
+              if (count > 0) ...[
+                const SizedBox(width: 5),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? Colors.white.withValues(alpha: 0.25)
+                        : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(5),
                   ),
+                  child: Text(
+                    '$count',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color:
+                          isSelected ? Colors.white : const Color(0xFF94A3B8),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildJournalDropdown() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: _selectedJournalId != null
+            ? const Color(0xFFEEF2FF)
+            : Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: _selectedJournalId != null
+              ? const Color(0xFF6366F1).withValues(alpha: 0.3)
+              : const Color(0xFFE2E8F0),
+        ),
+      ),
+      child: DropdownButton<String?>(
+        value: _selectedJournalId,
+        hint: const Text('All',
+            style: TextStyle(fontSize: 13, color: Color(0xFF94A3B8))),
+        underline: const SizedBox(),
+        isDense: true,
+        icon: const Icon(Icons.keyboard_arrow_down,
+            size: 18, color: Color(0xFF94A3B8)),
+        items: [
+          const DropdownMenuItem(value: null, child: Text('All')),
+          ...journals.map(
+            (j) => DropdownMenuItem(
+              value: j.id,
+              child: Text('${j.id}',
+                  style: const TextStyle(fontSize: 13)),
+            ),
           ),
         ],
+        onChanged: (v) {
+          setState(() {
+            _selectedJournalId = v;
+            _applyFilters();
+          });
+        },
       ),
+    );
+  }
 
-      // Bottom action bar
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+  Widget _buildToggleChip({
+    required String label,
+    required IconData icon,
+    required bool isActive,
+    required Color activeColor,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withValues(alpha: 0.3),
-              blurRadius: 4,
-              offset: const Offset(0, -1),
+          color: isActive ? activeColor : Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isActive ? activeColor : const Color(0xFFE2E8F0),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon,
+                size: 14,
+                color: isActive ? Colors.white : const Color(0xFFF59E0B)),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: isActive ? Colors.white : const Color(0xFF475569),
+              ),
             ),
           ],
         ),
-        child: SafeArea(
-          child: Row(
-            children: [
-              // Fetch button
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: _isLoading ? null : () => _fetchPapers(),
-                  icon: const Icon(Icons.download, size: 18),
-                  label: const Text('获取'),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    if (_papers.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.cloud_off, size: 56, color: Color(0xFFCBD5E1)),
+            SizedBox(height: 20),
+            Text(
+              'No data available',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF1E293B),
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              'Run /idea-scout in Claude Code\nto generate data',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Color(0xFF94A3B8),
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return const Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.search_off, size: 48, color: Color(0xFFCBD5E1)),
+          SizedBox(height: 12),
+          Text('No matching results',
+              style: TextStyle(color: Color(0xFF94A3B8), fontSize: 15)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomBar(int selectedCount) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+      ),
+      child: SafeArea(
+        child: Row(
+          children: [
+            if (selectedCount > 0) ...[
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEEF2FF),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.check_circle,
+                        size: 16, color: Color(0xFF6366F1)),
+                    const SizedBox(width: 6),
+                    Text(
+                      '$selectedCount',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF6366F1),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(width: 8),
-              // Translate button
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: _isTranslating || _papers.isEmpty
-                      ? null
-                      : _translatePapers,
-                  icon: const Icon(Icons.translate, size: 18),
-                  label: const Text('翻译'),
-                ),
-              ),
-              const SizedBox(width: 8),
-              // Export button
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: selectedCount > 0 ? _exportSelected : null,
-                  icon: const Icon(Icons.file_copy_outlined, size: 18),
-                  label: Text('导出($selectedCount)'),
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    for (final p in _papers) {
+                      p.isSelected = false;
+                    }
+                    _showSelectedOnly = false;
+                    _applyFilters();
+                  });
+                  _saveSelections();
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.clear_all,
+                      size: 20, color: Color(0xFF94A3B8)),
                 ),
               ),
             ],
-          ),
+            const Spacer(),
+            GestureDetector(
+              onTap: selectedCount > 0 ? _exportSelected : null,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
+                decoration: BoxDecoration(
+                  color: selectedCount > 0
+                      ? const Color(0xFF6366F1)
+                      : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.file_download_outlined,
+                        size: 18,
+                        color: selectedCount > 0
+                            ? Colors.white
+                            : const Color(0xFFCBD5E1)),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Export',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: selectedCount > 0
+                            ? Colors.white
+                            : const Color(0xFFCBD5E1),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
