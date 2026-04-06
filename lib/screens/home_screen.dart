@@ -52,10 +52,10 @@ class _HomeScreenState extends State<HomeScreen> {
       final list = jsonDecode(resp.body) as List;
       final papers = list.map((j) => Paper.fromJson(j)).toList();
 
-      // Fill in tier from journal registry if missing in data
+      // Always fill tier from journal registry (data may not have it)
       final jMap = journalMap;
       for (final p in papers) {
-        if (p.tier == 3 && jMap.containsKey(p.journalId)) {
+        if (jMap.containsKey(p.journalId)) {
           p.tier = jMap[p.journalId]!.tier;
         }
         if (savedSelections.contains(p.doi)) {
@@ -131,7 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
               'topics': p.topics,
               'tier': p.tier,
               'cited_by': p.citedBy,
-              'oa': p.isOa,
+              'is_oa': p.isOa,
               'pdf_url': p.pdfUrl,
             })
         .toList();
