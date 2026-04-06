@@ -8,7 +8,7 @@ class Paper {
   final String date;
   final String journalId;
   final String journalName;
-  final int tier;
+  int tier;
   final List<String> topics;
   final int citedBy;
   final bool isOa;
@@ -67,7 +67,7 @@ class Paper {
           ? List<String>.from(json['topics'] as List)
           : [],
       citedBy: json['cited_by'] as int? ?? 0,
-      isOa: json['is_oa'] as bool? ?? false,
+      isOa: (json['is_oa'] ?? json['oa']) as bool? ?? false,
       pdfUrl: json['pdf_url'] as String?,
       isSelected: json['is_selected'] as bool? ?? false,
     );
