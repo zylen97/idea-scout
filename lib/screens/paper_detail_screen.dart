@@ -13,15 +13,15 @@ class PaperDetailScreen extends StatelessWidget {
   });
 
   static const _tierColors = {
-    1: Color(0xFFEF4444),
-    2: Color(0xFFF59E0B),
-    3: Color(0xFF10B981),
+    1: Color(0xFFC25B3F),
+    2: Color(0xFFB8963E),
+    3: Color(0xFF5A8A6A),
   };
 
   static const _tierBgColors = {
-    1: Color(0xFFFEF2F2),
-    2: Color(0xFFFFFBEB),
-    3: Color(0xFFECFDF5),
+    1: Color(0xFFFAF0ED),
+    2: Color(0xFFFAF6ED),
+    3: Color(0xFFEDF5F0),
   };
 
   @override
@@ -30,21 +30,21 @@ class PaperDetailScreen extends StatelessWidget {
     final tierBg = _tierBgColors[paper.tier] ?? _tierBgColors[3]!;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: const Color(0xFFE8E6DC),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF0EEE6),
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new,
-              size: 18, color: Color(0xFF475569)),
+              size: 18, color: Color(0xFF6B6560)),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           paper.journalName,
           style: const TextStyle(
             fontSize: 14,
-            color: Color(0xFF64748B),
+            color: Color(0xFF6B6560),
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -58,11 +58,18 @@ class PaperDetailScreen extends StatelessWidget {
             Container(
               width: double.infinity,
               margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                color: const Color(0xFFF5F3ED),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFD8D4CA)),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x0A000000),
+                    offset: Offset(0, 1),
+                    blurRadius: 3,
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,7 +86,7 @@ class PaperDetailScreen extends StatelessWidget {
                           color: tierBg,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                              color: tierColor.withValues(alpha: 0.3)),
+                              color: tierColor.withValues(alpha: 0.25)),
                         ),
                         child: Text(
                           '${paper.journalId} · Tier ${paper.tier}',
@@ -94,13 +101,13 @@ class PaperDetailScreen extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
+                          color: const Color(0xFFECE9E1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           paper.date,
                           style: const TextStyle(
-                            color: Color(0xFF64748B),
+                            color: Color(0xFF6B6560),
                             fontSize: 13,
                           ),
                         ),
@@ -110,19 +117,19 @@ class PaperDetailScreen extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFECFDF5),
+                            color: const Color(0xFFEDF5F0),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(Icons.lock_open,
-                                  size: 14, color: Color(0xFF059669)),
+                                  size: 14, color: Color(0xFF5A8A6A)),
                               SizedBox(width: 4),
                               Text(
                                 'Open Access',
                                 style: TextStyle(
-                                  color: Color(0xFF059669),
+                                  color: Color(0xFF5A8A6A),
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -135,19 +142,19 @@ class PaperDetailScreen extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF1F5F9),
+                            color: const Color(0xFFECE9E1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(Icons.format_quote,
-                                  size: 14, color: Color(0xFF64748B)),
+                                  size: 14, color: Color(0xFF6B6560)),
                               const SizedBox(width: 4),
                               Text(
                                 'Cited ${paper.citedBy}',
                                 style: const TextStyle(
-                                  color: Color(0xFF64748B),
+                                  color: Color(0xFF6B6560),
                                   fontSize: 12,
                                 ),
                               ),
@@ -156,7 +163,7 @@ class PaperDetailScreen extends StatelessWidget {
                         ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
 
                   // Chinese title
                   if (paper.titleCn.isNotEmpty) ...[
@@ -166,7 +173,7 @@ class PaperDetailScreen extends StatelessWidget {
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
                         height: 1.4,
-                        color: Color(0xFF0F172A),
+                        color: Color(0xFF2D2A26),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -181,44 +188,44 @@ class PaperDetailScreen extends StatelessWidget {
                           ? FontWeight.w400
                           : FontWeight.w700,
                       color: paper.titleCn.isNotEmpty
-                          ? const Color(0xFF64748B)
-                          : const Color(0xFF0F172A),
+                          ? const Color(0xFF6B6560)
+                          : const Color(0xFF2D2A26),
                       height: 1.5,
                     ),
                   ),
 
                   // DOI
                   if (paper.doi.isNotEmpty) ...[
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 16),
                     GestureDetector(
                       onTap: () => launchUrl(Uri.parse(paper.doi)),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF0F9FF),
+                          color: const Color(0xFFECE9E1),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                              color: const Color(0xFFBAE6FD)),
+                              color: const Color(0xFFD8D4CA)),
                         ),
                         child: Row(
                           children: [
                             const Icon(Icons.link,
-                                size: 16, color: Color(0xFF0284C7)),
+                                size: 16, color: Color(0xFF8B7355)),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 paper.doi,
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: Color(0xFF0284C7),
+                                  color: Color(0xFF8B7355),
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             const Icon(Icons.open_in_new,
-                                size: 14, color: Color(0xFF0284C7)),
+                                size: 14, color: Color(0xFF8B7355)),
                           ],
                         ),
                       ),
@@ -228,52 +235,76 @@ class PaperDetailScreen extends StatelessWidget {
               ),
             ),
 
+            // Abstract section heading
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+              child: Row(
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF8B7355),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'Abstract',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF2D2A26),
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Container(
+                      height: 1,
+                      color: const Color(0xFFD8D4CA),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
             // Abstract card
             Container(
               width: double.infinity,
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              padding: const EdgeInsets.all(20),
+              margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                color: const Color(0xFFF5F3ED),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFD8D4CA)),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x0A000000),
+                    offset: Offset(0, 1),
+                    blurRadius: 3,
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
-                    children: [
-                      Icon(Icons.subject,
-                          size: 18, color: Color(0xFF6366F1)),
-                      SizedBox(width: 8),
-                      Text(
-                        'Abstract',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF1E293B),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
                   if (paper.abstractCn.isNotEmpty) ...[
                     SelectableText(
                       paper.abstractCn,
                       style: const TextStyle(
                         fontSize: 15,
                         height: 1.8,
-                        color: Color(0xFF334155),
+                        color: Color(0xFF3D3A36),
                       ),
                     ),
                     const SizedBox(height: 20),
                     Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
+                        color: const Color(0xFFECE9E1),
                         borderRadius: BorderRadius.circular(12),
                         border:
-                            Border.all(color: const Color(0xFFE2E8F0)),
+                            Border.all(color: const Color(0xFFD8D4CA)),
                       ),
                       child: ExpansionTile(
                         shape: RoundedRectangleBorder(
@@ -282,7 +313,7 @@ class PaperDetailScreen extends StatelessWidget {
                           'English Abstract',
                           style: TextStyle(
                             fontSize: 13,
-                            color: Color(0xFF64748B),
+                            color: Color(0xFF6B6560),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -293,7 +324,7 @@ class PaperDetailScreen extends StatelessWidget {
                               paper.abstract_,
                               style: const TextStyle(
                                 fontSize: 13,
-                                color: Color(0xFF64748B),
+                                color: Color(0xFF6B6560),
                                 height: 1.7,
                               ),
                             ),
@@ -307,73 +338,13 @@ class PaperDetailScreen extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 15,
                         height: 1.8,
-                        color: Color(0xFF334155),
+                        color: Color(0xFF3D3A36),
                       ),
                     ),
                   ],
                 ],
               ),
             ),
-
-            // Topics card
-            if (paper.topics.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Container(
-                width: double.infinity,
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Row(
-                      children: [
-                        Icon(Icons.label_outline,
-                            size: 18, color: Color(0xFF6366F1)),
-                        SizedBox(width: 8),
-                        Text(
-                          'Topics',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF1E293B),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: paper.topics
-                          .where((t) => t.isNotEmpty)
-                          .map(
-                            (t) => Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFEEF2FF),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                t,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: Color(0xFF4338CA),
-                                ),
-                              ),
-                            ),
-                          )
-                          .toList(),
-                    ),
-                  ],
-                ),
-              ),
-            ],
 
             // PDF button
             if (paper.pdfUrl != null) ...[
@@ -387,7 +358,7 @@ class PaperDetailScreen extends StatelessWidget {
                     icon: const Icon(Icons.picture_as_pdf),
                     label: const Text('View PDF'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6366F1),
+                      backgroundColor: const Color(0xFF8B7355),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(

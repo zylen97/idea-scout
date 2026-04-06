@@ -23,6 +23,9 @@ class _HomeScreenState extends State<HomeScreen> {
   String _scanDate = '';
   bool _showSelectedOnly = false;
 
+  // Scan history
+  List<Map<String, dynamic>> _scanHistory = [];
+
   String _searchQuery = '';
   String? _selectedJournalId;
   int? _selectedTier;
@@ -44,6 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final prefs = await SharedPreferences.getInstance();
       final savedSelections = prefs.getStringList('selected_ids') ?? [];
 
+      // Load papers
       final resp = await http.get(Uri.parse('data/latest.json'));
       if (resp.statusCode != 200) {
         throw Exception('HTTP ${resp.statusCode}');
@@ -51,6 +55,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
       final list = jsonDecode(resp.body) as List;
       final papers = list.map((j) => Paper.fromJson(j)).toList();
+
+      // Load scan history (graceful fail)
+      try {
+        final histResp = await http.get(Uri.parse('data/scan_history.json'));
+        if (histResp.statusCode == 200) {
+          final histData = jsonDecode(histResp.body) as Map<String, dynamic>;
+          _scanHistory = List<Map<String, dynamic>>.from(
+              histData['scans'] as List? ?? []);
+        }
+      } catch (_) {
+        // scan_history.json missing or invalid - that's fine
+      }
 
       // Always fill tier from journal registry (data may not have it)
       final jMap = journalMap;
@@ -142,7 +158,8 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (ctx) => Dialog(
         shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: const Color(0xFFF5F3ED),
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -155,11 +172,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEEF2FF),
+                      color: const Color(0xFFECE9E1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(Icons.file_copy_outlined,
-                        size: 18, color: Color(0xFF6366F1)),
+                        size: 18, color: Color(0xFF8B7355)),
                   ),
                   const SizedBox(width: 12),
                   Text(
@@ -167,23 +184,23 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF1E293B),
+                      color: Color(0xFF2D2A26),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
               const Text(
-                'Copy JSON → save as selected.json\nin idea_scout folder',
-                style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                'Copy JSON \u2192 save as selected.json\nin idea_scout folder',
+                style: TextStyle(fontSize: 12, color: Color(0xFF9B9488)),
               ),
               const SizedBox(height: 16),
               Container(
                 height: 320,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
+                  color: const Color(0xFFE8E6DC),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: const Color(0xFFD8D4CA)),
                 ),
                 padding: const EdgeInsets.all(14),
                 child: SingleChildScrollView(
@@ -193,6 +210,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       fontSize: 12,
                       fontFamily: 'monospace',
                       height: 1.5,
+                      color: Color(0xFF3D3A36),
                     ),
                   ),
                 ),
@@ -203,7 +221,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(ctx),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6366F1),
+                    backgroundColor: const Color(0xFF8B7355),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
@@ -230,33 +248,99 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  /// Format scan history into compact display strings.
+  String _formatScanSummary(Map<String, dynamic> scan) {
+    final fromDate = scan['from_date'] as String? ?? '';
+    final toDate = scan['to_date'] as String? ?? '';
+    final tiers = (scan['tiers'] as List?)?.map((e) => 'T$e').join('+') ?? '';
+    final count = scan['paper_count'] as int? ?? 0;
+
+    // Format dates to short month names
+    String shortMonth(String dateStr) {
+      if (dateStr.length < 7) return dateStr;
+      final parts = dateStr.split('-');
+      if (parts.length < 2) return dateStr;
+      const months = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      final m = int.tryParse(parts[1]) ?? 0;
+      final y = parts[0];
+      return '${m > 0 && m <= 12 ? months[m] : parts[1]} $y';
+    }
+
+    return '${shortMonth(fromDate)}\u2013${shortMonth(toDate)} ($tiers, $count papers)';
+  }
+
   @override
   Widget build(BuildContext context) {
     final selectedCount = _papers.where((p) => p.isSelected).length;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFE8E6DC),
       body: SafeArea(
         child: Column(
           children: [
             _buildHeader(),
 
+            // Scan history bar
+            if (!_isLoading && _scanHistory.isNotEmpty)
+              Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFECE9E1),
+                  border: Border(
+                    bottom: BorderSide(color: Color(0xFFD8D4CA)),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.radar,
+                        size: 14, color: Color(0xFF8B7355)),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Scanned: ${_scanHistory.map(_formatScanSummary).join(' | ')}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF6B6560),
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            // Paper count status bar
             if (!_isLoading && _papers.isNotEmpty)
               Container(
                 width: double.infinity,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                color: const Color(0xFFF0FDF4),
+                decoration: const BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: Color(0xFFD8D4CA)),
+                  ),
+                ),
                 child: Row(
                   children: [
-                    const Icon(Icons.check_circle_outline,
-                        size: 14, color: Color(0xFF16A34A)),
-                    const SizedBox(width: 6),
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF5A8A6A),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '${_papers.length} papers  ·  $_scanDate',
+                        '${_papers.length} papers  \u00b7  $_scanDate',
                         style: const TextStyle(
                           fontSize: 12,
-                          color: Color(0xFF166534),
+                          color: Color(0xFF6B6560),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -265,14 +349,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.7),
+                        color: const Color(0xFFE8E6DC),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
                         '${_filteredPapers.length}/${_papers.length}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 11,
-                          color: Colors.grey[600],
+                          color: Color(0xFF9B9488),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -286,10 +370,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: double.infinity,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                color: const Color(0xFFFEF2F2),
+                color: const Color(0xFFFAF0ED),
                 child: Text(
                   _statusText,
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF991B1B)),
+                  style: const TextStyle(fontSize: 12, color: Color(0xFFC25B3F)),
                 ),
               ),
 
@@ -301,10 +385,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          CircularProgressIndicator(color: Color(0xFF6366F1)),
+                          CircularProgressIndicator(color: Color(0xFF8B7355)),
                           SizedBox(height: 16),
                           Text('Loading papers...',
-                              style: TextStyle(color: Color(0xFF94A3B8))),
+                              style: TextStyle(color: Color(0xFF9B9488))),
                         ],
                       ),
                     )
@@ -348,8 +432,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 12, 8),
       decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
+        color: Color(0xFFF0EEE6),
+        border: Border(bottom: BorderSide(color: Color(0xFFD8D4CA))),
       ),
       child: Row(
         children: [
@@ -357,9 +441,7 @@ class _HomeScreenState extends State<HomeScreen> {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-              ),
+              color: const Color(0xFF8B7355),
               borderRadius: BorderRadius.circular(10),
             ),
             child:
@@ -374,7 +456,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF1E293B),
+                  color: Color(0xFF2D2A26),
                   letterSpacing: -0.5,
                 ),
               ),
@@ -382,7 +464,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 'FT50 / UTD24 Journal Scanner',
                 style: TextStyle(
                   fontSize: 11,
-                  color: Color(0xFF94A3B8),
+                  color: Color(0xFF9B9488),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -401,7 +483,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Icon(
                   _showChinese ? Icons.translate : Icons.abc,
                   size: 22,
-                  color: const Color(0xFF64748B),
+                  color: const Color(0xFF6B6560),
                 ),
               ),
             ),
@@ -418,17 +500,17 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           TextField(
             controller: _searchController,
-            style: const TextStyle(fontSize: 14),
+            style: const TextStyle(fontSize: 14, color: Color(0xFF2D2A26)),
             decoration: InputDecoration(
               hintText: 'Search titles, abstracts, journals...',
               hintStyle:
-                  const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+                  const TextStyle(color: Color(0xFF9B9488), fontSize: 14),
               prefixIcon: const Icon(Icons.search,
-                  size: 20, color: Color(0xFF94A3B8)),
+                  size: 20, color: Color(0xFF9B9488)),
               suffixIcon: _searchQuery.isNotEmpty
                   ? IconButton(
                       icon: const Icon(Icons.clear,
-                          size: 18, color: Color(0xFF94A3B8)),
+                          size: 18, color: Color(0xFF9B9488)),
                       onPressed: () {
                         _searchController.clear();
                         setState(() {
@@ -460,7 +542,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     label: 'Selected',
                     icon: Icons.star,
                     isActive: _showSelectedOnly,
-                    activeColor: const Color(0xFF6366F1),
+                    activeColor: const Color(0xFF8B7355),
                     onTap: () {
                       setState(() {
                         _showSelectedOnly = !_showSelectedOnly;
@@ -480,9 +562,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildTierChip(int tier) {
     final isSelected = _selectedTier == tier;
     final colors = {
-      1: const Color(0xFFEF4444),
-      2: const Color(0xFFF59E0B),
-      3: const Color(0xFF10B981),
+      1: const Color(0xFFC25B3F),
+      2: const Color(0xFFB8963E),
+      3: const Color(0xFF5A8A6A),
     };
     final color = colors[tier]!;
     final count = _papers.where((p) => p.tier == tier).length;
@@ -500,10 +582,10 @@ class _HomeScreenState extends State<HomeScreen> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
-            color: isSelected ? color : Colors.white,
+            color: isSelected ? color : const Color(0xFFF5F3ED),
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: isSelected ? color : const Color(0xFFE2E8F0),
+              color: isSelected ? color : const Color(0xFFD8D4CA),
             ),
           ),
           child: Row(
@@ -515,7 +597,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color:
-                      isSelected ? Colors.white : const Color(0xFF475569),
+                      isSelected ? Colors.white : const Color(0xFF6B6560),
                 ),
               ),
               if (count > 0) ...[
@@ -526,7 +608,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   decoration: BoxDecoration(
                     color: isSelected
                         ? Colors.white.withValues(alpha: 0.25)
-                        : const Color(0xFFF1F5F9),
+                        : const Color(0xFFECE9E1),
                     borderRadius: BorderRadius.circular(5),
                   ),
                   child: Text(
@@ -535,7 +617,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                       color:
-                          isSelected ? Colors.white : const Color(0xFF94A3B8),
+                          isSelected ? Colors.white : const Color(0xFF9B9488),
                     ),
                   ),
                 ),
@@ -552,23 +634,23 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         color: _selectedJournalId != null
-            ? const Color(0xFFEEF2FF)
-            : Colors.white,
+            ? const Color(0xFFECE9E1)
+            : const Color(0xFFF5F3ED),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: _selectedJournalId != null
-              ? const Color(0xFF6366F1).withValues(alpha: 0.3)
-              : const Color(0xFFE2E8F0),
+              ? const Color(0xFF8B7355).withValues(alpha: 0.4)
+              : const Color(0xFFD8D4CA),
         ),
       ),
       child: DropdownButton<String?>(
         value: _selectedJournalId,
         hint: const Text('All',
-            style: TextStyle(fontSize: 13, color: Color(0xFF94A3B8))),
+            style: TextStyle(fontSize: 13, color: Color(0xFF9B9488))),
         underline: const SizedBox(),
         isDense: true,
         icon: const Icon(Icons.keyboard_arrow_down,
-            size: 18, color: Color(0xFF94A3B8)),
+            size: 18, color: Color(0xFF9B9488)),
         items: [
           const DropdownMenuItem(value: null, child: Text('All')),
           ...journals.map(
@@ -602,10 +684,10 @@ class _HomeScreenState extends State<HomeScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
-          color: isActive ? activeColor : Colors.white,
+          color: isActive ? activeColor : const Color(0xFFF5F3ED),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: isActive ? activeColor : const Color(0xFFE2E8F0),
+            color: isActive ? activeColor : const Color(0xFFD8D4CA),
           ),
         ),
         child: Row(
@@ -613,14 +695,14 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Icon(icon,
                 size: 14,
-                color: isActive ? Colors.white : const Color(0xFFF59E0B)),
+                color: isActive ? Colors.white : const Color(0xFFB8963E)),
             const SizedBox(width: 4),
             Text(
               label,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: isActive ? Colors.white : const Color(0xFF475569),
+                color: isActive ? Colors.white : const Color(0xFF6B6560),
               ),
             ),
           ],
@@ -635,14 +717,14 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.cloud_off, size: 56, color: Color(0xFFCBD5E1)),
+            Icon(Icons.cloud_off, size: 56, color: Color(0xFFC5BFB5)),
             SizedBox(height: 20),
             Text(
               'No data available',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF1E293B),
+                color: Color(0xFF2D2A26),
               ),
             ),
             SizedBox(height: 8),
@@ -651,7 +733,7 @@ class _HomeScreenState extends State<HomeScreen> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
-                color: Color(0xFF94A3B8),
+                color: Color(0xFF9B9488),
                 height: 1.5,
               ),
             ),
@@ -663,10 +745,10 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.search_off, size: 48, color: Color(0xFFCBD5E1)),
+          Icon(Icons.search_off, size: 48, color: Color(0xFFC5BFB5)),
           SizedBox(height: 12),
           Text('No matching results',
-              style: TextStyle(color: Color(0xFF94A3B8), fontSize: 15)),
+              style: TextStyle(color: Color(0xFF9B9488), fontSize: 15)),
         ],
       ),
     );
@@ -676,8 +758,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
       decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+        color: Color(0xFFF0EEE6),
+        border: Border(top: BorderSide(color: Color(0xFFD8D4CA))),
       ),
       child: SafeArea(
         child: Row(
@@ -687,20 +769,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEEF2FF),
+                  color: const Color(0xFFECE9E1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
                   children: [
                     const Icon(Icons.check_circle,
-                        size: 16, color: Color(0xFF6366F1)),
+                        size: 16, color: Color(0xFF8B7355)),
                     const SizedBox(width: 6),
                     Text(
                       '$selectedCount',
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF6366F1),
+                        color: Color(0xFF8B7355),
                       ),
                     ),
                   ],
@@ -721,11 +803,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
+                    color: const Color(0xFFECE9E1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.clear_all,
-                      size: 20, color: Color(0xFF94A3B8)),
+                      size: 20, color: Color(0xFF9B9488)),
                 ),
               ),
             ],
@@ -738,8 +820,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
                 decoration: BoxDecoration(
                   color: selectedCount > 0
-                      ? const Color(0xFF6366F1)
-                      : const Color(0xFFF1F5F9),
+                      ? const Color(0xFF8B7355)
+                      : const Color(0xFFECE9E1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -748,7 +830,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         size: 18,
                         color: selectedCount > 0
                             ? Colors.white
-                            : const Color(0xFFCBD5E1)),
+                            : const Color(0xFFC5BFB5)),
                     const SizedBox(width: 6),
                     Text(
                       'Export',
@@ -757,7 +839,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         fontWeight: FontWeight.w600,
                         color: selectedCount > 0
                             ? Colors.white
-                            : const Color(0xFFCBD5E1),
+                            : const Color(0xFFC5BFB5),
                       ),
                     ),
                   ],

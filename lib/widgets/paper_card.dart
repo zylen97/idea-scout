@@ -16,15 +16,15 @@ class PaperCard extends StatelessWidget {
   });
 
   static const _tierColors = {
-    1: Color(0xFFEF4444),
-    2: Color(0xFFF59E0B),
-    3: Color(0xFF10B981),
+    1: Color(0xFFC25B3F),
+    2: Color(0xFFB8963E),
+    3: Color(0xFF5A8A6A),
   };
 
   static const _tierBgColors = {
-    1: Color(0xFFFEF2F2),
-    2: Color(0xFFFFFBEB),
-    3: Color(0xFFECFDF5),
+    1: Color(0xFFFAF0ED),
+    2: Color(0xFFFAF6ED),
+    3: Color(0xFFEDF5F0),
   };
 
   @override
@@ -41,14 +41,21 @@ class PaperCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
       decoration: BoxDecoration(
-        color: paper.isSelected ? const Color(0xFFF0F0FF) : Colors.white,
+        color: paper.isSelected ? const Color(0xFFF5F0E8) : const Color(0xFFF5F3ED),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: paper.isSelected
-              ? const Color(0xFF6366F1).withValues(alpha: 0.4)
-              : const Color(0xFFE2E8F0),
+              ? const Color(0xFF8B7355).withValues(alpha: 0.5)
+              : const Color(0xFFD8D4CA),
           width: paper.isSelected ? 1.5 : 1,
         ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A000000),
+            offset: Offset(0, 1),
+            blurRadius: 3,
+          ),
+        ],
       ),
       child: Material(
         color: Colors.transparent,
@@ -71,7 +78,7 @@ class PaperCard extends StatelessWidget {
                         color: tierBg,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                            color: tierColor.withValues(alpha: 0.3)),
+                            color: tierColor.withValues(alpha: 0.25)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -90,7 +97,7 @@ class PaperCard extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 5, vertical: 1),
                             decoration: BoxDecoration(
-                              color: tierColor.withValues(alpha: 0.15),
+                              color: tierColor.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -109,8 +116,8 @@ class PaperCard extends StatelessWidget {
                     // Date
                     Text(
                       paper.date,
-                      style: TextStyle(
-                        color: Colors.grey[500],
+                      style: const TextStyle(
+                        color: Color(0xFF9B9488),
                         fontSize: 12,
                       ),
                     ),
@@ -120,13 +127,13 @@ class PaperCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFECFDF5),
+                          color: const Color(0xFFEDF5F0),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: const Text(
                           'OA',
                           style: TextStyle(
-                            color: Color(0xFF059669),
+                            color: Color(0xFF5A8A6A),
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                           ),
@@ -143,13 +150,13 @@ class PaperCard extends StatelessWidget {
                         height: 24,
                         decoration: BoxDecoration(
                           color: paper.isSelected
-                              ? const Color(0xFF6366F1)
-                              : Colors.white,
+                              ? const Color(0xFF8B7355)
+                              : const Color(0xFFF5F3ED),
                           borderRadius: BorderRadius.circular(7),
                           border: Border.all(
                             color: paper.isSelected
-                                ? const Color(0xFF6366F1)
-                                : const Color(0xFFCBD5E1),
+                                ? const Color(0xFF8B7355)
+                                : const Color(0xFFC5BFB5),
                             width: 1.5,
                           ),
                         ),
@@ -170,7 +177,7 @@ class PaperCard extends StatelessWidget {
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     height: 1.4,
-                    color: Color(0xFF1E293B),
+                    color: Color(0xFF2D2A26),
                   ),
                 ),
 
@@ -181,7 +188,7 @@ class PaperCard extends StatelessWidget {
                     abstract_,
                     style: const TextStyle(
                       fontSize: 13,
-                      color: Color(0xFF64748B),
+                      color: Color(0xFF6B6560),
                       height: 1.6,
                     ),
                     maxLines: 3,
@@ -189,55 +196,31 @@ class PaperCard extends StatelessWidget {
                   ),
                 ],
 
-                // Topics + citations
-                if (paper.topics.isNotEmpty || paper.citedBy > 0) ...[
+                // Citations only (topics removed)
+                if (paper.citedBy > 0) ...[
                   const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 4,
-                    children: [
-                      ...paper.topics.where((t) => t.isNotEmpty).take(2).map(
-                            (t) => Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF1F5F9),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                t,
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  color: Color(0xFF64748B),
-                                ),
-                              ),
-                            ),
-                          ),
-                      if (paper.citedBy > 0)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.format_quote_rounded,
-                                  size: 12, color: Color(0xFF94A3B8)),
-                              const SizedBox(width: 3),
-                              Text(
-                                '${paper.citedBy}',
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  color: Color(0xFF64748B),
-                                ),
-                              ),
-                            ],
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFECE9E1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.format_quote_rounded,
+                            size: 12, color: Color(0xFF9B9488)),
+                        const SizedBox(width: 3),
+                        Text(
+                          '${paper.citedBy}',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Color(0xFF6B6560),
                           ),
                         ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ],
