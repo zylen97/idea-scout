@@ -82280,7 +82280,7 @@ c=A.Z(d,d.$ti.i("ak.E"))
 j=c
 i=A.aNR()
 for(d=j,b=d.length,a=0;a<d.length;d.length===b||(0,A.y)(d),++a){h=d[a]
-if(h.y===3&&i.au(h.w))h.y=J.le(i,h.w).e
+if(i.au(h.w))h.y=J.le(i,h.w).e
 if(J.Gz(m,h.f))h.ax=!0}if(J.cR(j)!==0){d=j
 d=new A.a2(d,new A.aiE(),A.V(d).i("a2<1,u>")).vw(0,new A.aiF())
 a0=A.Z(d,d.$ti.i("v.E"))
@@ -82467,7 +82467,7 @@ A.aiz.prototype={
 $1(a){return a.ax},
 $S:45}
 A.aiA.prototype={
-$1(a){return A.aq(["journal_id",a.w,"journal_name",a.x,"title",a.b,"title_cn",a.c,"doi",a.f,"date",a.r,"abstract",a.d,"abstract_cn",a.e,"topics",a.z,"tier",a.y,"cited_by",a.Q,"oa",a.as,"pdf_url",a.at],t.N,t.X)},
+$1(a){return A.aq(["journal_id",a.w,"journal_name",a.x,"title",a.b,"title_cn",a.c,"doi",a.f,"date",a.r,"abstract",a.d,"abstract_cn",a.e,"topics",a.z,"tier",a.y,"cited_by",a.Q,"is_oa",a.as,"pdf_url",a.at],t.N,t.X)},
 $S:512}
 A.aiB.prototype={
 $1(a){var s=null,r=A.bu(20),q=t.p,p=A.ex(A.c([A.ca(s,B.Gv,B.q,s,s,new A.bx(B.fG,s,s,A.bu(10),s,s,B.C),s,36,s,s,s,s,36),B.zk,A.c8(""+this.a.length+" papers",s,s,s,B.zM,s,s)],q),B.M,B.D,B.af,0),o=A.bu(12),n=A.hi(B.bK,1)
