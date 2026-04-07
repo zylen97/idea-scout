@@ -173,7 +173,7 @@ class _PaperCardState extends State<PaperCard> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              '${paper.journalId} · ${_tierLabel(paper.tier)}',
+                              '${paper.journalName} · ${_tierLabel(paper.tier)}',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,
