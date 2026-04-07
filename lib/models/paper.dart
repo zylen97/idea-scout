@@ -14,6 +14,7 @@ class Paper {
   final bool isOa;
   final String? pdfUrl;
   bool isSelected;
+  final String scanDate; // from scan_date in papers.json
 
   Paper({
     required this.id,
@@ -31,6 +32,7 @@ class Paper {
     required this.isOa,
     this.pdfUrl,
     this.isSelected = false,
+    this.scanDate = '',
   });
 
   Map<String, dynamic> toJson() => {
@@ -49,6 +51,7 @@ class Paper {
         'is_oa': isOa,
         'pdf_url': pdfUrl,
         'is_selected': isSelected,
+        'scan_date': scanDate,
       };
 
   factory Paper.fromJson(Map<String, dynamic> json) {
@@ -70,6 +73,7 @@ class Paper {
       isOa: (json['is_oa'] ?? json['oa']) as bool? ?? false,
       pdfUrl: json['pdf_url'] as String?,
       isSelected: json['is_selected'] as bool? ?? false,
+      scanDate: json['scan_date'] as String? ?? '',
     );
   }
 }

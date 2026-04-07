@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/paper.dart';
+import '../widgets/paper_card.dart' show buildHighlightedText;
 
 class PaperDetailScreen extends StatelessWidget {
   final Paper paper;
@@ -167,30 +168,34 @@ class PaperDetailScreen extends StatelessWidget {
 
                   // Chinese title
                   if (paper.titleCn.isNotEmpty) ...[
-                    Text(
-                      paper.titleCn,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        height: 1.4,
-                        color: Color(0xFF2D2A26),
+                    RichText(
+                      text: buildHighlightedText(
+                        paper.titleCn,
+                        const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          height: 1.4,
+                          color: Color(0xFF2D2A26),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 10),
                   ],
 
                   // English title
-                  Text(
-                    paper.title,
-                    style: TextStyle(
-                      fontSize: paper.titleCn.isNotEmpty ? 14 : 20,
-                      fontWeight: paper.titleCn.isNotEmpty
-                          ? FontWeight.w400
-                          : FontWeight.w700,
-                      color: paper.titleCn.isNotEmpty
-                          ? const Color(0xFF6B6560)
-                          : const Color(0xFF2D2A26),
-                      height: 1.5,
+                  RichText(
+                    text: buildHighlightedText(
+                      paper.title,
+                      TextStyle(
+                        fontSize: paper.titleCn.isNotEmpty ? 14 : 20,
+                        fontWeight: paper.titleCn.isNotEmpty
+                            ? FontWeight.w400
+                            : FontWeight.w700,
+                        color: paper.titleCn.isNotEmpty
+                            ? const Color(0xFF6B6560)
+                            : const Color(0xFF2D2A26),
+                        height: 1.5,
+                      ),
                     ),
                   ),
 
@@ -290,12 +295,14 @@ class PaperDetailScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (paper.abstractCn.isNotEmpty) ...[
-                    SelectableText(
-                      paper.abstractCn,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        height: 1.8,
-                        color: Color(0xFF3D3A36),
+                    RichText(
+                      text: buildHighlightedText(
+                        paper.abstractCn,
+                        const TextStyle(
+                          fontSize: 15,
+                          height: 1.8,
+                          color: Color(0xFF3D3A36),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -320,12 +327,14 @@ class PaperDetailScreen extends StatelessWidget {
                         children: [
                           Padding(
                             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                            child: SelectableText(
-                              paper.abstract_,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                color: Color(0xFF6B6560),
-                                height: 1.7,
+                            child: RichText(
+                              text: buildHighlightedText(
+                                paper.abstract_,
+                                const TextStyle(
+                                  fontSize: 13,
+                                  color: Color(0xFF6B6560),
+                                  height: 1.7,
+                                ),
                               ),
                             ),
                           ),
@@ -333,12 +342,14 @@ class PaperDetailScreen extends StatelessWidget {
                       ),
                     ),
                   ] else ...[
-                    SelectableText(
-                      paper.abstract_,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        height: 1.8,
-                        color: Color(0xFF3D3A36),
+                    RichText(
+                      text: buildHighlightedText(
+                        paper.abstract_,
+                        const TextStyle(
+                          fontSize: 15,
+                          height: 1.8,
+                          color: Color(0xFF3D3A36),
+                        ),
                       ),
                     ),
                   ],
