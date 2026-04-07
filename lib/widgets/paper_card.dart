@@ -258,16 +258,23 @@ class _PaperCardState extends State<PaperCard> with SingleTickerProviderStateMix
                           if (widget.onDelete != null)
                             GestureDetector(
                               onTap: widget.onDelete,
-                              child: Padding(
-                                padding: const EdgeInsets.only(right: 4),
+                              child: Container(
+                                margin: const EdgeInsets.only(right: 6),
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: widget.isDeleted
+                                      ? const Color(0xFFEDF5F0)
+                                      : const Color(0xFFF0EDED),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
                                 child: Icon(
                                   widget.isDeleted
                                       ? Icons.restore_rounded
                                       : Icons.close_rounded,
-                                  size: 20,
+                                  size: 16,
                                   color: widget.isDeleted
                                       ? const Color(0xFF5A8A6A)
-                                      : const Color(0xFFC5BFB5),
+                                      : const Color(0xFF9B9488),
                                 ),
                               ),
                             ),
