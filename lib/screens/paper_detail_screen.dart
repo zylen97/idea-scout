@@ -25,6 +25,11 @@ class PaperDetailScreen extends StatelessWidget {
     3: Color(0xFFEDF5F0),
   };
 
+  static String _catLabel(int tier) {
+    const labels = {1: 'A', 2: 'B', 3: 'C'};
+    return labels[tier] ?? 'C';
+  }
+
   @override
   Widget build(BuildContext context) {
     final tierColor = _tierColors[paper.tier] ?? _tierColors[3]!;
@@ -89,12 +94,26 @@ class PaperDetailScreen extends StatelessWidget {
                           border: Border.all(
                               color: tierColor.withValues(alpha: 0.25)),
                         ),
-                        child: Text(
-                          '${paper.journalId} · Tier ${paper.tier}',
-                          style: TextStyle(
-                            color: tierColor,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
+                        child: Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(
+                                text: paper.journalId,
+                                style: TextStyle(
+                                  color: tierColor,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              TextSpan(
+                                text: ' \u00b7 ${_catLabel(paper.tier)}',
+                                style: TextStyle(
+                                  color: tierColor.withValues(alpha: 0.6),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),

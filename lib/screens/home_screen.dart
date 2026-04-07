@@ -45,6 +45,8 @@ class _HomeScreenState extends State<HomeScreen> {
   DateRangeFilter _dateRangeFilter = DateRangeFilter.all;
   ViewMode _viewMode = ViewMode.list;
   Set<String> _readDois = {};
+  Set<String> _deletedDois = {};
+  bool _showDeletedOnly = false;
 
   // Scan date grouping: which groups are expanded
   final Map<String, bool> _scanGroupExpanded = {};
@@ -68,6 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final prefs = await SharedPreferences.getInstance();
       final savedSelections = prefs.getStringList('selected_ids') ?? [];
       _readDois = (prefs.getStringList('read_dois') ?? []).toSet();
+      _deletedDois = (prefs.getStringList('deleted_dois') ?? []).toSet();
 
       // Try papers.json first, fallback to latest.json
       List<dynamic> list;
@@ -145,11 +148,22 @@ class _HomeScreenState extends State<HomeScreen> {
     await prefs.setStringList('read_dois', _readDois.toList());
   }
 
+  Future<void> _saveDeleted() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('deleted_dois', _deletedDois.toList());
+  }
+
   void _applyFilters() {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
     _filteredPapers = _papers.where((p) {
+      // Deleted filter
+      if (_showDeletedOnly) {
+        if (!_deletedDois.contains(p.doi)) return false;
+      } else {
+        if (_deletedDois.contains(p.doi)) return false;
+      }
       if (_showSelectedOnly && !p.isSelected) return false;
       if (_selectedTier != null && p.tier != _selectedTier) return false;
       if (_selectedJournalId != null && p.journalId != _selectedJournalId) {
@@ -430,7 +444,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String _formatScanSummary(Map<String, dynamic> scan) {
     final fromDate = scan['from_date'] as String? ?? '';
     final toDate = scan['to_date'] as String? ?? '';
-    final tiers = (scan['tiers'] as List?)?.map((e) => 'T$e').join('+') ?? '';
+    final tiers = (scan['tiers'] as List?)?.map((e) => _tierLabels[e] ?? '$e').join('+') ?? '';
     final count = scan['paper_count'] as int? ?? 0;
 
     String shortMonth(String dateStr) {
@@ -635,13 +649,26 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildPaperItem(Paper paper) {
+    final isDeleted = _deletedDois.contains(paper.doi);
     return PaperCard(
       paper: paper,
       showChinese: _showChinese,
       isRead: _readDois.contains(paper.doi),
+      isDeleted: isDeleted,
       onToggleSelect: () {
         setState(() => paper.isSelected = !paper.isSelected);
         _saveSelections();
+      },
+      onDelete: () {
+        setState(() {
+          if (isDeleted) {
+            _deletedDois.remove(paper.doi);
+          } else {
+            _deletedDois.add(paper.doi);
+          }
+          _applyFilters();
+        });
+        _saveDeleted();
       },
       onTap: () async {
         await _markAsRead(paper.doi);
@@ -756,7 +783,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(width: 8),
             Text(
-              'Tier ${item.tier}',
+              '${_tierLabels[item.tier] ?? "C"} \u00b7 ${_tierFieldNames[item.tier] ?? ""}',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
@@ -971,6 +998,23 @@ class _HomeScreenState extends State<HomeScreen> {
                     onTap: () {
                       setState(() {
                         _showSelectedOnly = !_showSelectedOnly;
+                        _showDeletedOnly = false;
+                        _applyFilters();
+                      });
+                    },
+                  ),
+                ],
+                if (_deletedDois.isNotEmpty) ...[
+                  const SizedBox(width: 8),
+                  _buildToggleChip(
+                    label: '${_showChinese ? "已删除" : "Deleted"} (${_deletedDois.length})',
+                    icon: Icons.delete_outline_rounded,
+                    isActive: _showDeletedOnly,
+                    activeColor: const Color(0xFF9B9488),
+                    onTap: () {
+                      setState(() {
+                        _showDeletedOnly = !_showDeletedOnly;
+                        _showSelectedOnly = false;
                         _applyFilters();
                       });
                     },
@@ -1071,6 +1115,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  static const _tierLabels = {1: 'A', 2: 'B', 3: 'C'};
+  static const _tierFieldNames = {
+    1: 'Ops & IS',
+    2: 'Econ & Strategy',
+    3: 'Org & Mgmt',
+  };
+
   Widget _buildTierChip(int tier) {
     final isSelected = _selectedTier == tier;
     final colors = {
@@ -1079,7 +1130,8 @@ class _HomeScreenState extends State<HomeScreen> {
       3: const Color(0xFF5A8A6A),
     };
     final color = colors[tier]!;
-    final count = _papers.where((p) => p.tier == tier).length;
+    final count = _papers.where((p) => p.tier == tier && !_deletedDois.contains(p.doi)).length;
+    final label = _tierLabels[tier] ?? 'C';
 
     return Padding(
       padding: const EdgeInsets.only(right: 6),
@@ -1092,10 +1144,10 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
             color: isSelected ? color : const Color(0xFFF5F3ED),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: isSelected ? color : const Color(0xFFD8D4CA),
             ),
@@ -1104,29 +1156,29 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'T$tier',
+                label,
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color:
                       isSelected ? Colors.white : const Color(0xFF6B6560),
                 ),
               ),
               if (count > 0) ...[
-                const SizedBox(width: 5),
+                const SizedBox(width: 4),
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? Colors.white.withValues(alpha: 0.25)
                         : const Color(0xFFECE9E1),
-                    borderRadius: BorderRadius.circular(5),
+                    borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
                     '$count',
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: 9,
                       fontWeight: FontWeight.w700,
                       color:
                           isSelected ? Colors.white : const Color(0xFF9B9488),

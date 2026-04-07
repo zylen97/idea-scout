@@ -57,7 +57,9 @@ class PaperCard extends StatefulWidget {
   final bool showChinese;
   final VoidCallback onToggleSelect;
   final VoidCallback? onTap;
+  final VoidCallback? onDelete;
   final bool isRead;
+  final bool isDeleted;
 
   const PaperCard({
     super.key,
@@ -65,7 +67,9 @@ class PaperCard extends StatefulWidget {
     required this.showChinese,
     required this.onToggleSelect,
     this.onTap,
+    this.onDelete,
     this.isRead = false,
+    this.isDeleted = false,
   });
 
   @override
@@ -105,6 +109,11 @@ class _PaperCardState extends State<PaperCard> with SingleTickerProviderStateMix
   void dispose() {
     _starController.dispose();
     super.dispose();
+  }
+
+  static String _tierLabel(int tier) {
+    const labels = {1: 'A', 2: 'B', 3: 'C'};
+    return labels[tier] ?? 'C';
   }
 
   void _onStarTap() {
@@ -180,7 +189,7 @@ class _PaperCardState extends State<PaperCard> with SingleTickerProviderStateMix
                       // Header row
                       Row(
                         children: [
-                          // Journal badge
+                          // Journal badge with inline category
                           Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 4),
@@ -190,36 +199,28 @@ class _PaperCardState extends State<PaperCard> with SingleTickerProviderStateMix
                               border: Border.all(
                                   color: tierColor.withValues(alpha: 0.25)),
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  paper.journalId,
-                                  style: TextStyle(
-                                    color: tierColor,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                                Container(
-                                  margin: const EdgeInsets.only(left: 6),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 5, vertical: 1),
-                                  decoration: BoxDecoration(
-                                    color: tierColor.withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Text(
-                                    'T${paper.tier}',
+                            child: Text.rich(
+                              TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: paper.journalId,
                                     style: TextStyle(
                                       color: tierColor,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w800,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.5,
                                     ),
                                   ),
-                                ),
-                              ],
+                                  TextSpan(
+                                    text: ' \u00b7 ${_tierLabel(paper.tier)}',
+                                    style: TextStyle(
+                                      color: tierColor.withValues(alpha: 0.55),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                           const SizedBox(width: 10),
@@ -253,6 +254,23 @@ class _PaperCardState extends State<PaperCard> with SingleTickerProviderStateMix
                             ),
                           ],
                           const Spacer(),
+                          // Delete / Restore button
+                          if (widget.onDelete != null)
+                            GestureDetector(
+                              onTap: widget.onDelete,
+                              child: Padding(
+                                padding: const EdgeInsets.only(right: 4),
+                                child: Icon(
+                                  widget.isDeleted
+                                      ? Icons.restore_rounded
+                                      : Icons.close_rounded,
+                                  size: 20,
+                                  color: widget.isDeleted
+                                      ? const Color(0xFF5A8A6A)
+                                      : const Color(0xFFC5BFB5),
+                                ),
+                              ),
+                            ),
                           // Star icon
                           GestureDetector(
                             onTap: _onStarTap,
