@@ -194,32 +194,16 @@ class _PaperCardState extends State<PaperCard> with SingleTickerProviderStateMix
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: tierBg,
+                              color: tierColor,
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                  color: tierColor.withValues(alpha: 0.25)),
                             ),
-                            child: Text.rich(
-                              TextSpan(
-                                children: [
-                                  TextSpan(
-                                    text: paper.journalId,
-                                    style: TextStyle(
-                                      color: tierColor,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: ' \u00b7 ${_tierLabel(paper.tier)}',
-                                    style: TextStyle(
-                                      color: tierColor.withValues(alpha: 0.55),
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
+                            child: Text(
+                              '${paper.journalId} · ${_tierLabel(paper.tier)}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.5,
                               ),
                             ),
                           ),

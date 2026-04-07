@@ -591,7 +591,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ? _buildEmptyState()
                       : _viewMode == ViewMode.journalGroup
                           ? _buildJournalGroupView()
-                          : _buildScanDateGroupView(),
+                          : _buildFlatList(),
             ),
           ],
         ),
@@ -1222,7 +1222,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ...journals.map(
             (j) => DropdownMenuItem(
               value: j.id,
-              child: Text(j.id, style: const TextStyle(fontSize: 13)),
+              child: Text('${j.id} - ${j.name}', style: const TextStyle(fontSize: 13)),
             ),
           ),
         ],
