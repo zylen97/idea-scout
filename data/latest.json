@@ -1,1 +1,306 @@
-[]
+[
+  {
+    "journal_id": "MS",
+    "journal_name": "Management Science",
+    "title": "Do Carbon Emissions Affect Stock Returns? Causal Evidence from a Supreme Court Ruling",
+    "doi": "https://doi.org/10.1287/mnsc.2024.06732",
+    "date": "2026-04-03",
+    "abstract": "Considering the importance of corporate carbon emissions, the Supreme Court of the United States ruled against the Environmental Protection Agency (EPA) and curtailed EPA’s regulatory powers by unprecedentedly invoking the “major questions doctrine” in its judgment of West Virginia v. EPA in 2022. We find that the stock prices of firms with greater exposure to carbon risk increased relative to firms with lower exposure after the Supreme Court verdict. The results are more pronounced for firms subject to higher federal climate enforcement intensity prior to the court ruling. Long-term climate commitments by state governments and carbon-sensitive institutional investors attenuate the effect. Both cash flow and discount rate contribute to the climate risk effect in firm value. Overall, our findings from this landmark climate litigation suggest that climate transition risks can affect stock prices. This paper was accepted by Lin William Cong, finance. Funding: Funding support by Hong Kong General Research Fund [Grant 17501825] is gratefully acknowledged. This work was supported by National Natural Science Foundation of China [Grants 72172082 and 72342021 (C. Shan)]. Supplemental Material: The online appendix and data files are available at https://doi.org/10.1287/mnsc.2024.06732 .",
+    "topics": [
+      "Corporate Social Responsibility Reporting",
+      "Regulation and Compliance Studies",
+      "Auditing, Earnings Management, Governance"
+    ],
+    "cited_by": 0,
+    "oa": false,
+    "pdf_url": "",
+    "tier": 1,
+    "title_cn": "二氧化碳排放是否影响股票收益？来自最高法院裁决的因果证据",
+    "abstract_cn": "考虑到企业碳排放的重要性，美国最高法院在2022年对西弗吉尼亚州诉环保署案的裁决中，裁定反对环保署（EPA），并通过前所未有地援引“重大问题原则”限制了EPA的监管权力。我们发现，在最高法院裁决后，碳风险暴露较大的公司的股价相对于碳风险暴露较小的公司有所上涨。对于在法院裁决之前受到更高联邦气候执法强度的公司，这一结果更为显著。各州政府的长期气候承诺和对碳敏感的机构投资者则减弱了这一影响。现金流和折现率共同影响了企业价值中的气候风险效应。总体而言，我们在这一具有里程碑意义的气候诉讼中的发现表明，气候转型风险可以影响股价。本文由林威廉·孔（Lin William Cong）接受，研究领域为金融。资金支持：感谢香港一般研究基金[资助号17501825]的资助支持。本研究得到了中国国家自然科学基金[资助号72172082和72342021（C. Shan）]的支持。补充材料：在线附录和数据文件可在https://doi.org/10.1287/mnsc.2024.06732获取。"
+  },
+  {
+    "journal_id": "MS",
+    "journal_name": "Management Science",
+    "title": "Private Equity, Consumers, and Competition: Evidence from the Nursing Home Industry",
+    "doi": "https://doi.org/10.1287/mnsc.2023.01486",
+    "date": "2026-04-03",
+    "abstract": "This paper studies how product market competition shapes the impact of private equity (PE) acquisitions on consumers. We examine nursing home buyouts and observe that PE-owned facilities exhibit greater competitive sensitivity: competing more aggressively when competitive incentives are strong and exploiting market power more aggressively when competitive incentives are weak. We find that PE-owned facilities are more sensitive to local market competition—even when comparing effects only across facilities purchased as part of the same acquisition—and are more responsive to a pro-competitive policy helping consumers compare facilities. This suggests that regulators should attend to the competitive sensitivity of acquirers and the concentration of markets where acquisitions occur, as well as consider pro-competitive policies to mitigate or even reverse PE’s potentially adverse consequences. This paper was accepted by Carrie Chan, healthcare management. Funding: This work was supported by the UCLA Price Center for Entrepreneurship and Innovation and the UCLA Fink Center for Finance and Investment. Supplemental Material: The online appendix and data files are available at https://doi.org/10.1287/mnsc.2023.01486 .",
+    "topics": [
+      "Private Equity and Venture Capital",
+      "Financial Literacy, Pension, Retirement Analysis",
+      "Firm Innovation and Growth"
+    ],
+    "cited_by": 0,
+    "oa": false,
+    "pdf_url": "",
+    "tier": 1,
+    "title_cn": "私募股权、消费者与竞争：来自养老院行业的证据",
+    "abstract_cn": "本文研究了产品市场竞争如何影响私募股权（PE）收购对消费者的影响。我们考察了养老院的收购案例，并观察到PE拥有的设施对竞争的敏感性更强：在竞争激励强烈时更加积极地竞争，而在竞争激励薄弱时更为积极地利用市场权力。我们发现PE拥有的设施对当地市场竞争的敏感性更高——即使仅在同一收购的设施之间进行比较时也是如此——并且更能对支持消费者比较设施的促进竞争政策做出反应。这表明，监管者应关注收购者的竞争敏感性以及收购发生市场的集中度，同时考虑采用促进竞争的政策，以缓解甚至逆转PE可能带来的不利后果。本文由Carrie Chan接受，属于医疗管理领域的研究。资金支持：本研究由UCLA创业与创新普赖斯中心和UCLA财政与投资芬克中心提供支持。补充材料：在线附录和数据文件可在https://doi.org/10.1287/mnsc.2023.01486找到。"
+  },
+  {
+    "journal_id": "MS",
+    "journal_name": "Management Science",
+    "title": "Tobin Tax Policy, Housing Speculation, and Property Market Dynamics",
+    "doi": "https://doi.org/10.1287/mnsc.2022.00370",
+    "date": "2026-04-03",
+    "abstract": "Hong Kong introduced a Tobin property tax—the Special Stamp Duty (SSD)—in 2010, which substantially increased the selling costs of short-term residential property holders. This study examines the effectiveness of this Tobin tax in curbing speculation and cooling down the housing market. We find that the SSD effectively curtails flippers who hold homes for less than two years and reduces their market presence from 23.2% in 2009% to 2.4% in 2011 and 0.9% in 2013. However, one year after implementing the tax, housing prices grow by 12.64% and 15.76% in the primary and secondary markets, respectively, indicating a lack of a market cooling effect. Flippers strategically defer sales to circumvent the SSD charges, resulting in the sharp bunching of urgent sales immediately after the lock-in period ends. Further, the SSD effectively increases selling costs and prolongs potential sellers’ holding periods, thereby significantly reducing liquidity and driving up prices in the secondary market. The unintended externality is that the unmet housing demand from the secondary market triggers a buying frenzy in the primary market, which increases the prices in the primary market as well. Our findings have policy implications for the viability of Tobin taxes for regulating real estate markets. This paper was accepted by Agostino Capponi, finance. Funding: S. Agarwal was supported by the National Natural Science Foundation of China [Grant 72495154]. Supplemental Material: The internet appendix and data files are available at https://doi.org/10.1287/mnsc.2022.00370 .",
+    "topics": [
+      "Housing Market and Economics",
+      "Housing, Finance, and Neoliberalism",
+      "Property Rights and Legal Doctrine"
+    ],
+    "cited_by": 0,
+    "oa": false,
+    "pdf_url": "",
+    "tier": 1,
+    "title_cn": "托宾税政策、住房投机与房地产市场动态",
+    "abstract_cn": "香港于2010年引入了托宾物业税——特别印花税（SSD），这大幅增加了短期住宅物业持有者的销售成本。本研究考察了这一托宾税在遏制投机和降温房地产市场方面的有效性。我们发现，SSD有效地抑制了持有住房不足两年的投机者（翻转者），其市场份额从2009年的23.2%降至2011年的2.4%和2013年的0.9%。然而，在实施该税一年后，主要市场和次级市场的房价分别增长了12.64%和15.76%，这表明缺乏市场降温效果。翻转者通过战略性延迟销售来规避SSD费用，导致在锁定期结束后紧急销售的现象急剧增加。此外，SSD有效地提高了销售成本，延长了潜在卖家的持有周期，从而显著降低了流动性并推高了次级市场的价格。意外的外部性是，次级市场上未满足的住房需求引发了主要市场的抢购狂潮，进而也提高了主要市场的价格。我们的研究结果对托宾税在调节房地产市场上的可行性具有政策启示。本文已被阿戈斯丁·卡波尼（Agostino Capponi）接受，主题为金融。资金支持：S. Agarwal获得了中国国家自然科学基金的支持[资助号72495154]。补充材料：互联网附录和数据文件请见https://doi.org/10.1287/mnsc.2022.00370。"
+  },
+  {
+    "journal_id": "MS",
+    "journal_name": "Management Science",
+    "title": "Exchange-Traded Funds and the Wash Sale Loophole",
+    "doi": "https://doi.org/10.1287/mnsc.2024.06944",
+    "date": "2026-04-03",
+    "abstract": "Tax wash sale rules prohibit the recognition of capital losses when substantially identical securities are sold and immediately repurchased within short windows. This study examines whether institutional investors use exchange-traded funds (ETFs) to circumvent wash sale rules. Consistent with tax-motivated demand for ETFs, incumbent ETFs both create more shares and experience more trading volume upon the introduction of nearly identical ETFs, particularly when recent returns are negative. We show that tax-sensitive institutions’ investment in highly correlated ETFs has proliferated in recent years, exceeding a quarter of their assets under management. Furthermore, tax-sensitive institutions holding more ETFs are significantly more likely to engage in swapping nearly identical ETFs. This swapping behavior has become widespread, with tax-sensitive institutional investors swapping $417 billion of nearly identical ETFs since 2001. We estimate that tax-sensitive institutions realized more than $84 billion dollars in losses in highly correlated ETFs associated with the swapping activity since 2001. This paper was accepted by Shiva Rajgopal, accounting. Funding: The authors thank their institutions for financial support. M. Dambra thanks the Kenneth W. Colwell endowment for research support, C. M. C. Lee thanks the Kermit O. Hanson endowment for research support, and P. J. Quinn thanks PricewaterhouseCoopers for research support. Supplemental Material: The online appendix and data files are available at https://doi.org/10.1287/mnsc.2024.06944 .",
+    "topics": [
+      "Financial Markets and Investment Strategies",
+      "Corporate Finance and Governance",
+      "Corporate Taxation and Avoidance"
+    ],
+    "cited_by": 0,
+    "oa": false,
+    "pdf_url": "",
+    "tier": 1,
+    "title_cn": "交易所交易基金与洗售漏洞",
+    "abstract_cn": "税务洗售规则禁止在短时间内出售并立即重新购入实质上相同的证券时确认资本损失。本研究考察机构投资者是否利用交易所交易基金（ETFs）规避洗售规则。与对ETFs的税务驱动需求一致，现有的ETFs在引入几乎相同的ETFs时不仅创造了更多的份额，而且交易量也随之增加，尤其是在近期回报为负的情况下。我们显示，税务敏感型机构在高度相关的ETFs上的投资在近年来激增，已经超过其管理资产的四分之一。此外，持有更多ETFs的税务敏感型机构更有可能进行几乎相同ETFs的交换。自2001年以来，税务敏感的机构投资者进行此类交换的行为已成为普遍现象，涉及金额达到4170亿美元。我们预计，自2001年以来，税务敏感机构在与交换活动相关的高度相关ETFs上实现的损失超过840亿美元。该论文已被会计学专家Shiva Rajgopal接受。资助：作者感谢其机构的财务支持。M. Dambra感谢Kenneth W. Colwell基金会的研究支持，C. M. C. Lee感谢Kermit O. Hanson基金会的研究支持，P. J. Quinn感谢普华永道的研究支持。补充材料：在线附录和数据文件可在https://doi.org/10.1287/mnsc.2024.06944获取。"
+  },
+  {
+    "journal_id": "MS",
+    "journal_name": "Management Science",
+    "title": "Waiting for the Right Offer: Laboratory Evidence on How News Affects Bargaining",
+    "doi": "https://doi.org/10.1287/mnsc.2024.07224",
+    "date": "2026-04-02",
+    "abstract": "We conduct a series of laboratory experiments to examine whether the gradual exogenous revelation of sellers’ private information influences the occurrence of trades in a bilateral bargaining setting with a static lemon condition. We find that, although information does not increase efficiency, it reduces the likelihood that buyers incur losses when trading with low-quality sellers. Anticipating that additional signals will arrive, buyers hesitate to finalize deals immediately and exhibit a “waiting for news” effect, making sizable offer adjustments only when sufficient positive signals have accumulated. In contrast, informed sellers are less sensitive to news but appear to wait for the offer that they deem acceptable. This paper was accepted by Dorothea Kübler, behavioral economics and decision analysis. Funding: T. Ding initiated this project while at the Shanghai University of Finance and Economics and thanks the National Natural Science Foundation of China [Grant 72173076] for financial support. S. F. Lehrer thanks the Social Science and Humanities Research Council of Canada for research support. Supplemental Material: The online appendix and data files are available at https://doi.org/10.1287/mnsc.2024.07224 .",
+    "topics": [
+      "Experimental Behavioral Economics Studies",
+      "Game Theory and Applications",
+      "Economic Policies and Impacts"
+    ],
+    "cited_by": 0,
+    "oa": false,
+    "pdf_url": "",
+    "tier": 1,
+    "title_cn": "等待合适的报价：新闻如何影响谈判的实验室证据",
+    "abstract_cn": "我们进行了一系列实验室实验，以检验卖方私人信息逐步外生性揭示是否会影响在静态柠檬情境下的双边议价中的交易发生。我们发现，尽管信息并不提高效率，但它减少了买方与低质量卖方交易时遭受损失的可能性。买方预期会有额外信号到来，因此在立即达成交易时犹豫不决，并表现出“等待消息”的效应，只有在足够的积极信号积累后才会进行大幅度的出价调整。相比之下，知情的卖方对消息的敏感性较低，但似乎在等待他们认为可接受的出价。本文已被多萝西娅·库布勒（Dorothea Kübler）接受，涉及行为经济学与决策分析。资金支持：丁腾在上海财经大学启动了此项目，感谢中国国家自然科学基金 [资助号72173076] 的财政支持。S. F. Lehrer 感谢加拿大社会科学与人文学科研究委员会的研究支持。补充材料：在线附录和数据文件可在 https://doi.org/10.1287/mnsc.2024.07224 获取。"
+  },
+  {
+    "journal_id": "OR",
+    "journal_name": "Operations Research",
+    "title": "Beyond O(T) Regret: Decoupling Learning and Decision Making in Online Linear Programming",
+    "doi": "https://doi.org/10.1287/opre.2024.1575",
+    "date": "2026-04-02",
+    "abstract": "Breaking the [Formula: see text] Barrier in Online Linear Programming How can fast first-order methods for online linear programming (OLP) match the performance of more computationally intensive LP-based approaches? In the paper “Beyond [Formula: see text] Regret: Decoupling Learning and Decision Making in Online Linear Programming,” the authors develop a new framework that improves the regret guarantees of scalable first-order algorithms for online linear programming. They show that when the dual problem satisfies a mild error bound condition, first-order methods can achieve [Formula: see text] regret, including [Formula: see text] in continuous support settings and [Formula: see text] in finite support settings. The key insight is to decouple learning and decision making. The algorithm first learns an approximate dual solution and then localizes decisions to a neighborhood around that solution using an adaptive procedure. This decoupling narrows the gap between efficient gradient-based methods and LP-based benchmarks, providing strong theoretical guarantees while maintaining scalability for applications such as revenue management, online advertising, and cloud computing.",
+    "topics": [
+      "Advanced Bandit Algorithms Research",
+      "Optimization and Search Problems",
+      "Stochastic Gradient Optimization Techniques"
+    ],
+    "cited_by": 0,
+    "oa": false,
+    "pdf_url": "",
+    "tier": 1,
+    "title_cn": "超越 O(T) 后悔：在线线性规划中学习与决策的解耦",
+    "abstract_cn": "突破在线线性规划中的[公式：见文本]障碍 如何使在线线性规划（OLP）中的快速一阶方法与更为计算密集的基于线性规划的方法匹敌？在论文《超越[公式：见文本]后悔：在线线性规划中的学习与决策解耦》中，作者们提出了一个新框架，改善了可扩展的一阶算法在在线线性规划中的后悔保证。他们展示了当对偶问题满足温和的误差界限条件时，一阶方法能够实现[公式：见文本]的后悔，包括在连续支持环境中的[公式：见文本]和在有限支持环境中的[公式：见文本]。关键的见解在于学习和决策的解耦。该算法首先学习一个近似的对偶解，然后利用自适应过程将决策局限于该解附近的邻域。这样的解耦缩小了基于梯度的方法与基于线性规划的基准之间的差距，提供了强有力的理论保证，同时保持了在收益管理、在线广告和云计算等应用领域的可扩展性。"
+  },
+  {
+    "journal_id": "POM",
+    "journal_name": "Production and Operations Management",
+    "title": "EXPRESS: Will Machines Take Over? Algorithms for Human-Machine Collaborative Decision Making in Healthcare",
+    "doi": "https://doi.org/10.1177/10591478261443194",
+    "date": "2026-04-03",
+    "abstract": "Despite significant advancements in predictive artificial intelligence (AI), organizations continue to grapple with determining the most effective integration of AI into their operations, particularly in combining AI with human capabilities in task execution. This paper introduces a diagnostic system aimed at minimizing costs while maintaining patient safety in hospitals by efficiently allocating mammography interpretation tasks between AI algorithms and radiologists. The optimal diagnostic system employs algorithm-generated risk scores for mammograms to determine if additional assessment by a radiologist is necessary. It evaluates the costs of two approaches—automation, where AI completely replaces human interpretation, and delegation, where AI and radiologists share interpretation tasks–compared to the current expert-alone strategy. When AI performance does not exceed that of radiologists, the optimal design is a simple two-threshold policy: AI recommends no follow-up for low-risk cases, recommends follow-up for high-risk cases, and delegates ambiguous cases in between to radiologists; the thresholds are analytically derived and state-independent. This two-threshold policy is state-independent and that optimal thresholds are not contingent on the diagnostic system’s prior history. We demonstrate our system’s performance by back-testing against real-life scenarios, utilizing data from a mammography AI contest and real-world cost and performance metrics. Backtesting demonstrates potential cost savings of up to 20.9% compared to the expert-alone approach. Beyond radiology imaging, our work holds significant implications for the design of workflows in the AI era and human-machine collaboration contexts.",
+    "topics": [
+      "Artificial Intelligence in Healthcare and Education",
+      "Explainable Artificial Intelligence (XAI)",
+      "Machine Learning in Healthcare"
+    ],
+    "cited_by": 0,
+    "oa": false,
+    "pdf_url": "",
+    "tier": 1,
+    "title_cn": "机器会接管吗？医疗保健中人机协作决策的算法",
+    "abstract_cn": "尽管预测性人工智能（AI）已取得显著进展，组织仍在努力确定如何最有效地将AI整合到其运营中，特别是在任务执行时如何将AI与人类能力相结合。本文介绍了一种诊断系统，旨在通过在AI算法和放射科医生之间有效分配乳腺X光检查解读任务，最小化成本的同时维护医院中患者的安全。最优诊断系统使用算法生成的乳腺X光检查风险评分来判断是否需要放射科医生的额外评估。它评估了两种方法的成本——自动化，即AI完全取代人工解读，以及委托，即AI与放射科医生共享解读任务——与当前仅依赖专家的策略进行比较。当AI的表现不超过放射科医生时，最优设计为一个简单的双阈值政策：对于低风险病例，AI建议不进行后续检查；对于高风险病例，建议进行后续检查；而对于模棱两可的病例，则转交给放射科医生处理；这些阈值根据分析法得出，并且与状态无关。该双阈值政策的特点是状态无关，即最优阈值不依赖于诊断系统的先前历史。我们通过回测真实场景来展示我们系统的性能，利用来自乳腺X光AI竞赛的数据以及实际的成本和性能指标。回测结果显示，与仅依赖专家的方法相比，有可能节省高达20.9%的成本。除了放射学影像外，我们的研究对AI时代和人机协作背景下的工作流程设计具有重要意义。"
+  },
+  {
+    "journal_id": "POM",
+    "journal_name": "Production and Operations Management",
+    "title": "EXPRESS: Waiting Time Externality Awareness in Socially Responsible Queueing",
+    "doi": "https://doi.org/10.1177/10591478261442860",
+    "date": "2026-04-02",
+    "abstract": "In service systems, customers tend to overutilize resources, resulting in high congestion. We study a noncoercive way to alleviate congestion based on customers’ awareness of the negative waiting externalities they impose. To this end, we revisit Naor’s rational-queue model by adding a term that captures the cost a customer associates with the waiting time generated for other customers encountered during their sojourn. First, we show that this modification preserves the threshold structure of customers’ joining strategy. Using lattice-path counting techniques, we derive a closedform expression for the expected generated waiting time, conditional on the number of customers observed upon arrival. The generated wait is increasing and concave in the queue length at arrival. Viewing expected waiting time as allocated across arrivals, the queue length associated with an arbitrary unit of expected generated waiting time is first-order stochastically lower than the queue length associated with a unit of expected personal waiting time. We prove that the maximum generated wait is increasing and convex in the joining threshold and provide tight bounds with exact light/heavy traffic asymptotics. Internalizing social awareness (weight on generated wait) lowers the joining threshold and reduces waiting; in high-demand regimes, it can also increase social welfare. When the operator can also influence the weight on personal wait, that lever reduces congestion more strongly than waiting externality awareness. Finally, we quantify the awareness level needed to reach Naor’s social threshold and show that it is lowest at a non-extreme demand level.",
+    "topics": [
+      "Advanced Queuing Theory Analysis",
+      "Network Traffic and Congestion Control",
+      "Complex Network Analysis Techniques"
+    ],
+    "cited_by": 0,
+    "oa": false,
+    "pdf_url": "",
+    "tier": 1,
+    "title_cn": "表达：社会责任排队中的等待时间外部性意识",
+    "abstract_cn": "在服务系统中，客户往往会过度利用资源，导致高拥堵。我们研究了一种非强制性的方法来缓解拥堵，基于客户对其产生的负等待外部性的认知。为此，我们重新审视了Naor的理性排队模型，增加了一个项，该项捕捉到客户在其逗留期间为其他客户产生的等待时间所关联的成本。首先，我们展示了这一修改保持了客户加入策略的阈值结构。使用格路径计数技术，我们推导出到达时观察到的客户数量条件下的期望生成等待时间的封闭形式表达式。生成的等待时间在到达时的队列长度上是递增且凹的。将期望等待时间视为在到达之间的分配，与任意单位的期望生成等待时间相关的队列长度在随机上是低于与单位期望个人等待时间相关的队列长度。我们证明，最大生成等待时间在加入阈值上是递增且凸的，并提供了在轻/重交通极限条件下的紧 bounds。内化社会认知（对生成等待的权重）降低了加入阈值并减少了等待；在高需求情况下，它还可以增加社会福利。当运营商能够影响个人等待的权重时，这一杠杆对拥堵的减缓效果比等待外部性认知更强。最后，我们量化了达到Naor社会阈值所需的认知水平，并表明在非极端需求水平时该认知水平最低。"
+  },
+  {
+    "journal_id": "POM",
+    "journal_name": "Production and Operations Management",
+    "title": "EXPRESS: Scheduling Additive Manufacturing Systems: Complexity and Algorithms to Minimize the Number of Late Parts",
+    "doi": "https://doi.org/10.1177/10591478261442695",
+    "date": "2026-04-02",
+    "abstract": "Additive Manufacturing (AM) is a process by which three-dimensional products are made via the addition of material in a layer-by-layer fashion. This manufacturing technique is growing in commercial usage given its advantages in creating very dense or complex geometries as well as highly customizable components. In healthcare, for example, AM can be used to improve patient outcomes by providing timely medical devices (or parts) required for treatments. Minimizing the number of late parts in this context will directly improve the patients’ welfare. This paper studies the nesting and scheduling problem within the AM context and shows the problem of minimizing the number of late parts is strongly NP-hard even if the nesting of parts-into-jobs is given. We also develop efficient algorithms to minimize the number of late parts, both when nesting is fixed beforehand and when nesting is part of the algorithm. The theoretical results, including algorithm performance bounds, developed in this paper are new contributions to the literature. An extensive computational study evaluates the performance of both algorithms. The nesting and scheduling algorithm performs within 7% of the lower bound on average and shows an effective way to nest and schedule systems containing challenging problem instances. Providing efficient, high-performing algorithms such as these will allow AM managers to quickly schedule parts for AM production with a minimum number of late parts and consequently improve both customer satisfaction and profitability of the firm.",
+    "topics": [
+      "Additive Manufacturing and 3D Printing Technologies",
+      "Optimization and Packing Problems",
+      "Scheduling and Optimization Algorithms"
+    ],
+    "cited_by": 0,
+    "oa": false,
+    "pdf_url": "",
+    "tier": 1,
+    "title_cn": "调度增材制造系统：复杂性及减少迟交部件数量的算法",
+    "abstract_cn": "增材制造（AM）是一种通过逐层添加材料来制造三维产品的过程。鉴于其在创造非常密集或复杂几何形状以及高度可定制组件方面的优势，这种制造技术在商业上的应用正在增长。在医疗保健领域，例如，AM可用于通过提供治疗所需的及时医疗设备（或部件）来改善患者的结果。在这种情况下，减少延迟部件的数量将直接提升患者的福利。本文研究了AM背景下的嵌套与调度问题，并表明即使在给定部件到作业的嵌套情况下，最小化延迟部件数量的问题也是一个强NP难题。我们还开发了高效算法，以最小化延迟部件的数量，无论是在嵌套事先固定的情况下，还是在嵌套作为算法的一部分的情况下。本文中提出的理论结果，包括算法性能界限，都是对文献的新贡献。广泛的计算研究评估了这两种算法的性能。嵌套与调度算法的表现平均在下界内表现出7%的误差，并展示了在包含挑战性问题实例的系统中有效进行嵌套和调度的方法。提供这样的高效、高性能算法将使增材制造管理者能够快速调度部件进行增材生产，减少延迟部件的数量，从而提升顾客满意度和公司的盈利能力。"
+  },
+  {
+    "journal_id": "ISR",
+    "journal_name": "Information Systems Research",
+    "title": "To Adopt or Not: The Paradox of AR Fitting Technology in Retail Channels",
+    "doi": "https://doi.org/10.1287/isre.2024.1425",
+    "date": "2026-04-03",
+    "abstract": "As brick-and-mortar retail rebounds, congestion in fitting rooms has reemerged as a critical operational challenge. Augmented reality (AR) fitting applications offer a scalable solution by enabling rapid virtual trials and reducing in-store delays, yet imperfect assessments may increase product mismatches. This study provides actionable guidance for retailers on AR adoption and pricing strategies by clarifying the economic roles of the substitution and complementarity effects. Our findings underscore the importance of a market-contingent approach to AR adoption and system upgrades. Rather than presuming that improvements in accuracy or usability will uniformly enhance performance, retailers and IT managers should rigorously evaluate how technological capabilities interact with market size, price fluctuations, and congestion dynamics. We also inform targeted marketing by demonstrating how heterogeneity in consumer technology preferences shapes channel selection and effective transaction outcomes. More broadly, our results caution policymakers that emerging digital technologies—while intended to reduce friction—may generate unintended welfare losses if mismatch risks and strategic responses are overlooked. These insights provide actionable guidance for digital transformation initiatives in retail and other capacity-constrained service systems characterized by heterogeneous consumers.",
+    "topics": [
+      "Consumer Retail Behavior Studies",
+      "Consumer Market Behavior and Pricing",
+      "Technology Adoption and User Behaviour"
+    ],
+    "cited_by": 0,
+    "oa": false,
+    "pdf_url": "",
+    "tier": 1,
+    "title_cn": "选择或不选择：零售渠道中增强现实试穿技术的悖论",
+    "abstract_cn": "随着实体零售的复苏，试衣间的拥堵重新成为一个关键的运营挑战。增强现实（AR）试衣应用通过实现快速的虚拟试衣并减少店内延误，提供了一种可扩展的解决方案，但不完美的评估可能会增加产品的不匹配。本研究通过澄清替代效应和互补效应的经济角色，为零售商提供了有关AR采用和定价策略的可操作性建议。我们的研究结果强调了一种市场依赖的方法在AR采用和系统升级过程中的重要性。零售商和IT经理不应假设准确度或可用性的提升会均匀地提高业绩，而应严格评估技术能力与市场规模、价格波动和拥堵动态之间的互动关系。我们还通过展示消费者技术偏好的异质性如何影响渠道选择和有效交易结果，来为针对性的市场营销提供信息。更广泛地说，我们的研究结果提醒政策制定者，新兴数字技术——尽管旨在减少摩擦——如果忽视不匹配风险和战略反应，可能会产生意想不到的福利损失。这些洞察为零售以及其他由异质消费者主导的容量受限服务系统中的数字转型计划提供了可操作的指导。"
+  },
+  {
+    "journal_id": "ISR",
+    "journal_name": "Information Systems Research",
+    "title": "More Can Be Less: The Economics of Answer Viewing on Paid Q&amp;A Platforms",
+    "doi": "https://doi.org/10.1287/isre.2022.0641",
+    "date": "2026-04-03",
+    "abstract": "Paid Q&amp;A platforms increasingly experiment with an answer-viewing feature that allows users to pay a small fee to access answers already given to others. At first glance, this model appears to expand access and create new revenue streams. Our research, however, shows that the reality is more complex. Using a game-theoretic model, we demonstrate that answer viewing can sometimes harm platform profits due to market cannibalization: Users who might have paid for personalized answers switch to cheaper viewing options. Surprisingly, we find that answerers may raise their consulting fees when platforms share a large portion of viewing revenue with them, and users do not always benefit because personalized answers become more expensive. These results reveal a central paradox—more can be less—as adding another monetization channel may backfire. For practice, our findings highlight the need for Q&amp;A platforms to carefully calibrate revenue-sharing policies to avoid undermining their core market. For policy, the study underscores the importance of safeguards to protect small knowledge providers when platform incentives diverge from those of answerers and users. Beyond Q&amp;A, the insights apply to broader contexts where platforms repackage personalized services into standardized products.",
+    "topics": [
+      "Expert finding and Q&A systems",
+      "Information Retrieval and Search Behavior",
+      "Wikis in Education and Collaboration"
+    ],
+    "cited_by": 0,
+    "oa": false,
+    "pdf_url": "",
+    "tier": 1,
+    "title_cn": "更多未必意味着更好：付费问答平台上答案浏览的经济学",
+    "abstract_cn": "付费问答平台越来越多地尝试一种答案查看功能，允许用户支付少量费用访问其他人已提供的答案。乍一看，这种模式似乎扩大了访问范围并创造了新的收入来源。然而，我们的研究显示，现实更为复杂。通过使用博弈论模型，我们证明，答案查看有时可能会损害平台利润，因为它导致市场的自我蚕食：本可能支付个性化答案费用的用户转向更便宜的查看选项。令人惊讶的是，我们发现，当平台与答复者分享大量查看收入时，答复者可能会提高咨询费用，而用户并不总是受益，因为个性化答案变得更加昂贵。这些结果揭示了一个核心悖论——更多可能意味着更少——增加另一个货币化渠道可能适得其反。在实践中，我们的发现强调了问答平台需要仔细调整收入分配政策，以避免削弱其核心市场。在政策层面，这项研究强调了在平台激励与答复者和用户的激励不一致时，保护小知识提供者的重要性。超越问答领域，这些洞察适用于更广泛的背景，其中平台将个性化服务重新包装为标准化产品。"
+  },
+  {
+    "journal_id": "SMJ",
+    "journal_name": "Strategic Management Journal",
+    "title": "Thinking and feeling about novelty: How cognition and emotion shape investment in novel ideas",
+    "doi": "https://doi.org/10.1002/smj.70085",
+    "date": "2026-04-04",
+    "abstract": "Abstract While prior research on the strategic framing of innovation highlights the cognitive mechanisms underlying novelty evaluation, we know little about the corresponding emotional mechanisms. Drawing on appraisal theory, construal level theory, and the literature on emotions, we theorize two distinct appraisal‐emotion pathways through which the framing of novel ideas evokes hope and awe among investors with different motives. We argue that high‐construal framing supplements economically motivated investors' low‐level feasibility orientation, which evokes hope and increases their willingness to invest. By contrast, low‐construal framing supplements non‐economically motivated investors' high‐level desirability orientation, which evokes awe and increases their willingness to invest. We test and find some support for these within‐motive pathways across three studies. Our study offers new theoretical and practical insights on the strategic framing of novel ideas.",
+    "topics": [
+      "Media Influence and Health",
+      "Creativity in Education and Neuroscience",
+      "Decision-Making and Behavioral Economics"
+    ],
+    "cited_by": 0,
+    "oa": true,
+    "pdf_url": "https://doi.org/10.1002/smj.70085",
+    "tier": 2,
+    "title_cn": "思考与感受新颖性：认知与情感如何影响对新点子的投资",
+    "abstract_cn": "摘要：虽然以前关于创新的战略框架研究强调了新颖性评估背后的认知机制，但我们对相应的情感机制知之甚少。基于评估理论、构念层次理论以及情感文献，我们理论化了两条不同的评估-情感路径，通过这些路径，新颖想法的框架能在具有不同动机的投资者中引发希望和敬畏。我们认为，高层次的框架补充了经济动机投资者的低层次可行性取向，从而引发希望并增加他们的投资意愿。相反，低层次的框架则补充了非经济动机投资者的高层次渴望取向，从而引发敬畏并增加他们的投资意愿。我们在三项研究中测试并支持这些动机内路径。我们的研究为新颖想法的战略框架提供了新的理论和实践见解。"
+  },
+  {
+    "journal_id": "OS",
+    "journal_name": "Organization Science",
+    "title": "Other People’s Children: How Diversity Without Inclusion Impacts Community Support for Public Schools",
+    "doi": "https://doi.org/10.1287/orsc.2024.19351",
+    "date": "2026-04-03",
+    "abstract": "Organizations pursuing activities that advance the public interest often require support from their local communities, but such support may be harder to come by in more racially diverse communities. In this study, we argue that this negative effect of racial diversity on support for organizations serving the public interest will be weaker the more inclusive the community, especially where community inclusion is accompanied by shared values among members of different groups and where the organizations themselves are racially representative. We test and find support for these predictions by looking at one specific type of public service organization: public schools in the United States. Specifically, we find that community support for public schools—both generally in terms of local spending per pupil and specifically as the bond amounts residents vote to approve—is negatively associated with racial diversity within a school district, but this negative relation only holds for less inclusive communities where members of different groups are less likely to live close to each other or to have social ties with each other. We further find that this moderating effect of community inclusion is complemented by shared values and organizational representativeness, so that diversity has the most negative effect in less inclusive communities where members of different races differ in their political beliefs and schools are relatively segregated, and no significant effect in inclusive communities with shared values and integrated schools. Our study sheds new light on the conditions under which organizations seeking to address grand challenges can benefit from strong community support. Funding: This work was supported by the Carlson School of Management [DEI Research Grant] and the Responsible Research in Business and Management [Dare to Care Scholorship]. Supplemental Material: The online appendices are available at https://doi.org/10.1287/orsc.2024.19351 .",
+    "topics": [
+      "Gender Diversity and Inequality",
+      "Social Capital and Networks",
+      "School Choice and Performance"
+    ],
+    "cited_by": 0,
+    "oa": false,
+    "pdf_url": "",
+    "tier": 2,
+    "title_cn": "他人的孩子：缺乏包容的多样性如何影响社区对公立学校的支持",
+    "abstract_cn": "追求促进公众利益活动的组织通常需要来自当地社区的支持，但这种支持在种族多样性较高的社区中可能更难获得。在本研究中，我们论证了种族多样性对服务公众利益的组织支持的负面影响将在更具包容性的社区中减弱，特别是在社区包容性伴随着不同群体成员之间共享价值观的情况下，以及当组织本身具有种族代表性时。我们通过研究一种特定类型的公共服务组织——美国的公立学校，来验证并支持这些预测。具体来说，我们发现，社区对公立学校的支持——无论是在每位学生的地方支出方面，还是在居民投票批准的债券金额方面——与学区内的种族多样性呈负相关，但这种负相关关系仅适用于包容性较差的社区，在这些社区中，不同群体的成员更不可能居住在彼此附近或建立社会联系。我们进一步发现，社区包容性的这种调节效应与共享价值观和组织的代表性相辅相成，因此在包容性较差的社区中，种族多样性对支持的负面影响最为明显，这些社区中不同种族的成员在政治信仰上存在差异，并且学校较为隔离；而在具有共享价值观和融合学校的包容性社区中，则没有显著影响。本研究为寻求应对重大挑战的组织可以从强大的社区支持中受益的条件提供了新的视角。资助：本研究得到了卡尔森管理学院[多元、平等与包容研究资助]和商业与管理领域负责任研究[勇于关怀奖学金]的支持。补充材料：在线附录可在https://doi.org/10.1287/orsc.2024.19351获取。"
+  },
+  {
+    "journal_id": "RP",
+    "journal_name": "Research Policy",
+    "title": "The duality of duality: Generative and disruptive climate configurations for innovation",
+    "doi": "https://doi.org/10.1016/j.respol.2026.105479",
+    "date": "2026-04-02",
+    "abstract": "Organizational climate is seen as a key driver of organizational performance, including sustained innovation. However, there is limited work on the effects of climate duality on innovation. The co-existence of two distinct climate dimensions (duality) in an organization creates the potential for both generative and disruptive dualities. By dividing the innovation process into an idea generation stage and an innovation implementation stage, we develop a theory linking climate duality and the generative–disruptive dichotomy at each stage of the innovation process. In particular, we argue that climate duality should be generative at the idea stage and disruptive at the implementation stage. Using data from the 2018 Australian Public Service Employee Census ( N = 59,870), we test the distinct effects of climate duality at each stage. We conclude with a discussion of the implications of these findings for theories of work climate and innovation. • Advance workplace climate research with a configurational approach examining interactions among multiple workplace climates • Theorize relationship between duality (co-existence of go-getter and inclusive climates) and stages of innovation process • Use Australian Public Service Employee Census to show climate duality benefits idea generation (a divergent process) • Find climate duality hinders implementation (a convergent process), revealing paradoxical effects on innovation • Extend theories of climate duality and innovation to public organizations, contributing to cross-sector understanding",
+    "topics": [
+      "Innovation and Socioeconomic Development",
+      "Sustainability and Climate Change Governance",
+      "University-Industry-Government Innovation Models"
+    ],
+    "cited_by": 0,
+    "oa": true,
+    "pdf_url": "https://doi.org/10.1016/j.respol.2026.105479",
+    "tier": 2,
+    "title_cn": "双重性的双重性：创新的生成性与破坏性气候配置",
+    "abstract_cn": "组织气候被视为影响组织绩效的关键驱动因素，包括持续的创新。然而，关于气候双重性对创新影响的研究相对有限。在组织中，两个不同气候维度的共存（双重性）为生成性和破坏性双重性的可能性提供了空间。通过将创新过程分为创意生成阶段和创新实施阶段，我们构建了一个理论，连接气候双重性与创新过程每个阶段的生成性–破坏性二分法。特别是，我们认为气候双重性在创意阶段应表现为生成性，而在实施阶段则应表现为破坏性。利用2018年澳大利亚公共服务员工普查的数据（N = 59,870），我们测试了气候双重性在各个阶段的不同影响。最后，我们讨论了这些发现对工作气候和创新理论的启示。 • 采用配置方法推动工作场所气候研究，考察多种工作场所气候之间的互动 • 理论化双重性（进取气候与包容性气候的共存）与创新过程阶段之间的关系 • 使用澳大利亚公共服务员工普查数据表明气候双重性有利于创意生成（一个发散过程） • 发现气候双重性阻碍实施（一个收敛过程），揭示了对创新的悖论性影响 • 将气候双重性与创新理论扩展至公共组织，为跨部门理解做出贡献"
+  },
+  {
+    "journal_id": "JSCM",
+    "journal_name": "Journal of Supply Chain Management",
+    "title": "Pathways to upscaling: aligning capabilities with supply chain design in automotive manufacturing",
+    "doi": "https://doi.org/10.1108/scm-09-2025-0891",
+    "date": "2026-04-02",
+    "abstract": "Purpose Taking innovation to scale and accelerating the development of new technologies puts pressure on manufacturers to perform frequent ramp-ups in increasingly volatile markets. Such pressures inevitably bring the role of supply chain right at the centre of the challenge to design supply chains that are ready to upscale. This research aims to explore how manufacturers can design their supply chain and deploy the required capabilities to respond to the upscaling demands. Design/methodology/approach Drawing on the dynamic capabilities (DCs) theory, this study develops a conceptual framework which is validated through multiple case studies. Data was collected and analysed from 14 upscaling projects in automotive manufacturing. Findings This study identified specific DCs (e.g. dynamic relational capabilities) that manufacturers deployed in their upscaling projects, explored their micro-foundations, showed how these are coupled with different supply chain designs (SCDs) and how those matches evolve over time. A distinctive finding is the need for automotive manufacturers involved in innovative and technological upscaling projects, to move away from the traditional binary SCD choice (i.e. modular vs integral) to a less rigid SCD which we called “evolving SCD” and proved to be particularly valuable for companies with limited resources and evolving market positions. Practical implications This research outlines actionable pathways for upscaling and offers guidance on aligning SCD with capabilities. The findings also illustrate how managers can leverage temporal configurational shifts to strategically address evolving priorities from initial market entry concerns like IP protection and capability access, to later-stage challenges around supplier reliability and volume capacity. Originality/value This study introduces the concept of the evolving SCD which is particularly suitable for start-up companies in meeting the upscaling requirements. This research enriches the understanding on how to manage upscaling projects by offering fresh empirical insights into how manufacturers can successfully upscale by streamlining the SCD with capabilities.",
+    "topics": [
+      "Sustainable Supply Chain Management",
+      "Quality and Supply Management",
+      "Product Development and Customization"
+    ],
+    "cited_by": 0,
+    "oa": false,
+    "pdf_url": "",
+    "tier": 2,
+    "title_cn": "提升道路：在汽车制造中将能力与供应链设计对齐",
+    "abstract_cn": "目的 将创新规模化并加速新技术的发展，使制造商在日益不稳定的市场中频繁进行生产规模的调整面临压力。这些压力不可避免地将供应链的角色置于设计能够快速扩展的供应链挑战的中心。本研究旨在探索制造商如何设计其供应链并部署所需能力以响应扩展需求。设计/方法论 本研究基于动态能力（DC）理论，开发了一个概念框架，并通过多个案例研究进行了验证。数据来源于14个汽车制造的扩展项目，并对其进行了分析。研究结果 本研究确定了制造商在其扩展项目中部署的具体动态能力（例如：动态关系能力），探索了其微观基础，展示了这些能力如何与不同的供应链设计（SCD）相结合，以及这些匹配关系如何随着时间演变。一项独特的发现是，参与创新和技术扩展项目的汽车制造商需要从传统的二元供应链设计选择（即模块化与整体化）转向一种不那么拘谨的供应链设计，我们称之为“演变供应链设计”，并证明这种设计对于资源有限和市场地位不断变化的公司尤其有价值。实践意义 本研究为扩展提供了可行的路径，并提供了将供应链设计与能力对齐的指导。研究结果还展示了管理者如何利用时间配置的变化，战略性地应对从初始市场进入时的知识产权保护和能力获取等优先事项，到后期阶段面临的供应商可靠性和产能等挑战。独创性/价值 本研究引入了演变供应链设计的概念，特别适用于初创公司满足扩展需求。该研究通过提供新的实证见解，丰富了如何管理扩展项目的理解，展示了制造商如何通过简化供应链设计与能力实现成功扩展。"
+  },
+  {
+    "journal_id": "JBE",
+    "journal_name": "Journal of Business Ethics",
+    "title": "Battlelines of Accountability: The Discursive Production of Digital Responsibility",
+    "doi": "https://doi.org/10.1007/s10551-026-06308-6",
+    "date": "2026-04-02",
+    "abstract": "Abstract Public inquiries have become pivotal arenas in which the ethical responsibilities of digital platforms are publicly constructed and contested. Yet scholarship has paid limited attention to the linguistic mechanisms through which these contests unfold. This paper examines the 2024 Australian Joint Select Committee on Social Media and Australian Society as a high-stakes moral forum in which technology firms, regulators, and civil society actors engage in discursive struggles over adolescent harm and platform responsibility. Drawing on a qualitative analysis of more than 3000 pages of submissions and hearing transcripts, we show that accountability in this setting is not simply revealed but actively produced through language. Extending prior research on dialogic accountability, we incorporate Searle’s speech act theory to identify how presuppositions and indirect speech acts function as micro-level tools for shaping epistemic contests about what harms occur and responsibility contests about who ought to be held to account. Our findings demonstrate that corporate actors often deploy these linguistic devices to maintain ambiguity, diffuse blame, or perform symbolic responsibility, while legislators and advocates use them to assert duties, establish harms, and press for substantive accountability. We argue that “digital responsibility” emerges as a contingent discursive accomplishment rather than an intrinsic organizational property, highlighting the performative and strategic nature of ethical claims in contemporary platform governance. By theorizing accountability as a linguistically mediated moral practice, the paper advances business ethics scholarship on discursive legitimation, contributing to ongoing debates about how societies should evaluate and regulate the conduct of powerful digital firms.",
+    "topics": [
+      "Cybersecurity and Cyber Warfare Studies",
+      "Ethics and Social Impacts of AI",
+      "Digital Economy and Work Transformation"
+    ],
+    "cited_by": 0,
+    "oa": true,
+    "pdf_url": "https://doi.org/10.1007/s10551-026-06308-6",
+    "tier": 2,
+    "title_cn": "问责的战线：数字责任的话语生产",
+    "abstract_cn": "摘要 公共调查已成为数字平台伦理责任被公众构建和争论的重要场所。然而，学术界对这些争论展开的语言机制关注有限。本文考察了2024年澳大利亚社会媒体与澳大利亚社会联合特别委员会，作为一个高风险的道德论坛，其中技术公司、监管机构和公民社会参与者围绕青少年伤害和平台责任进行话语斗争。通过对3000多页提交材料和听证会记录的定性分析，我们展示了在这一背景下，问责制并非简单显现，而是通过语言积极构建的。我们在先前关于对话性问责的研究基础上，结合塞尔的言语行为理论，识别出预设和间接言语行为如何作为微观工具，塑造关于发生何种伤害和谁应承担责任的认知争论。我们的研究发现，企业行为者常常利用这些语言工具来维持模糊性、分散责任或进行象征性责任表演，而立法者和倡导者则利用它们来主张义务、确立伤害并推动实质性问责。我们认为，“数字责任”作为一种偶然的言语成就而非内在的组织属性出现，突显了当代平台治理中伦理主张的表演性和战略性。通过将问责理论化为一种语言中介的道德实践，本文推动了关于话语合法化的商业伦理研究，为社会如何评估和规范强大数字企业的行为的持续辩论做出了贡献。"
+  }
+]
