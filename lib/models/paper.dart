@@ -13,8 +13,8 @@ class Paper {
   final int citedBy;
   final bool isOa;
   final String? pdfUrl;
-  bool isSelected;
   final String scanDate; // from scan_date in papers.json
+  final List<String> authors;
 
   Paper({
     required this.id,
@@ -31,8 +31,8 @@ class Paper {
     required this.citedBy,
     required this.isOa,
     this.pdfUrl,
-    this.isSelected = false,
     this.scanDate = '',
+    this.authors = const [],
   });
 
   Map<String, dynamic> toJson() => {
@@ -50,8 +50,22 @@ class Paper {
         'cited_by': citedBy,
         'is_oa': isOa,
         'pdf_url': pdfUrl,
-        'is_selected': isSelected,
         'scan_date': scanDate,
+        'authors': authors,
+      };
+
+  /// Convert to idea_papers entry for user_state.json
+  Map<String, dynamic> toIdeaJson(String addedDate) => {
+        'doi': doi,
+        'title': title,
+        'title_cn': titleCn,
+        'authors': authors,
+        'journal_id': journalId,
+        'journal_name': journalName,
+        'date': date,
+        'abstract': abstract_,
+        'abstract_cn': abstractCn,
+        'added_date': addedDate,
       };
 
   factory Paper.fromJson(Map<String, dynamic> json) {
@@ -72,8 +86,10 @@ class Paper {
       citedBy: json['cited_by'] as int? ?? 0,
       isOa: (json['is_oa'] ?? json['oa']) as bool? ?? false,
       pdfUrl: json['pdf_url'] as String?,
-      isSelected: json['is_selected'] as bool? ?? false,
       scanDate: json['scan_date'] as String? ?? '',
+      authors: json['authors'] != null
+          ? List<String>.from(json['authors'] as List)
+          : [],
     );
   }
 }

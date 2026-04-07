@@ -57,8 +57,11 @@ class PaperCard extends StatefulWidget {
   final bool showChinese;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
+  final VoidCallback? onIdea;
+  final VoidCallback? onRemoveFromIdea;
   final bool isRead;
-  final bool isDeleted;
+  final bool isInIdea;
+  final bool isIdeaZone; // true when displayed in the Idea tab
 
   const PaperCard({
     super.key,
@@ -66,8 +69,11 @@ class PaperCard extends StatefulWidget {
     required this.showChinese,
     this.onTap,
     this.onDelete,
+    this.onIdea,
+    this.onRemoveFromIdea,
     this.isRead = false,
-    this.isDeleted = false,
+    this.isInIdea = false,
+    this.isIdeaZone = false,
   });
 
   @override
@@ -112,17 +118,12 @@ class _PaperCardState extends State<PaperCard> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
       decoration: BoxDecoration(
-        color: paper.isSelected
-            ? const Color(0xFFF5F0E8)
-            : isRead
-                ? const Color(0xFFF0EEE8)
-                : const Color(0xFFF5F3ED),
+        color: isRead
+            ? const Color(0xFFF0EEE8)
+            : const Color(0xFFF5F3ED),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: paper.isSelected
-              ? const Color(0xFF8B7355).withValues(alpha: 0.5)
-              : const Color(0xFFD8D4CA),
-          width: paper.isSelected ? 1.5 : 1,
+          color: const Color(0xFFD8D4CA),
         ),
         boxShadow: const [
           BoxShadow(
@@ -212,30 +213,67 @@ class _PaperCardState extends State<PaperCard> {
                             ),
                           ],
                           const Spacer(),
-                          // Delete / Restore button
-                          if (widget.onDelete != null)
-                            GestureDetector(
-                              onTap: widget.onDelete,
-                              child: Container(
-                                margin: const EdgeInsets.only(right: 6),
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: widget.isDeleted
-                                      ? const Color(0xFFEDF5F0)
-                                      : const Color(0xFFFAF0ED),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Icon(
-                                  widget.isDeleted
-                                      ? Icons.restore_rounded
-                                      : Icons.close_rounded,
-                                  size: 16,
-                                  color: widget.isDeleted
-                                      ? const Color(0xFF5A8A6A)
-                                      : const Color(0xFFC25B3F),
+                          // Action buttons
+                          if (widget.isIdeaZone) ...[
+                            // Idea zone: remove button
+                            if (widget.onRemoveFromIdea != null)
+                              GestureDetector(
+                                onTap: widget.onRemoveFromIdea,
+                                child: Container(
+                                  margin: const EdgeInsets.only(right: 6),
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFAF0ED),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Icon(
+                                    Icons.remove_circle_outline,
+                                    size: 16,
+                                    color: Color(0xFFC25B3F),
+                                  ),
                                 ),
                               ),
-                            ),
+                          ] else ...[
+                            // Pending zone: idea button + delete button
+                            if (widget.onIdea != null)
+                              GestureDetector(
+                                onTap: widget.onIdea,
+                                child: Container(
+                                  margin: const EdgeInsets.only(right: 6),
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: widget.isInIdea
+                                        ? const Color(0xFFFAF6ED)
+                                        : const Color(0xFFFAF6ED),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Icon(
+                                    widget.isInIdea
+                                        ? Icons.lightbulb
+                                        : Icons.lightbulb_outline,
+                                    size: 16,
+                                    color: const Color(0xFFB8963E),
+                                  ),
+                                ),
+                              ),
+                            if (widget.onDelete != null)
+                              GestureDetector(
+                                onTap: widget.onDelete,
+                                child: Container(
+                                  margin: const EdgeInsets.only(right: 6),
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFAF0ED),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Icon(
+                                    Icons.close_rounded,
+                                    size: 16,
+                                    color: Color(0xFFC25B3F),
+                                  ),
+                                ),
+                              ),
+                          ],
                         ],
                       ),
                       const SizedBox(height: 12),

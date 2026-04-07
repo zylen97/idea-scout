@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -24,14 +25,14 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   List<Paper> _papers = [];
   List<Paper> _filteredPapers = [];
   bool _isLoading = true;
   String _statusText = '';
   bool _showChinese = true;
   String _scanDate = '';
-  bool _showSelectedOnly = false;
 
   // Scan history
   List<Map<String, dynamic>> _scanHistory = [];
@@ -41,12 +42,19 @@ class _HomeScreenState extends State<HomeScreen> {
   int? _selectedTier;
   final _searchController = TextEditingController();
 
-  // New features
+  // Filters
   DateRangeFilter _dateRangeFilter = DateRangeFilter.all;
   ViewMode _viewMode = ViewMode.list;
   Set<String> _readDois = {};
   Set<String> _deletedDois = {};
-  bool _showDeletedOnly = false;
+
+  // Idea papers: DOI -> idea paper data (from user_state)
+  List<Map<String, dynamic>> _ideaPapers = [];
+  Set<String> get _ideaDois => _ideaPapers.map((p) => p['doi'] as String).toSet();
+
+  // GitHub sync
+  String? _githubToken;
+  String? _userStateSha; // SHA for GitHub API updates
 
   // Scan date grouping: which groups are expanded
   final Map<String, bool> _scanGroupExpanded = {};
@@ -54,9 +62,13 @@ class _HomeScreenState extends State<HomeScreen> {
   // Journal group view: which groups are expanded
   final Map<String, bool> _journalGroupExpanded = {};
 
+  // Tab controller
+  late TabController _tabController;
+
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _loadData();
   }
 
@@ -68,11 +80,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      final savedSelections = prefs.getStringList('selected_ids') ?? [];
       _readDois = (prefs.getStringList('read_dois') ?? []).toSet();
-      _deletedDois = (prefs.getStringList('deleted_dois') ?? []).toSet();
+      _githubToken = prefs.getString('github_token');
 
-      // Try papers.json first, fallback to latest.json
+      // Load local state first (instant)
+      _deletedDois = (prefs.getStringList('deleted_dois') ?? []).toSet();
+      final localIdeaJson = prefs.getString('idea_papers');
+      if (localIdeaJson != null) {
+        _ideaPapers = List<Map<String, dynamic>>.from(
+            jsonDecode(localIdeaJson) as List);
+      }
+
+      // Try to sync from GitHub (source of truth)
+      await _syncFromGitHub();
+
+      // Load papers.json
       List<dynamic> list;
       try {
         final resp = await http.get(Uri.parse('data/papers.json'));
@@ -89,13 +111,15 @@ class _HomeScreenState extends State<HomeScreen> {
         list = jsonDecode(resp.body) as List;
       }
 
-      final papers = list.map((j) => Paper.fromJson(j as Map<String, dynamic>)).toList();
+      final papers =
+          list.map((j) => Paper.fromJson(j as Map<String, dynamic>)).toList();
 
       // Load scan history (graceful fail)
       try {
         final histResp = await http.get(Uri.parse('data/scan_history.json'));
         if (histResp.statusCode == 200) {
-          final histData = jsonDecode(histResp.body) as Map<String, dynamic>;
+          final histData =
+              jsonDecode(histResp.body) as Map<String, dynamic>;
           _scanHistory = List<Map<String, dynamic>>.from(
               histData['scans'] as List? ?? []);
         }
@@ -106,9 +130,6 @@ class _HomeScreenState extends State<HomeScreen> {
       for (final p in papers) {
         if (jMap.containsKey(p.journalId)) {
           p.tier = jMap[p.journalId]!.tier;
-        }
-        if (savedSelections.contains(p.doi)) {
-          p.isSelected = true;
         }
       }
 
@@ -134,11 +155,87 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _saveSelections() async {
+  // ──────────────────────────────────────────
+  // GitHub API Sync
+  // ──────────────────────────────────────────
+  Future<void> _syncFromGitHub() async {
+    if (_githubToken == null || _githubToken!.isEmpty) return;
+    try {
+      final resp = await http.get(
+        Uri.parse(
+            'https://api.github.com/repos/zylen97/idea-scout/contents/data/user_state.json'),
+        headers: {
+          'Authorization': 'Bearer $_githubToken',
+          'Accept': 'application/vnd.github.v3+json',
+        },
+      );
+      if (resp.statusCode == 200) {
+        final data = jsonDecode(resp.body) as Map<String, dynamic>;
+        _userStateSha = data['sha'] as String?;
+        final content = utf8.decode(base64Decode(
+            (data['content'] as String).replaceAll('\n', '')));
+        final state = jsonDecode(content) as Map<String, dynamic>;
+
+        // GitHub is source of truth - merge
+        final ghDeletedDois = Set<String>.from(
+            (state['deleted_dois'] as List?)?.cast<String>() ?? []);
+        final ghIdeaPapers = List<Map<String, dynamic>>.from(
+            state['idea_papers'] as List? ?? []);
+
+        // Merge: GitHub wins
+        _deletedDois = ghDeletedDois;
+        _ideaPapers = ghIdeaPapers;
+
+        // Save merged state locally
+        await _saveLocalState();
+      }
+    } catch (e) {
+      debugPrint('GitHub sync failed: $e');
+    }
+  }
+
+  Future<void> _pushToGitHub() async {
+    if (_githubToken == null || _githubToken!.isEmpty) return;
+    try {
+      final stateJson = jsonEncode({
+        'deleted_dois': _deletedDois.toList(),
+        'idea_papers': _ideaPapers,
+      });
+      final encoded = base64Encode(utf8.encode(stateJson));
+
+      final body = {
+        'message': 'sync user_state',
+        'content': encoded,
+        if (_userStateSha != null) 'sha': _userStateSha,
+      };
+
+      final resp = await http.put(
+        Uri.parse(
+            'https://api.github.com/repos/zylen97/idea-scout/contents/data/user_state.json'),
+        headers: {
+          'Authorization': 'Bearer $_githubToken',
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(body),
+      );
+
+      if (resp.statusCode == 200 || resp.statusCode == 201) {
+        final data = jsonDecode(resp.body) as Map<String, dynamic>;
+        _userStateSha =
+            (data['content'] as Map<String, dynamic>?)?['sha'] as String?;
+      } else {
+        debugPrint('GitHub push failed: ${resp.statusCode} ${resp.body}');
+      }
+    } catch (e) {
+      debugPrint('GitHub push error: $e');
+    }
+  }
+
+  Future<void> _saveLocalState() async {
     final prefs = await SharedPreferences.getInstance();
-    final selectedIds =
-        _papers.where((p) => p.isSelected).map((p) => p.doi).toList();
-    await prefs.setStringList('selected_ids', selectedIds);
+    await prefs.setStringList('deleted_dois', _deletedDois.toList());
+    await prefs.setString('idea_papers', jsonEncode(_ideaPapers));
   }
 
   Future<void> _markAsRead(String doi) async {
@@ -148,9 +245,177 @@ class _HomeScreenState extends State<HomeScreen> {
     await prefs.setStringList('read_dois', _readDois.toList());
   }
 
-  Future<void> _saveDeleted() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList('deleted_dois', _deletedDois.toList());
+  // ──────────────────────────────────────────
+  // Actions: delete and idea
+  // ──────────────────────────────────────────
+  void _deletePaper(Paper paper) {
+    setState(() {
+      _deletedDois.add(paper.doi);
+      // Also remove from idea if present
+      _ideaPapers.removeWhere((p) => p['doi'] == paper.doi);
+      _applyFilters();
+    });
+    _saveLocalState();
+    _pushToGitHub();
+  }
+
+  void _addToIdea(Paper paper) {
+    if (_ideaDois.contains(paper.doi)) return;
+    final today = DateTime.now();
+    final addedDate =
+        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+    setState(() {
+      _ideaPapers.add(paper.toIdeaJson(addedDate));
+    });
+    _saveLocalState();
+    _pushToGitHub();
+  }
+
+  void _removeFromIdea(String doi) {
+    setState(() {
+      _ideaPapers.removeWhere((p) => p['doi'] == doi);
+    });
+    _saveLocalState();
+    _pushToGitHub();
+  }
+
+  // ──────────────────────────────────────────
+  // RIS Export
+  // ──────────────────────────────────────────
+  void _exportRis() {
+    if (_ideaPapers.isEmpty) {
+      _showMessage(_showChinese ? '暂无 Idea 论文' : 'No idea papers to export');
+      return;
+    }
+
+    final buffer = StringBuffer();
+    for (final p in _ideaPapers) {
+      buffer.writeln('TY  - JOUR');
+      buffer.writeln('TI  - ${p['title'] ?? ''}');
+      final authors = p['authors'] as List? ?? [];
+      for (final a in authors) {
+        buffer.writeln('AU  - $a');
+      }
+      buffer.writeln('T2  - ${p['journal_name'] ?? ''}');
+      final date = p['date'] as String? ?? '';
+      if (date.isNotEmpty) {
+        final parts = date.split('-');
+        buffer.writeln('PY  - ${parts[0]}');
+        buffer.writeln('DA  - ${date.replaceAll('-', '/')}');
+      }
+      final doi = p['doi'] as String? ?? '';
+      if (doi.isNotEmpty) {
+        final doiClean = doi.replaceFirst('https://doi.org/', '');
+        buffer.writeln('DO  - $doiClean');
+      }
+      final abstract_ = p['abstract'] as String? ?? '';
+      if (abstract_.isNotEmpty) {
+        buffer.writeln('AB  - $abstract_');
+      }
+      buffer.writeln('ER  - ');
+      buffer.writeln();
+    }
+
+    final content = buffer.toString();
+    final bytes = utf8.encode(content);
+    final blob = html.Blob([bytes], 'application/x-research-info-systems');
+    final url = html.Url.createObjectUrlFromBlob(blob);
+    final anchor = html.AnchorElement(href: url)
+      ..setAttribute('download', 'idea_papers.ris')
+      ..click();
+    html.Url.revokeObjectUrl(url);
+  }
+
+  // ──────────────────────────────────────────
+  // Token settings dialog
+  // ──────────────────────────────────────────
+  void _showTokenDialog() {
+    final controller = TextEditingController(text: _githubToken ?? '');
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: const Color(0xFFF5F3ED),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.settings, size: 20, color: Color(0xFF8B7355)),
+                  SizedBox(width: 8),
+                  Text(
+                    'GitHub Token',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF2D2A26),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Set a GitHub personal access token to enable cross-device sync.',
+                style: TextStyle(fontSize: 12, color: Color(0xFF9B9488)),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                decoration: const InputDecoration(
+                  hintText: 'ghp_...',
+                  hintStyle: TextStyle(color: Color(0xFFB5AFA6)),
+                ),
+                style: const TextStyle(fontSize: 13, fontFamily: 'monospace'),
+                obscureText: true,
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('Cancel',
+                        style: TextStyle(color: Color(0xFF9B9488))),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () async {
+                      final token = controller.text.trim();
+                      final prefs = await SharedPreferences.getInstance();
+                      if (token.isEmpty) {
+                        await prefs.remove('github_token');
+                        setState(() => _githubToken = null);
+                      } else {
+                        await prefs.setString('github_token', token);
+                        setState(() => _githubToken = token);
+                        // Trigger sync
+                        _syncFromGitHub().then((_) {
+                          if (mounted) {
+                            setState(() => _applyFilters());
+                            _showMessage('GitHub sync complete');
+                          }
+                        });
+                      }
+                      if (ctx.mounted) Navigator.pop(ctx);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF8B7355),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                    ),
+                    child: const Text('Save'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _applyFilters() {
@@ -158,13 +423,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final today = DateTime(now.year, now.month, now.day);
 
     _filteredPapers = _papers.where((p) {
-      // Deleted filter
-      if (_showDeletedOnly) {
-        if (!_deletedDois.contains(p.doi)) return false;
-      } else {
-        if (_deletedDois.contains(p.doi)) return false;
-      }
-      if (_showSelectedOnly && !p.isSelected) return false;
+      // Hide deleted and idea papers from pending
+      if (_deletedDois.contains(p.doi)) return false;
+      if (_ideaDois.contains(p.doi)) return false;
+
       if (_selectedTier != null && p.tier != _selectedTier) return false;
       if (_selectedJournalId != null && p.journalId != _selectedJournalId) {
         return false;
@@ -179,17 +441,20 @@ class _HomeScreenState extends State<HomeScreen> {
               if (paperDate.isBefore(today)) return false;
               break;
             case DateRangeFilter.week:
-              if (paperDate.isBefore(today.subtract(const Duration(days: 7)))) {
+              if (paperDate
+                  .isBefore(today.subtract(const Duration(days: 7)))) {
                 return false;
               }
               break;
             case DateRangeFilter.month:
-              if (paperDate.isBefore(today.subtract(const Duration(days: 30)))) {
+              if (paperDate
+                  .isBefore(today.subtract(const Duration(days: 30)))) {
                 return false;
               }
               break;
             case DateRangeFilter.threeMonths:
-              if (paperDate.isBefore(today.subtract(const Duration(days: 90)))) {
+              if (paperDate
+                  .isBefore(today.subtract(const Duration(days: 90)))) {
                 return false;
               }
               break;
@@ -249,14 +514,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Default: only "today" expanded
     for (final key in sortedKeys) {
-      _scanGroupExpanded.putIfAbsent(key, () =>
-          key.contains('今日') || key == 'Today');
+      _scanGroupExpanded.putIfAbsent(
+          key, () => key.contains('今日') || key == 'Today');
     }
 
     final items = <_ListItem>[];
     for (final key in sortedKeys) {
       final papers = groups[key]!;
-      final unreadCount = papers.where((p) => !_readDois.contains(p.doi)).length;
+      final unreadCount =
+          papers.where((p) => !_readDois.contains(p.doi)).length;
       final isExpanded = _scanGroupExpanded[key] ?? false;
       items.add(_ListItem.header(
         label: key,
@@ -275,7 +541,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// Build journal-grouped list items
   List<_ListItem> _buildJournalGroupedItems() {
-    // Group by tier, then journal
     final tierGroups = <int, Map<String, List<Paper>>>{};
     for (final p in _filteredPapers) {
       tierGroups.putIfAbsent(p.tier, () => {});
@@ -287,12 +552,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
     for (final tier in sortedTiers) {
       final journalMap_ = tierGroups[tier]!;
-      final tierTotal = journalMap_.values.fold<int>(0, (s, l) => s + l.length);
+      final tierTotal =
+          journalMap_.values.fold<int>(0, (s, l) => s + l.length);
       final tierKey = 'tier_$tier';
       _journalGroupExpanded.putIfAbsent(tierKey, () => true);
       final tierExpanded = _journalGroupExpanded[tierKey] ?? true;
 
-      items.add(_ListItem.tierHeader(tier: tier, count: tierTotal, isExpanded: tierExpanded));
+      items.add(_ListItem.tierHeader(
+          tier: tier, count: tierTotal, isExpanded: tierExpanded));
 
       if (tierExpanded) {
         final sortedJournals = journalMap_.keys.toList()..sort();
@@ -320,122 +587,13 @@ class _HomeScreenState extends State<HomeScreen> {
     return items;
   }
 
-  void _exportSelected() {
-    final selected = _papers.where((p) => p.isSelected).toList();
-    if (selected.isEmpty) {
-      _showMessage(_showChinese ? '未选择论文' : 'No papers selected');
-      return;
-    }
-
-    final exportData = selected
-        .map((p) => {
-              'journal_id': p.journalId,
-              'journal_name': p.journalName,
-              'title': p.title,
-              'title_cn': p.titleCn,
-              'doi': p.doi,
-              'date': p.date,
-              'abstract': p.abstract_,
-              'abstract_cn': p.abstractCn,
-              'topics': p.topics,
-              'tier': p.tier,
-              'cited_by': p.citedBy,
-              'is_oa': p.isOa,
-              'pdf_url': p.pdfUrl,
-            })
-        .toList();
-
-    final jsonStr = const JsonEncoder.withIndent('  ').convert(exportData);
-
-    showDialog(
-      context: context,
-      builder: (ctx) => Dialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        backgroundColor: const Color(0xFFF5F3ED),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFECE9E1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(Icons.file_copy_outlined,
-                        size: 18, color: Color(0xFF8B7355)),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    '${selected.length} papers',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF2D2A26),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Copy JSON \u2192 save as selected.json\nin idea_scout folder',
-                style: TextStyle(fontSize: 12, color: Color(0xFF9B9488)),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                height: 320,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8E6DC),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFD8D4CA)),
-                ),
-                padding: const EdgeInsets.all(14),
-                child: SingleChildScrollView(
-                  child: SelectableText(
-                    jsonStr,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontFamily: 'monospace',
-                      height: 1.5,
-                      color: Color(0xFF3D3A36),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF8B7355),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: const Text('Close'),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   void _showMessage(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(msg),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         margin: const EdgeInsets.all(16),
       ),
     );
@@ -444,7 +602,10 @@ class _HomeScreenState extends State<HomeScreen> {
   String _formatScanSummary(Map<String, dynamic> scan) {
     final fromDate = scan['from_date'] as String? ?? '';
     final toDate = scan['to_date'] as String? ?? '';
-    final tiers = (scan['tiers'] as List?)?.map((e) => _tierLabels[e] ?? '$e').join('+') ?? '';
+    final tiers = (scan['tiers'] as List?)
+            ?.map((e) => _tierLabels[e] ?? '$e')
+            .join('+') ??
+        '';
     final count = scan['paper_count'] as int? ?? 0;
 
     String shortMonth(String dateStr) {
@@ -465,7 +626,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedCount = _papers.where((p) => p.isSelected).length;
+    final ideaCount = _ideaPapers.length;
 
     return Scaffold(
       backgroundColor: const Color(0xFFE8E6DC),
@@ -473,6 +634,42 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           children: [
             _buildHeader(),
+
+            // GitHub sync banner
+            if (_githubToken == null || _githubToken!.isEmpty)
+              GestureDetector(
+                onTap: _showTokenDialog,
+                child: Container(
+                  width: double.infinity,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFAF6ED),
+                    border: Border(
+                      bottom: BorderSide(color: Color(0xFFD8D4CA)),
+                    ),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.sync_disabled,
+                          size: 14, color: Color(0xFFB8963E)),
+                      SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'Set GitHub token for cross-device sync',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFFB8963E),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      Icon(Icons.arrow_forward_ios,
+                          size: 12, color: Color(0xFFB8963E)),
+                    ],
+                  ),
+                ),
+              ),
 
             // Scan history bar
             if (!_isLoading && _scanHistory.isNotEmpty)
@@ -506,53 +703,39 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-            // Paper count status bar
-            if (!_isLoading && _papers.isNotEmpty)
+            // Tab bar
+            if (!_isLoading)
               Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 decoration: const BoxDecoration(
+                  color: Color(0xFFF0EEE6),
                   border: Border(
                     bottom: BorderSide(color: Color(0xFFD8D4CA)),
                   ),
                 ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF5A8A6A),
-                        shape: BoxShape.circle,
-                      ),
+                child: TabBar(
+                  controller: _tabController,
+                  labelColor: const Color(0xFF2D2A26),
+                  unselectedLabelColor: const Color(0xFF9B9488),
+                  labelStyle: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  unselectedLabelStyle: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  indicatorColor: const Color(0xFF8B7355),
+                  indicatorWeight: 3,
+                  tabs: [
+                    Tab(
+                      text: _showChinese
+                          ? '待处理 (${_filteredPapers.length})'
+                          : 'Pending (${_filteredPapers.length})',
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        '${_papers.length} papers  \u00b7  $_scanDate',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF6B6560),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE8E6DC),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        '${_filteredPapers.length}/${_papers.length}',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: Color(0xFF9B9488),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                    Tab(
+                      text: _showChinese
+                          ? 'Idea ($ideaCount)'
+                          : 'Idea ($ideaCount)',
                     ),
                   ],
                 ),
@@ -566,12 +749,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: const Color(0xFFFAF0ED),
                 child: Text(
                   _statusText,
-                  style:
-                      const TextStyle(fontSize: 12, color: Color(0xFFC25B3F)),
+                  style: const TextStyle(
+                      fontSize: 12, color: Color(0xFFC25B3F)),
                 ),
               ),
-
-            if (!_isLoading) _buildFilterBar(),
 
             Expanded(
               child: _isLoading
@@ -587,39 +768,240 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                     )
-                  : _filteredPapers.isEmpty
-                      ? _buildEmptyState()
-                      : _viewMode == ViewMode.journalGroup
-                          ? _buildJournalGroupView()
-                          : _buildFlatList(),
+                  : TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildPendingTab(),
+                        _buildIdeaTab(),
+                      ],
+                    ),
             ),
           ],
         ),
       ),
-
-
     );
   }
 
-  Widget _buildScanDateGroupView() {
-    // Check if any paper has scanDate
-    final hasScanDates = _filteredPapers.any((p) => p.scanDate.isNotEmpty);
-    if (!hasScanDates) {
-      // Flat list fallback
-      return _buildFlatList();
+  // ──────────────────────────────────────────
+  // Pending Tab
+  // ──────────────────────────────────────────
+  Widget _buildPendingTab() {
+    return Column(
+      children: [
+        // Paper count status bar
+        if (_papers.isNotEmpty)
+          Container(
+            width: double.infinity,
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            decoration: const BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: Color(0xFFD8D4CA)),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF5A8A6A),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '${_papers.length} papers  \u00b7  $_scanDate',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF6B6560),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE8E6DC),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '${_filteredPapers.length}/${_papers.length}',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFF9B9488),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        _buildFilterBar(),
+        Expanded(
+          child: _filteredPapers.isEmpty
+              ? _buildEmptyState()
+              : _viewMode == ViewMode.journalGroup
+                  ? _buildJournalGroupView()
+                  : _buildFlatList(),
+        ),
+      ],
+    );
+  }
+
+  // ──────────────────────────────────────────
+  // Idea Tab
+  // ──────────────────────────────────────────
+  Widget _buildIdeaTab() {
+    if (_ideaPapers.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.lightbulb_outline,
+                size: 56, color: Color(0xFFC5BFB5)),
+            const SizedBox(height: 20),
+            Text(
+              _showChinese ? '暂无 Idea 论文' : 'No idea papers yet',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF2D2A26),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _showChinese
+                  ? '在待处理列表中点击灯泡按钮\n将感兴趣的论文加入此处'
+                  : 'Tap the lightbulb button on papers\nto add them here',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Color(0xFF9B9488),
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
-    final items = _buildScanDateGroupedItems();
-    return ListView.builder(
-      padding: const EdgeInsets.only(top: 4, bottom: 100),
-      itemCount: items.length,
-      itemBuilder: (ctx, i) {
-        final item = items[i];
-        if (item.type == _ItemType.scanHeader) {
-          return _buildScanGroupHeader(item);
-        }
-        return _buildPaperItem(item.paper!);
-      },
+    // Build Paper objects from idea data for display
+    final ideaPaperObjects = _ideaPapers.map((p) {
+      return Paper(
+        id: '',
+        title: p['title'] as String? ?? '',
+        titleCn: p['title_cn'] as String? ?? '',
+        abstract_: p['abstract'] as String? ?? '',
+        abstractCn: p['abstract_cn'] as String? ?? '',
+        doi: p['doi'] as String? ?? '',
+        date: p['date'] as String? ?? '',
+        journalId: p['journal_id'] as String? ?? '',
+        journalName: p['journal_name'] as String? ?? '',
+        tier: 3,
+        topics: [],
+        citedBy: 0,
+        isOa: false,
+        authors: (p['authors'] as List?)?.cast<String>() ?? [],
+      );
+    }).toList();
+
+    // Fix tiers from journal registry
+    final jMap = journalMap;
+    for (final p in ideaPaperObjects) {
+      if (jMap.containsKey(p.journalId)) {
+        p.tier = jMap[p.journalId]!.tier;
+      }
+    }
+
+    return Column(
+      children: [
+        // Export RIS button bar
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: const BoxDecoration(
+            border: Border(
+              bottom: BorderSide(color: Color(0xFFD8D4CA)),
+            ),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.lightbulb,
+                  size: 16, color: Color(0xFFB8963E)),
+              const SizedBox(width: 8),
+              Text(
+                '${_ideaPapers.length} ${_showChinese ? "篇" : "papers"}',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF2D2A26),
+                ),
+              ),
+              const Spacer(),
+              GestureDetector(
+                onTap: _exportRis,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF8B7355),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.file_download_outlined,
+                          size: 16, color: Colors.white),
+                      const SizedBox(width: 6),
+                      Text(
+                        _showChinese ? '导出 RIS' : 'Export RIS',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.only(top: 4, bottom: 100),
+            itemCount: ideaPaperObjects.length,
+            itemBuilder: (ctx, i) {
+              final paper = ideaPaperObjects[i];
+              return PaperCard(
+                paper: paper,
+                showChinese: _showChinese,
+                isRead: _readDois.contains(paper.doi),
+                isIdeaZone: true,
+                onRemoveFromIdea: () => _removeFromIdea(paper.doi),
+                onTap: () async {
+                  await _markAsRead(paper.doi);
+                  if (!mounted) return;
+                  setState(() {});
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PaperDetailScreen(
+                        paper: paper,
+                        showChinese: _showChinese,
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -650,29 +1032,17 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildPaperItem(Paper paper) {
-    final isDeleted = _deletedDois.contains(paper.doi);
     return PaperCard(
       paper: paper,
       showChinese: _showChinese,
       isRead: _readDois.contains(paper.doi),
-      isDeleted: isDeleted,
-
-
-      onDelete: () {
-        setState(() {
-          if (isDeleted) {
-            _deletedDois.remove(paper.doi);
-          } else {
-            _deletedDois.add(paper.doi);
-          }
-          _applyFilters();
-        });
-        _saveDeleted();
-      },
+      isInIdea: _ideaDois.contains(paper.doi),
+      onDelete: () => _deletePaper(paper),
+      onIdea: () => _addToIdea(paper),
       onTap: () async {
         await _markAsRead(paper.doi);
         if (!mounted) return;
-        setState(() {}); // refresh read state
+        setState(() {});
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -898,6 +1268,27 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           const Spacer(),
+          // Settings (GitHub token)
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: _showTokenDialog,
+              child: Container(
+                width: 40,
+                height: 40,
+                alignment: Alignment.center,
+                child: Icon(
+                  Icons.settings_outlined,
+                  size: 22,
+                  color: _githubToken != null && _githubToken!.isNotEmpty
+                      ? const Color(0xFF5A8A6A)
+                      : const Color(0xFF6B6560),
+                ),
+              ),
+            ),
+          ),
+          // Language toggle
           Material(
             color: Colors.transparent,
             child: InkWell(
@@ -938,8 +1329,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     _showChinese ? '本月' : 'Month'),
                 _buildDateChip(DateRangeFilter.threeMonths,
                     _showChinese ? '近3月' : '3 Months'),
-                _buildDateChip(DateRangeFilter.all,
-                    _showChinese ? '全部' : 'All'),
+                _buildDateChip(
+                    DateRangeFilter.all, _showChinese ? '全部' : 'All'),
               ],
             ),
           ),
@@ -953,24 +1344,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ...[1, 2, 3].map((tier) => _buildTierChip(tier)),
                 const SizedBox(width: 8),
                 _buildJournalDropdown(),
-
-
-                if (_deletedDois.isNotEmpty) ...[
-                  const SizedBox(width: 8),
-                  _buildToggleChip(
-                    label: '${_showChinese ? "已删除" : "Deleted"} (${_deletedDois.length})',
-                    icon: Icons.delete_outline_rounded,
-                    isActive: _showDeletedOnly,
-                    activeColor: const Color(0xFF9B9488),
-                    onTap: () {
-                      setState(() {
-                        _showDeletedOnly = !_showDeletedOnly;
-                        _showSelectedOnly = false;
-                        _applyFilters();
-                      });
-                    },
-                  ),
-                ],
                 const SizedBox(width: 8),
                 _buildViewModeToggle(),
               ],
@@ -994,7 +1367,8 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
             color: isActive
                 ? const Color(0xFF8B7355)
@@ -1024,12 +1398,14 @@ class _HomeScreenState extends State<HomeScreen> {
     return GestureDetector(
       onTap: () {
         setState(() {
-          _viewMode = isGrouped ? ViewMode.list : ViewMode.journalGroup;
+          _viewMode =
+              isGrouped ? ViewMode.list : ViewMode.journalGroup;
         });
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
         decoration: BoxDecoration(
           color: isGrouped
               ? const Color(0xFF8B7355)
@@ -1057,7 +1433,8 @@ class _HomeScreenState extends State<HomeScreen> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: isGrouped ? Colors.white : const Color(0xFF6B6560),
+                color:
+                    isGrouped ? Colors.white : const Color(0xFF6B6560),
               ),
             ),
           ],
@@ -1081,7 +1458,12 @@ class _HomeScreenState extends State<HomeScreen> {
       3: const Color(0xFF5A8A6A),
     };
     final color = colors[tier]!;
-    final count = _papers.where((p) => p.tier == tier && !_deletedDois.contains(p.doi)).length;
+    final count = _papers
+        .where((p) =>
+            p.tier == tier &&
+            !_deletedDois.contains(p.doi) &&
+            !_ideaDois.contains(p.doi))
+        .length;
     final label = _tierLabels[tier] ?? 'C';
 
     return Padding(
@@ -1095,7 +1477,8 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
             color: isSelected ? color : const Color(0xFFF5F3ED),
             borderRadius: BorderRadius.circular(8),
@@ -1111,15 +1494,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color:
-                      isSelected ? Colors.white : const Color(0xFF6B6560),
+                  color: isSelected
+                      ? Colors.white
+                      : const Color(0xFF6B6560),
                 ),
               ),
               if (count > 0) ...[
                 const SizedBox(width: 4),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 4, vertical: 1),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? Colors.white.withValues(alpha: 0.25)
@@ -1131,8 +1515,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(
                       fontSize: 9,
                       fontWeight: FontWeight.w700,
-                      color:
-                          isSelected ? Colors.white : const Color(0xFF9B9488),
+                      color: isSelected
+                          ? Colors.white
+                          : const Color(0xFF9B9488),
                     ),
                   ),
                 ),
@@ -1161,7 +1546,8 @@ class _HomeScreenState extends State<HomeScreen> {
       child: DropdownButton<String?>(
         value: _selectedJournalId,
         hint: Text(_showChinese ? '全部' : 'All',
-            style: const TextStyle(fontSize: 13, color: Color(0xFF9B9488))),
+            style: const TextStyle(
+                fontSize: 13, color: Color(0xFF9B9488))),
         underline: const SizedBox(),
         isDense: true,
         icon: const Icon(Icons.keyboard_arrow_down,
@@ -1173,7 +1559,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ...journals.map(
             (j) => DropdownMenuItem(
               value: j.id,
-              child: Text('${j.id} - ${j.name}', style: const TextStyle(fontSize: 13)),
+              child: Text('${j.id} - ${j.name}',
+                  style: const TextStyle(fontSize: 13)),
             ),
           ),
         ],
@@ -1187,53 +1574,14 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildToggleChip({
-    required String label,
-    required IconData icon,
-    required bool isActive,
-    required Color activeColor,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: isActive ? activeColor : const Color(0xFFF5F3ED),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: isActive ? activeColor : const Color(0xFFD8D4CA),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon,
-                size: 14,
-                color: isActive ? Colors.white : const Color(0xFFB8963E)),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: isActive ? Colors.white : const Color(0xFF6B6560),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildEmptyState() {
     if (_papers.isEmpty) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.cloud_off, size: 56, color: Color(0xFFC5BFB5)),
+            const Icon(Icons.cloud_off,
+                size: 56, color: Color(0xFFC5BFB5)),
             const SizedBox(height: 20),
             Text(
               _showChinese ? '暂无数据' : 'No data available',
@@ -1263,7 +1611,8 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.search_off, size: 48, color: Color(0xFFC5BFB5)),
+          const Icon(Icons.search_off,
+              size: 48, color: Color(0xFFC5BFB5)),
           const SizedBox(height: 12),
           Text(
             _showChinese ? '无匹配结果' : 'No matching results',
@@ -1275,107 +1624,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildBottomBar(int selectedCount) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-      decoration: const BoxDecoration(
-        color: Color(0xFFF0EEE6),
-        border: Border(top: BorderSide(color: Color(0xFFD8D4CA))),
-      ),
-      child: SafeArea(
-        child: Row(
-          children: [
-            if (selectedCount > 0) ...[
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFECE9E1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.star_rounded,
-                        size: 16, color: Color(0xFFB8963E)),
-                    const SizedBox(width: 6),
-                    Text(
-                      '$selectedCount ${_showChinese ? "篇" : "papers"}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF8B7355),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              GestureDetector(
-                onTap: () {
-                  setState(() {
-                    for (final p in _papers) {
-                      p.isSelected = false;
-                    }
-                    _showSelectedOnly = false;
-                    _applyFilters();
-                  });
-                  _saveSelections();
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFECE9E1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(Icons.clear_all,
-                      size: 20, color: Color(0xFF9B9488)),
-                ),
-              ),
-            ],
-            const Spacer(),
-            GestureDetector(
-              onTap: selectedCount > 0 ? _exportSelected : null,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
-                decoration: BoxDecoration(
-                  color: selectedCount > 0
-                      ? const Color(0xFF8B7355)
-                      : const Color(0xFFECE9E1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.file_download_outlined,
-                        size: 18,
-                        color: selectedCount > 0
-                            ? Colors.white
-                            : const Color(0xFFC5BFB5)),
-                    const SizedBox(width: 6),
-                    Text(
-                      _showChinese ? '导出' : 'Export',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: selectedCount > 0
-                            ? Colors.white
-                            : const Color(0xFFC5BFB5),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   void dispose() {
     _searchController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 }
@@ -1408,7 +1660,8 @@ class _ListItem {
     this.groupKey,
   });
 
-  factory _ListItem.paper(Paper p) => _ListItem._(type: _ItemType.paper, paper: p);
+  factory _ListItem.paper(Paper p) =>
+      _ListItem._(type: _ItemType.paper, paper: p);
 
   factory _ListItem.header({
     required String label,
