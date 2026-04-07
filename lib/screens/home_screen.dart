@@ -596,7 +596,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomBar(selectedCount),
+
+
     );
   }
 
@@ -655,10 +656,8 @@ class _HomeScreenState extends State<HomeScreen> {
       showChinese: _showChinese,
       isRead: _readDois.contains(paper.doi),
       isDeleted: isDeleted,
-      onToggleSelect: () {
-        setState(() => paper.isSelected = !paper.isSelected);
-        _saveSelections();
-      },
+
+
       onDelete: () {
         setState(() {
           if (isDeleted) {
@@ -926,40 +925,6 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
       child: Column(
         children: [
-          TextField(
-            controller: _searchController,
-            style: const TextStyle(fontSize: 14, color: Color(0xFF2D2A26)),
-            decoration: InputDecoration(
-              hintText: _showChinese
-                  ? '搜索标题、摘要、期刊...'
-                  : 'Search titles, abstracts, journals...',
-              hintStyle:
-                  const TextStyle(color: Color(0xFF9B9488), fontSize: 14),
-              prefixIcon: const Icon(Icons.search,
-                  size: 20, color: Color(0xFF9B9488)),
-              suffixIcon: _searchQuery.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear,
-                          size: 18, color: Color(0xFF9B9488)),
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() {
-                          _searchQuery = '';
-                          _applyFilters();
-                        });
-                      },
-                    )
-                  : null,
-            ),
-            onChanged: (v) {
-              setState(() {
-                _searchQuery = v;
-                _applyFilters();
-              });
-            },
-          ),
-          const SizedBox(height: 8),
-
           // Date range filter chips
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -988,22 +953,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ...[1, 2, 3].map((tier) => _buildTierChip(tier)),
                 const SizedBox(width: 8),
                 _buildJournalDropdown(),
-                if (_papers.any((p) => p.isSelected)) ...[
-                  const SizedBox(width: 8),
-                  _buildToggleChip(
-                    label: _showChinese ? '已收藏' : 'Starred',
-                    icon: Icons.star_rounded,
-                    isActive: _showSelectedOnly,
-                    activeColor: const Color(0xFFB8963E),
-                    onTap: () {
-                      setState(() {
-                        _showSelectedOnly = !_showSelectedOnly;
-                        _showDeletedOnly = false;
-                        _applyFilters();
-                      });
-                    },
-                  ),
-                ],
+
+
                 if (_deletedDois.isNotEmpty) ...[
                   const SizedBox(width: 8),
                   _buildToggleChip(

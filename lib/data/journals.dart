@@ -18,14 +18,14 @@ const List<Map<String, dynamic>> _journalData = [
   {"id": "JSCM", "name": "Journal of Supply Chain Management", "openalex_id": "S59007373", "issn": "1523-2409", "tier": 1, "tags": ["供应链治理", "采购"], "transfer_to": "建筑供应链"},
   {"id": "JBE", "name": "Journal of Business Ethics", "openalex_id": "S76633192", "issn": "0167-4544", "tier": 3, "tags": ["商业伦理", "ESG", "可持续", "利益相关方"], "transfer_to": "工程伦理/ESG/可持续建筑"},
   {"id": "AER", "name": "American Economic Review", "openalex_id": "S23254222", "issn": "0002-8282", "tier": 2, "tags": ["机制设计", "公共经济学", "博弈论"], "transfer_to": "工程公共政策/激励机制"},
-  {"id": "ECMA", "name": "Econometrica", "openalex_id": "S95464858", "issn": "0012-9682", "tier": 2, "tags": ["计量方法", "博弈理论", "拍卖"], "transfer_to": "方法论武器库/投标博弈"},
+
   {"id": "JIBS", "name": "Journal of International Business Studies", "openalex_id": "S38024979", "issn": "0047-2506", "tier": 2, "tags": ["跨国运营", "制度距离", "国际化"], "transfer_to": "国际工程项目"},
-  {"id": "MKS", "name": "Marketing Science", "openalex_id": "S163534328", "issn": "0732-2399", "tier": 2, "tags": ["定价博弈", "双边市场", "拍卖"], "transfer_to": "工程投标/定价博弈"},
+
   {"id": "AMR", "name": "Academy of Management Review", "openalex_id": "S46763546", "issn": "0363-7425", "tier": 3, "tags": ["理论构建", "概念框架"], "transfer_to": "研究框架借鉴"},
   {"id": "ASQ", "name": "Administrative Science Quarterly", "openalex_id": "S143668711", "issn": "0001-8392", "tier": 3, "tags": ["深度案例", "定性方法"], "transfer_to": "工程案例研究"},
   {"id": "DS", "name": "Decision Sciences", "openalex_id": "S177792750", "issn": "0011-7315", "tier": 1, "tags": ["决策分析", "行为运筹"], "transfer_to": "工程决策"},
   {"id": "JBV", "name": "Journal of Business Venturing", "openalex_id": "S66201313", "issn": "0883-9026", "tier": 3, "tags": ["创业", "不确定性决策"], "transfer_to": "PPP/项目投资"},
-  {"id": "ETP", "name": "Entrepreneurship Theory and Practice", "openalex_id": "S187626162", "issn": "1042-2587", "tier": 3, "tags": ["创业生态", "商业模式"], "transfer_to": "建筑创新生态"},
+
   {"id": "JOM2", "name": "Journal of Management", "openalex_id": "S122767448", "issn": "0149-2063", "tier": 3, "tags": ["管理理论", "综述"], "transfer_to": "研究框架参考"},
   {"id": "OBHDP", "name": "Organizational Behavior and Human Decision Processes", "openalex_id": "S64744539", "issn": "0749-5978", "tier": 3, "tags": ["行为决策", "团队决策", "判断偏差"], "transfer_to": "工程项目决策行为"},
   {"id": "OrgStudies", "name": "Organization Studies", "openalex_id": "S28882882", "issn": "0170-8406", "tier": 3, "tags": ["组织理论", "制度逻辑", "实践理论"], "transfer_to": "建筑业组织/制度分析"},

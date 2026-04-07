@@ -55,7 +55,6 @@ TextSpan buildHighlightedText(String text, TextStyle baseStyle) {
 class PaperCard extends StatefulWidget {
   final Paper paper;
   final bool showChinese;
-  final VoidCallback onToggleSelect;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
   final bool isRead;
@@ -65,7 +64,6 @@ class PaperCard extends StatefulWidget {
     super.key,
     required this.paper,
     required this.showChinese,
-    required this.onToggleSelect,
     this.onTap,
     this.onDelete,
     this.isRead = false,
@@ -76,9 +74,7 @@ class PaperCard extends StatefulWidget {
   State<PaperCard> createState() => _PaperCardState();
 }
 
-class _PaperCardState extends State<PaperCard> with SingleTickerProviderStateMixin {
-  late AnimationController _starController;
-  late Animation<double> _starScale;
+class _PaperCardState extends State<PaperCard> {
 
   static const _tierColors = {
     1: Color(0xFFC25B3F),
@@ -92,34 +88,12 @@ class _PaperCardState extends State<PaperCard> with SingleTickerProviderStateMix
     3: Color(0xFFEDF5F0),
   };
 
-  @override
-  void initState() {
-    super.initState();
-    _starController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    _starScale = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.4), weight: 50),
-      TweenSequenceItem(tween: Tween(begin: 1.4, end: 1.0), weight: 50),
-    ]).animate(CurvedAnimation(parent: _starController, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _starController.dispose();
-    super.dispose();
-  }
 
   static String _tierLabel(int tier) {
     const labels = {1: 'A', 2: 'B', 3: 'C'};
     return labels[tier] ?? 'C';
   }
 
-  void _onStarTap() {
-    _starController.forward(from: 0);
-    widget.onToggleSelect();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -248,7 +222,7 @@ class _PaperCardState extends State<PaperCard> with SingleTickerProviderStateMix
                                 decoration: BoxDecoration(
                                   color: widget.isDeleted
                                       ? const Color(0xFFEDF5F0)
-                                      : const Color(0xFFF0EDED),
+                                      : const Color(0xFFFAF0ED),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Icon(
@@ -258,26 +232,10 @@ class _PaperCardState extends State<PaperCard> with SingleTickerProviderStateMix
                                   size: 16,
                                   color: widget.isDeleted
                                       ? const Color(0xFF5A8A6A)
-                                      : const Color(0xFF9B9488),
+                                      : const Color(0xFFC25B3F),
                                 ),
                               ),
                             ),
-                          // Star icon
-                          GestureDetector(
-                            onTap: _onStarTap,
-                            child: ScaleTransition(
-                              scale: _starScale,
-                              child: Icon(
-                                paper.isSelected
-                                    ? Icons.star_rounded
-                                    : Icons.star_border_rounded,
-                                size: 26,
-                                color: paper.isSelected
-                                    ? const Color(0xFFB8963E)
-                                    : const Color(0xFFC5BFB5),
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                       const SizedBox(height: 12),
