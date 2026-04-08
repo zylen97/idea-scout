@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../data/journals.dart';
+import '../data/cepm_journals.dart';
+import '../data/source_config.dart';
 import '../models/paper.dart';
 import '../widgets/paper_card.dart';
 import 'paper_detail_screen.dart';
@@ -27,8 +29,24 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
-  List<Paper> _papers = [];
-  List<Paper> _filteredPapers = [];
+  // Source switcher
+  DataSource _currentSource = DataSource.ft50;
+
+  // Per-source state
+  final Map<DataSource, List<Paper>> _papersBySource = {};
+  final Map<DataSource, List<Paper>> _filteredBySource = {};
+  final Map<DataSource, Set<String>> _deletedDoisBySource = {};
+  final Map<DataSource, List<Map<String, dynamic>>> _ideaPapersBySource = {};
+  final Map<DataSource, Set<String>> _readDoisBySource = {};
+
+  // Convenience getters for current source
+  List<Paper> get _papers => _papersBySource[_currentSource] ?? [];
+  List<Paper> get _filteredPapers => _filteredBySource[_currentSource] ?? [];
+  Set<String> get _deletedDois => _deletedDoisBySource[_currentSource] ?? {};
+  List<Map<String, dynamic>> get _ideaPapers => _ideaPapersBySource[_currentSource] ?? [];
+  Set<String> get _readDois => _readDoisBySource[_currentSource] ?? {};
+  Set<String> get _ideaDois => _ideaPapers.map((p) => p['doi'] as String).toSet();
+
   bool _isLoading = true;
   String _statusText = '';
   bool _showChinese = true;
@@ -45,12 +63,6 @@ class _HomeScreenState extends State<HomeScreen>
   // Filters
   DateRangeFilter _dateRangeFilter = DateRangeFilter.all;
   ViewMode _viewMode = ViewMode.list;
-  Set<String> _readDois = {};
-  Set<String> _deletedDois = {};
-
-  // Idea papers: DOI -> idea paper data (from user_state)
-  List<Map<String, dynamic>> _ideaPapers = [];
-  Set<String> get _ideaDois => _ideaPapers.map((p) => p['doi'] as String).toSet();
 
   // GitHub sync
   String? _githubToken;
@@ -80,39 +92,79 @@ class _HomeScreenState extends State<HomeScreen>
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      _readDois = (prefs.getStringList('read_dois') ?? []).toSet();
       _githubToken = prefs.getString('github_token');
 
-      // Load local state first (instant)
-      _deletedDois = (prefs.getStringList('deleted_dois') ?? []).toSet();
-      final localIdeaJson = prefs.getString('idea_papers');
-      if (localIdeaJson != null) {
-        _ideaPapers = List<Map<String, dynamic>>.from(
-            jsonDecode(localIdeaJson) as List);
+      // Load per-source local state
+      for (final source in DataSource.values) {
+        final prefix = source.stateKey;
+        // Migrate old keys (no prefix) to ft50_ prefix
+        if (source == DataSource.ft50) {
+          final oldRead = prefs.getStringList('read_dois');
+          if (oldRead != null && prefs.getStringList('ft50_read_dois') == null) {
+            await prefs.setStringList('ft50_read_dois', oldRead);
+            await prefs.remove('read_dois');
+          }
+          final oldDeleted = prefs.getStringList('deleted_dois');
+          if (oldDeleted != null && prefs.getStringList('ft50_deleted_dois') == null) {
+            await prefs.setStringList('ft50_deleted_dois', oldDeleted);
+            await prefs.remove('deleted_dois');
+          }
+          final oldIdea = prefs.getString('idea_papers');
+          if (oldIdea != null && prefs.getString('ft50_idea_papers') == null) {
+            await prefs.setString('ft50_idea_papers', oldIdea);
+            await prefs.remove('idea_papers');
+          }
+        }
+
+        _readDoisBySource[source] = (prefs.getStringList('${prefix}_read_dois') ?? []).toSet();
+        _deletedDoisBySource[source] = (prefs.getStringList('${prefix}_deleted_dois') ?? []).toSet();
+        final ideaJson = prefs.getString('${prefix}_idea_papers');
+        if (ideaJson != null) {
+          _ideaPapersBySource[source] = List<Map<String, dynamic>>.from(
+              jsonDecode(ideaJson) as List);
+        } else {
+          _ideaPapersBySource[source] = [];
+        }
       }
 
       // Try to sync from GitHub (source of truth)
       await _syncFromGitHub();
 
-      // Load papers.json
-      List<dynamic> list;
-      try {
-        final resp = await http.get(Uri.parse('data/papers.json'));
-        if (resp.statusCode == 200) {
-          list = jsonDecode(resp.body) as List;
-        } else {
-          throw Exception('papers.json not found');
+      // Load papers for each source
+      for (final source in DataSource.values) {
+        List<dynamic> list;
+        try {
+          final resp = await http.get(Uri.parse(source.papersFile));
+          if (resp.statusCode == 200) {
+            list = jsonDecode(resp.body) as List;
+          } else {
+            throw Exception('${source.papersFile} not found');
+          }
+        } catch (_) {
+          try {
+            final resp = await http.get(Uri.parse(source.latestFile));
+            if (resp.statusCode == 200) {
+              list = jsonDecode(resp.body) as List;
+            } else {
+              list = [];
+            }
+          } catch (_) {
+            list = [];
+          }
         }
-      } catch (_) {
-        final resp = await http.get(Uri.parse('data/latest.json'));
-        if (resp.statusCode != 200) {
-          throw Exception('HTTP ${resp.statusCode}');
-        }
-        list = jsonDecode(resp.body) as List;
-      }
 
-      final papers =
-          list.map((j) => Paper.fromJson(j as Map<String, dynamic>)).toList();
+        final papers = list.map((j) => Paper.fromJson(j as Map<String, dynamic>)).toList();
+
+        // Fill tier from journal registry
+        final jMap = source == DataSource.cepm ? cepmJournalMap : journalMap;
+        for (final p in papers) {
+          if (jMap.containsKey(p.journalId)) {
+            p.tier = jMap[p.journalId]!.tier;
+          }
+        }
+
+        _papersBySource[source] = papers;
+      }
 
       // Load scan history (graceful fail)
       try {
@@ -125,25 +177,10 @@ class _HomeScreenState extends State<HomeScreen>
         }
       } catch (_) {}
 
-      // Fill tier from journal registry
-      final jMap = journalMap;
-      for (final p in papers) {
-        if (jMap.containsKey(p.journalId)) {
-          p.tier = jMap[p.journalId]!.tier;
-        }
-      }
-
-      if (papers.isNotEmpty) {
-        final dates =
-            papers.map((p) => p.date).where((d) => d.isNotEmpty).toList();
-        if (dates.isNotEmpty) {
-          dates.sort();
-          _scanDate = '${dates.first} ~ ${dates.last}';
-        }
-      }
+      // Compute scan date for current source
+      _updateScanDate();
 
       setState(() {
-        _papers = papers;
         _applyFilters();
         _isLoading = false;
       });
@@ -153,6 +190,19 @@ class _HomeScreenState extends State<HomeScreen>
         _statusText = 'Load failed: $e';
       });
     }
+  }
+
+  void _updateScanDate() {
+    final papers = _papers;
+    if (papers.isNotEmpty) {
+      final dates = papers.map((p) => p.date).where((d) => d.isNotEmpty).toList();
+      if (dates.isNotEmpty) {
+        dates.sort();
+        _scanDate = '${dates.first} ~ ${dates.last}';
+        return;
+      }
+    }
+    _scanDate = '';
   }
 
   // ──────────────────────────────────────────
@@ -176,15 +226,26 @@ class _HomeScreenState extends State<HomeScreen>
             (data['content'] as String).replaceAll('\n', '')));
         final state = jsonDecode(content) as Map<String, dynamic>;
 
-        // GitHub is source of truth - merge
-        final ghDeletedDois = Set<String>.from(
-            (state['deleted_dois'] as List?)?.cast<String>() ?? []);
-        final ghIdeaPapers = List<Map<String, dynamic>>.from(
-            state['idea_papers'] as List? ?? []);
-
-        // Merge: GitHub wins
-        _deletedDois = ghDeletedDois;
-        _ideaPapers = ghIdeaPapers;
+        // Detect format: nested (new) vs flat (old)
+        if (state.containsKey('ft50')) {
+          // New nested format
+          for (final source in DataSource.values) {
+            final key = source.stateKey;
+            final sourceState = state[key] as Map<String, dynamic>? ?? {};
+            _deletedDoisBySource[source] = Set<String>.from(
+                (sourceState['deleted_dois'] as List?)?.cast<String>() ?? []);
+            _ideaPapersBySource[source] = List<Map<String, dynamic>>.from(
+                sourceState['idea_papers'] as List? ?? []);
+          }
+        } else {
+          // Legacy flat format -> migrate to ft50
+          _deletedDoisBySource[DataSource.ft50] = Set<String>.from(
+              (state['deleted_dois'] as List?)?.cast<String>() ?? []);
+          _ideaPapersBySource[DataSource.ft50] = List<Map<String, dynamic>>.from(
+              state['idea_papers'] as List? ?? []);
+          _deletedDoisBySource[DataSource.cepm] = {};
+          _ideaPapersBySource[DataSource.cepm] = [];
+        }
 
         // Save merged state locally
         await _saveLocalState();
@@ -198,8 +259,11 @@ class _HomeScreenState extends State<HomeScreen>
     if (_githubToken == null || _githubToken!.isEmpty) return;
     try {
       final stateJson = jsonEncode({
-        'deleted_dois': _deletedDois.toList(),
-        'idea_papers': _ideaPapers,
+        for (final source in DataSource.values)
+          source.stateKey: {
+            'deleted_dois': (_deletedDoisBySource[source] ?? {}).toList(),
+            'idea_papers': _ideaPapersBySource[source] ?? [],
+          },
       });
       final encoded = base64Encode(utf8.encode(stateJson));
 
@@ -234,15 +298,22 @@ class _HomeScreenState extends State<HomeScreen>
 
   Future<void> _saveLocalState() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList('deleted_dois', _deletedDois.toList());
-    await prefs.setString('idea_papers', jsonEncode(_ideaPapers));
+    for (final source in DataSource.values) {
+      final prefix = source.stateKey;
+      await prefs.setStringList('${prefix}_deleted_dois',
+          (_deletedDoisBySource[source] ?? {}).toList());
+      await prefs.setString('${prefix}_idea_papers',
+          jsonEncode(_ideaPapersBySource[source] ?? []));
+    }
   }
 
   Future<void> _markAsRead(String doi) async {
-    if (_readDois.contains(doi)) return;
-    _readDois.add(doi);
+    final readSet = _readDoisBySource[_currentSource] ?? {};
+    if (readSet.contains(doi)) return;
+    readSet.add(doi);
+    _readDoisBySource[_currentSource] = readSet;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList('read_dois', _readDois.toList());
+    await prefs.setStringList('${_currentSource.stateKey}_read_dois', readSet.toList());
   }
 
   // ──────────────────────────────────────────
@@ -250,9 +321,8 @@ class _HomeScreenState extends State<HomeScreen>
   // ──────────────────────────────────────────
   void _deletePaper(Paper paper) {
     setState(() {
-      _deletedDois.add(paper.doi);
-      // Also remove from idea if present
-      _ideaPapers.removeWhere((p) => p['doi'] == paper.doi);
+      (_deletedDoisBySource[_currentSource] ??= {}).add(paper.doi);
+      (_ideaPapersBySource[_currentSource] ?? []).removeWhere((p) => p['doi'] == paper.doi);
       _applyFilters();
     });
     _saveLocalState();
@@ -265,7 +335,7 @@ class _HomeScreenState extends State<HomeScreen>
     final addedDate =
         '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
     setState(() {
-      _ideaPapers.add(paper.toIdeaJson(addedDate));
+      (_ideaPapersBySource[_currentSource] ??= []).add(paper.toIdeaJson(addedDate));
     });
     _saveLocalState();
     _pushToGitHub();
@@ -273,7 +343,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   void _removeFromIdea(String doi) {
     setState(() {
-      _ideaPapers.removeWhere((p) => p['doi'] == doi);
+      (_ideaPapersBySource[_currentSource] ?? []).removeWhere((p) => p['doi'] == doi);
     });
     _saveLocalState();
     _pushToGitHub();
@@ -320,8 +390,9 @@ class _HomeScreenState extends State<HomeScreen>
     final bytes = utf8.encode(content);
     final blob = html.Blob([bytes], 'application/x-research-info-systems');
     final url = html.Url.createObjectUrlFromBlob(blob);
+    final filename = _currentSource == DataSource.cepm ? 'cepm_idea_papers.ris' : 'idea_papers.ris';
     final anchor = html.AnchorElement(href: url)
-      ..setAttribute('download', 'idea_papers.ris')
+      ..setAttribute('download', filename)
       ..click();
     html.Url.revokeObjectUrl(url);
   }
@@ -421,11 +492,13 @@ class _HomeScreenState extends State<HomeScreen>
   void _applyFilters() {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
+    final deletedDois = _deletedDoisBySource[_currentSource] ?? {};
+    final ideaDois = _ideaDois;
 
-    _filteredPapers = _papers.where((p) {
+    _filteredBySource[_currentSource] = (_papersBySource[_currentSource] ?? []).where((p) {
       // Hide deleted and idea papers from pending
-      if (_deletedDois.contains(p.doi)) return false;
-      if (_ideaDois.contains(p.doi)) return false;
+      if (deletedDois.contains(p.doi)) return false;
+      if (ideaDois.contains(p.doi)) return false;
 
       if (_selectedTier != null && p.tier != _selectedTier) return false;
       if (_selectedJournalId != null && p.journalId != _selectedJournalId) {
@@ -634,6 +707,59 @@ class _HomeScreenState extends State<HomeScreen>
         child: Column(
           children: [
             _buildHeader(),
+
+            // Source switcher
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: const BoxDecoration(
+                color: Color(0xFFF0EEE6),
+                border: Border(bottom: BorderSide(color: Color(0xFFD8D4CA))),
+              ),
+              child: Row(
+                children: DataSource.values.map((source) {
+                  final isActive = _currentSource == source;
+                  final color = source == DataSource.cepm
+                      ? const Color(0xFF2E7D6F)
+                      : const Color(0xFF8B7355);
+                  return Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        if (_currentSource == source) return;
+                        setState(() {
+                          _currentSource = source;
+                          _selectedJournalId = null;
+                          _selectedTier = null;
+                          _updateScanDate();
+                          _applyFilters();
+                        });
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          color: isActive ? color : Colors.transparent,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: isActive ? color : const Color(0xFFD8D4CA),
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          source.label,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: isActive ? Colors.white : const Color(0xFF6B6560),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
 
             // GitHub sync banner
             if (_githubToken == null || _githubToken!.isEmpty)
@@ -909,7 +1035,7 @@ class _HomeScreenState extends State<HomeScreen>
     }).toList();
 
     // Fix tiers from journal registry
-    final jMap = journalMap;
+    final jMap = _currentSource == DataSource.cepm ? cepmJournalMap : journalMap;
     for (final p in ideaPaperObjects) {
       if (jMap.containsKey(p.journalId)) {
         p.tier = jMap[p.journalId]!.tier;
@@ -1245,10 +1371,10 @@ class _HomeScreenState extends State<HomeScreen>
                 const Icon(Icons.explore, color: Colors.white, size: 20),
           ),
           const SizedBox(width: 12),
-          const Column(
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'Idea Scout',
                 style: TextStyle(
                   fontSize: 18,
@@ -1258,8 +1384,8 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ),
               Text(
-                'FT50 / UTD24 Journal Scanner',
-                style: TextStyle(
+                _currentSource.subtitle,
+                style: const TextStyle(
                   fontSize: 11,
                   color: Color(0xFF9B9488),
                   fontWeight: FontWeight.w500,
@@ -1341,8 +1467,10 @@ class _HomeScreenState extends State<HomeScreen>
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                ...[1, 2, 3].map((tier) => _buildTierChip(tier)),
-                const SizedBox(width: 8),
+                if (_currentSource.hasTiers)
+                  ...[1, 2, 3].map((tier) => _buildTierChip(tier)),
+                if (_currentSource.hasTiers)
+                  const SizedBox(width: 8),
                 _buildJournalDropdown(),
                 const SizedBox(width: 8),
                 _buildViewModeToggle(),
@@ -1458,10 +1586,12 @@ class _HomeScreenState extends State<HomeScreen>
       3: const Color(0xFF5A8A6A),
     };
     final color = colors[tier]!;
-    final count = _papers
+    final currentPapers = _papersBySource[_currentSource] ?? [];
+    final deletedDois = _deletedDoisBySource[_currentSource] ?? {};
+    final count = currentPapers
         .where((p) =>
             p.tier == tier &&
-            !_deletedDois.contains(p.doi) &&
+            !deletedDois.contains(p.doi) &&
             !_ideaDois.contains(p.doi))
         .length;
     final label = _tierLabels[tier] ?? 'C';
@@ -1556,7 +1686,7 @@ class _HomeScreenState extends State<HomeScreen>
           DropdownMenuItem(
               value: null,
               child: Text(_showChinese ? '全部' : 'All')),
-          ...journals.map(
+          ...(_currentSource == DataSource.cepm ? cepmJournals : journals).map(
             (j) => DropdownMenuItem(
               value: j.id,
               child: Text('${j.id} - ${j.name}',
