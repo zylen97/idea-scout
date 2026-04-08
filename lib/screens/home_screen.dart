@@ -1108,6 +1108,7 @@ class _HomeScreenState extends State<HomeScreen>
                 showChinese: _showChinese,
                 isRead: _readDois.contains(paper.doi),
                 isIdeaZone: true,
+                showTier: _currentSource.hasTiers,
                 onRemoveFromIdea: () => _removeFromIdea(paper.doi),
                 onTap: () async {
                   await _markAsRead(paper.doi);
@@ -1119,6 +1120,7 @@ class _HomeScreenState extends State<HomeScreen>
                       builder: (_) => PaperDetailScreen(
                         paper: paper,
                         showChinese: _showChinese,
+                        showTier: _currentSource.hasTiers,
                       ),
                     ),
                   );
@@ -1163,6 +1165,7 @@ class _HomeScreenState extends State<HomeScreen>
       showChinese: _showChinese,
       isRead: _readDois.contains(paper.doi),
       isInIdea: _ideaDois.contains(paper.doi),
+      showTier: _currentSource.hasTiers,
       onDelete: () => _deletePaper(paper),
       onIdea: () => _addToIdea(paper),
       onTap: () async {

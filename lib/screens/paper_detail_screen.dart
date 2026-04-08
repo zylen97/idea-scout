@@ -6,11 +6,13 @@ import '../widgets/paper_card.dart' show buildHighlightedText;
 class PaperDetailScreen extends StatelessWidget {
   final Paper paper;
   final bool showChinese;
+  final bool showTier;
 
   const PaperDetailScreen({
     super.key,
     required this.paper,
     required this.showChinese,
+    this.showTier = true,
   });
 
   static const _tierColors = {
@@ -32,8 +34,12 @@ class PaperDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tierColor = _tierColors[paper.tier] ?? _tierColors[3]!;
-    final tierBg = _tierBgColors[paper.tier] ?? _tierBgColors[3]!;
+    final tierColor = showTier
+        ? (_tierColors[paper.tier] ?? _tierColors[3]!)
+        : const Color(0xFF6B5B4E);
+    final tierBg = showTier
+        ? (_tierBgColors[paper.tier] ?? _tierBgColors[3]!)
+        : const Color(0xFFF0EDE8);
 
     return Scaffold(
       backgroundColor: const Color(0xFFE8E6DC),
@@ -105,13 +111,14 @@ class PaperDetailScreen extends StatelessWidget {
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
-                              TextSpan(
-                                text: ' \u00b7 ${_catLabel(paper.tier)}',
-                                style: TextStyle(
-                                  color: tierColor.withValues(alpha: 0.6),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                              if (showTier)
+                                TextSpan(
+                                  text: ' \u00b7 ${_catLabel(paper.tier)}',
+                                  style: TextStyle(
+                                    color: tierColor.withValues(alpha: 0.6),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                               ),
                             ],
                           ),

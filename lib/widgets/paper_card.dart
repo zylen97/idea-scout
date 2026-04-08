@@ -62,6 +62,7 @@ class PaperCard extends StatefulWidget {
   final bool isRead;
   final bool isInIdea;
   final bool isIdeaZone; // true when displayed in the Idea tab
+  final bool showTier;
 
   const PaperCard({
     super.key,
@@ -74,6 +75,7 @@ class PaperCard extends StatefulWidget {
     this.isRead = false,
     this.isInIdea = false,
     this.isIdeaZone = false,
+    this.showTier = true,
   });
 
   @override
@@ -104,8 +106,12 @@ class _PaperCardState extends State<PaperCard> {
   @override
   Widget build(BuildContext context) {
     final paper = widget.paper;
-    final tierColor = _tierColors[paper.tier] ?? _tierColors[3]!;
-    final tierBg = _tierBgColors[paper.tier] ?? _tierBgColors[3]!;
+    final tierColor = widget.showTier
+        ? (_tierColors[paper.tier] ?? _tierColors[3]!)
+        : const Color(0xFF6B5B4E);
+    final tierBg = widget.showTier
+        ? (_tierBgColors[paper.tier] ?? _tierBgColors[3]!)
+        : const Color(0xFFF0EDE8);
     final title = widget.showChinese && paper.titleCn.isNotEmpty
         ? paper.titleCn
         : paper.title;
@@ -173,7 +179,9 @@ class _PaperCardState extends State<PaperCard> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              '${paper.journalName} · ${_tierLabel(paper.tier)}',
+                              widget.showTier
+                                  ? '${paper.journalName} · ${_tierLabel(paper.tier)}'
+                                  : paper.journalName,
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,
