@@ -192,8 +192,8 @@ class PaperDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  // Chinese title
-                  if (paper.titleCn.isNotEmpty) ...[
+                  // Chinese title (skip if same as English title, e.g. CNKI)
+                  if (paper.titleCn.isNotEmpty && paper.titleCn != paper.title) ...[
                     RichText(
                       text: buildHighlightedText(
                         paper.titleCn,
@@ -208,16 +208,16 @@ class PaperDetailScreen extends StatelessWidget {
                     const SizedBox(height: 10),
                   ],
 
-                  // English title
+                  // English title (or primary title if no separate Chinese)
                   RichText(
                     text: buildHighlightedText(
                       paper.title,
                       TextStyle(
-                        fontSize: paper.titleCn.isNotEmpty ? 14 : 20,
-                        fontWeight: paper.titleCn.isNotEmpty
+                        fontSize: (paper.titleCn.isNotEmpty && paper.titleCn != paper.title) ? 14 : 20,
+                        fontWeight: (paper.titleCn.isNotEmpty && paper.titleCn != paper.title)
                             ? FontWeight.w400
                             : FontWeight.w700,
-                        color: paper.titleCn.isNotEmpty
+                        color: (paper.titleCn.isNotEmpty && paper.titleCn != paper.title)
                             ? const Color(0xFF6B6560)
                             : const Color(0xFF2D2A26),
                         height: 1.5,
@@ -225,7 +225,7 @@ class PaperDetailScreen extends StatelessWidget {
                     ),
                   ),
 
-                  // DOI
+                  // DOI or CNKI link
                   if (paper.doi.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     GestureDetector(
@@ -246,7 +246,9 @@ class PaperDetailScreen extends StatelessWidget {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                paper.doi,
+                                paper.doi.contains('cnki.net')
+                                    ? '知网链接'
+                                    : paper.doi,
                                 style: const TextStyle(
                                   fontSize: 12,
                                   color: Color(0xFF8B7355),
@@ -320,7 +322,7 @@ class PaperDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (paper.abstractCn.isNotEmpty) ...[
+                  if (paper.abstractCn.isNotEmpty && paper.abstractCn != paper.abstract_) ...[
                     RichText(
                       text: buildHighlightedText(
                         paper.abstractCn,

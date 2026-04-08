@@ -376,9 +376,11 @@ class _HomeScreenState extends State<HomeScreen>
         buffer.writeln('DA  - ${date.replaceAll('-', '/')}');
       }
       final doi = p['doi'] as String? ?? '';
-      if (doi.isNotEmpty) {
+      if (doi.isNotEmpty && doi.contains('doi.org')) {
         final doiClean = doi.replaceFirst('https://doi.org/', '');
         buffer.writeln('DO  - $doiClean');
+      } else if (doi.isNotEmpty) {
+        buffer.writeln('UR  - $doi');
       }
       final abstract_ = p['abstract'] as String? ?? '';
       if (abstract_.isNotEmpty) {
