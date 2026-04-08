@@ -360,7 +360,7 @@ class PaperDetailScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                  ] else ...[
+                  ] else if (paper.abstract_.isNotEmpty) ...[
                     RichText(
                       text: buildHighlightedText(
                         paper.abstract_,
@@ -368,6 +368,20 @@ class PaperDetailScreen extends StatelessWidget {
                           fontSize: 15,
                           height: 1.8,
                           color: Color(0xFF3D3A36),
+                        ),
+                      ),
+                    ),
+                  ] else ...[
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 20),
+                        child: Text(
+                          'No abstract available',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF9B9488),
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
                       ),
                     ),
