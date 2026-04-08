@@ -1,4 +1,4 @@
-enum DataSource { ft50, cepm }
+enum DataSource { ft50, cepm, cnki }
 
 extension DataSourceExt on DataSource {
   String get label {
@@ -7,6 +7,8 @@ extension DataSourceExt on DataSource {
         return 'FT50/UTD24';
       case DataSource.cepm:
         return 'CE/PM';
+      case DataSource.cnki:
+        return 'CNKI';
     }
   }
 
@@ -16,6 +18,8 @@ extension DataSourceExt on DataSource {
         return 'FT50 / UTD24 Journal Scanner';
       case DataSource.cepm:
         return 'CE / PM Journal Scanner';
+      case DataSource.cnki:
+        return 'CNKI Chinese Journal Scanner';
     }
   }
 
@@ -25,6 +29,8 @@ extension DataSourceExt on DataSource {
         return 'data/papers.json';
       case DataSource.cepm:
         return 'data/cepm_papers.json';
+      case DataSource.cnki:
+        return 'data/cnki_latest.json';
     }
   }
 
@@ -34,12 +40,16 @@ extension DataSourceExt on DataSource {
         return 'data/latest.json';
       case DataSource.cepm:
         return 'data/cepm_latest.json';
+      case DataSource.cnki:
+        return 'data/cnki_latest.json';
     }
   }
 
   String get stateKey {
-    return name; // 'ft50' or 'cepm'
+    return name; // 'ft50', 'cepm', or 'cnki'
   }
 
-  bool get hasTiers => this == DataSource.ft50;
+  bool get hasTiers => this == DataSource.ft50 || this == DataSource.cnki;
+
+  bool get isCnki => this == DataSource.cnki;
 }

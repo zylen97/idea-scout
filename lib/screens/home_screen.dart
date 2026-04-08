@@ -156,7 +156,7 @@ class _HomeScreenState extends State<HomeScreen>
         final papers = list.map((j) => Paper.fromJson(j as Map<String, dynamic>)).toList();
 
         // Fill tier from journal registry
-        final jMap = source == DataSource.cepm ? cepmJournalMap : journalMap;
+        final jMap = source == DataSource.ft50 ? journalMap : source == DataSource.cepm ? cepmJournalMap : <String, dynamic>{};
         for (final p in papers) {
           if (jMap.containsKey(p.journalId)) {
             p.tier = jMap[p.journalId]!.tier;
@@ -1035,7 +1035,7 @@ class _HomeScreenState extends State<HomeScreen>
     }).toList();
 
     // Fix tiers from journal registry
-    final jMap = _currentSource == DataSource.cepm ? cepmJournalMap : journalMap;
+    final jMap = _currentSource == DataSource.ft50 ? journalMap : _currentSource == DataSource.cepm ? cepmJournalMap : <String, dynamic>{};
     for (final p in ideaPaperObjects) {
       if (jMap.containsKey(p.journalId)) {
         p.tier = jMap[p.journalId]!.tier;
@@ -1576,11 +1576,18 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   static const _tierLabels = {1: 'A', 2: 'B', 3: 'C'};
-  static const _tierFieldNames = {
+  static const _ft50TierFieldNames = {
     1: 'Ops & IS',
     2: 'Econ & Strategy',
     3: 'Org & Mgmt',
   };
+  static const _cnkiTierFieldNames = {
+    1: '管理A',
+    2: '管理B1',
+    3: 'B2/工程',
+  };
+  Map<int, String> get _tierFieldNames =>
+      _currentSource.isCnki ? _cnkiTierFieldNames : _ft50TierFieldNames;
 
   Widget _buildTierChip(int tier) {
     final isSelected = _selectedTier == tier;
@@ -1663,6 +1670,19 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
+  List<DropdownMenuItem<String>> _cnkiJournalItems() {
+    final papers = _papersBySource[DataSource.cnki] ?? [];
+    final journalMap_ = <String, String>{};
+    for (final p in papers) {
+      journalMap_.putIfAbsent(p.journalId, () => p.journalName);
+    }
+    final sorted = journalMap_.entries.toList()..sort((a, b) => a.value.compareTo(b.value));
+    return sorted.map((e) => DropdownMenuItem(
+      value: e.key,
+      child: Text(e.value, style: const TextStyle(fontSize: 13)),
+    )).toList();
+  }
+
   Widget _buildJournalDropdown() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -1690,13 +1710,16 @@ class _HomeScreenState extends State<HomeScreen>
           DropdownMenuItem(
               value: null,
               child: Text(_showChinese ? '全部' : 'All')),
-          ...(_currentSource == DataSource.cepm ? cepmJournals : journals).map(
-            (j) => DropdownMenuItem(
-              value: j.id,
-              child: Text('${j.id} - ${j.name}',
-                  style: const TextStyle(fontSize: 13)),
+          if (_currentSource.isCnki)
+            ..._cnkiJournalItems()
+          else
+            ...(_currentSource == DataSource.cepm ? cepmJournals : journals).map(
+              (j) => DropdownMenuItem(
+                value: j.id,
+                child: Text('${j.id} - ${j.name}',
+                    style: const TextStyle(fontSize: 13)),
+              ),
             ),
-          ),
         ],
         onChanged: (v) {
           setState(() {
