@@ -1178,6 +1178,7 @@ class _HomeScreenState extends State<HomeScreen>
             builder: (_) => PaperDetailScreen(
               paper: paper,
               showChinese: _showChinese,
+              showTier: _currentSource.hasTiers,
             ),
           ),
         );
