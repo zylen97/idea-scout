@@ -336,6 +336,7 @@ class _HomeScreenState extends State<HomeScreen>
         '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
     setState(() {
       (_ideaPapersBySource[_currentSource] ??= []).add(paper.toIdeaJson(addedDate));
+      _applyFilters();
     });
     _saveLocalState();
     _pushToGitHub();
@@ -344,6 +345,7 @@ class _HomeScreenState extends State<HomeScreen>
   void _removeFromIdea(String doi) {
     setState(() {
       (_ideaPapersBySource[_currentSource] ?? []).removeWhere((p) => p['doi'] == doi);
+      _applyFilters();
     });
     _saveLocalState();
     _pushToGitHub();
