@@ -3,16 +3,86 @@ import '../models/paper.dart';
 
 /// Predefined keywords for highlighting
 const List<String> highlightKeywordsEn = [
-  'game theory', 'supply chain', 'network', 'optimization', 'prediction',
-  'platform', 'resilience', 'contract', 'auction', 'mechanism design',
-  'Nash', 'equilibrium', 'Stackelberg', 'coordination', 'disruption',
-  'ESG', 'sustainability',
+  // Game theory & mechanism design
+  'game theory', 'mechanism design', 'Nash', 'Stackelberg', 'equilibrium',
+  'biform game', 'differential game', 'evolutionary game', 'cooperative game',
+  'principal-agent', 'moral hazard', 'adverse selection', 'signaling',
+  'contract', 'auction', 'incentive', 'bargaining',
+  // Supply chain & operations
+  'supply chain', 'procurement', 'logistics', 'scheduling', 'inventory',
+  'coordination', 'disruption', 'resilience', 'lean construction',
+  'prefabricated', 'modular construction', 'off-site',
+  // Network & data
+  'network', 'social network', 'centrality', 'Shapley', 'community detection',
+  'SAOM', 'graph', 'knowledge graph',
+  // Prediction & optimization
+  'optimization', 'prediction', 'forecasting', 'machine learning', 'deep learning',
+  'predict-then-optimize', 'end-to-end', 'decision-focused',
+  'neural network', 'random forest', 'XGBoost', 'LSTM',
+  // Digital & technology
+  'digital transformation', 'digitalization', 'BIM', 'digital twin',
+  'blockchain', 'IoT', 'artificial intelligence', 'smart construction',
+  'automation', 'robotics', 'information system',
+  // Sustainability & ESG
+  'ESG', 'sustainability', 'sustainable development', 'carbon',
+  'green', 'circular economy', 'climate', 'emission',
+  'environmental disclosure', 'greenwashing', 'carbon label',
+  'corporate social responsibility', 'CSR',
+  // Construction & project management
+  'construction', 'project management', 'contractor', 'stakeholder',
+  'project delivery', 'PPP', 'risk', 'safety', 'accident',
+  'cost overrun', 'delay', 'dispute', 'claim',
+  'housing', 'affordable housing', 'infrastructure',
+  // Organization & strategy
+  'competitive advantage', 'innovation', 'collaboration', 'alliance',
+  'organizational learning', 'knowledge transfer', 'improvisation',
+  'team', 'leadership', 'trust', 'governance',
+  // Quantitative methods
+  'QCA', 'regression', 'panel data', 'causal inference',
+  'difference-in-difference', 'instrumental variable',
+  'Bayesian', 'Monte Carlo', 'simulation',
+  // Platform & market
+  'platform', 'two-sided market', 'matching', 'sharing economy',
+  'SaaS', 'coopetition',
+  // Disaster & emergency
+  'disaster', 'hazard', 'emergency', 'earthquake', 'flood',
+  'urban resilience', 'vulnerability',
 ];
 
 const List<String> highlightKeywordsCn = [
-  '博弈论', '供应链', '网络', '优化', '预测', '平台', '韧性', '合同',
-  '拍卖', '机制设计', '纳什', '均衡', '斯塔克尔伯格', '协调', '中断',
-  'ESG', '可持续',
+  // 博弈论
+  '博弈论', '博弈', '纳什', '斯塔克尔伯格', '均衡', '演化博弈', '微分博弈',
+  '合作博弈', '机制设计', '委托代理', '信号博弈', '激励', '合同',
+  // 供应链与运营
+  '供应链', '采购', '物流', '调度', '协调', '中断', '韧性',
+  '装配式', '预制', '模块化',
+  // 网络与数据
+  '网络', '社会网络', '中心性', 'Shapley', '知识图谱',
+  // 预测与优化
+  '优化', '预测', '机器学习', '深度学习', '神经网络',
+  '端到端', '决策优化', '随机森林',
+  // 数字化
+  '数字化', '数字化转型', 'BIM', '数字孪生', '区块链',
+  '人工智能', '智能建造', '自动化', '信息化', '物联网',
+  // 可持续与ESG
+  'ESG', '可持续', '碳排放', '碳标签', '绿色', '低碳',
+  '环境信息披露', '漂绿', '循环经济', '社会责任',
+  // 工程管理
+  '工程管理', '项目管理', '承包商', '利益相关方',
+  '施工', '安全', '事故', '风险', '延误', '超支',
+  '保障性住房', '基础设施', 'PPP',
+  // 组织与战略
+  '竞争优势', '创新', '合作', '联盟', '组织学习',
+  '知识转移', '即兴', '团队', '领导力', '信任', '治理',
+  // 方法
+  'QCA', '回归', '面板数据', '因果推断',
+  '双重差分', '工具变量', '贝叶斯', '仿真', '模拟',
+  // 平台
+  '平台', '共享经济', '竞合',
+  // 灾害
+  '灾害', '应急', '地震', '洪水', '城市韧性', '脆弱性',
+  // 城市与土地
+  '城市', '土地利用', '智慧城市', '数据治理',
 ];
 
 List<String> get allHighlightKeywords => [...highlightKeywordsEn, ...highlightKeywordsCn];
