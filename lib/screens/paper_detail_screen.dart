@@ -104,7 +104,7 @@ class PaperDetailScreen extends StatelessWidget {
                           TextSpan(
                             children: [
                               TextSpan(
-                                text: paper.journalId,
+                                text: paper.journalName,
                                 style: TextStyle(
                                   color: tierColor,
                                   fontSize: 13,
