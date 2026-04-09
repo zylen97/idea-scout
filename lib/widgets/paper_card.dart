@@ -133,6 +133,7 @@ class PaperCard extends StatefulWidget {
   final bool isInIdea;
   final bool isIdeaZone; // true when displayed in the Idea tab
   final bool showTier;
+  final double leftMargin;
 
   const PaperCard({
     super.key,
@@ -146,6 +147,7 @@ class PaperCard extends StatefulWidget {
     this.isInIdea = false,
     this.isIdeaZone = false,
     this.showTier = true,
+    this.leftMargin = 16,
   });
 
   @override
@@ -192,7 +194,7 @@ class _PaperCardState extends State<PaperCard> {
     final isRead = widget.isRead;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+      margin: EdgeInsets.only(left: widget.leftMargin, right: 16, top: 5, bottom: 5),
       decoration: BoxDecoration(
         color: isRead
             ? const Color(0xFFF0EEE8)

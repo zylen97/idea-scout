@@ -1243,10 +1243,10 @@ class _HomeScreenState extends State<HomeScreen>
                       });
                     },
                     child: Padding(
-                      padding: const EdgeInsets.only(left: 16, top: 22),
+                      padding: const EdgeInsets.only(left: 12, top: 22),
                       child: Icon(
                         isSelected ? Icons.check_box : Icons.check_box_outline_blank,
-                        size: 20,
+                        size: 22,
                         color: isSelected
                             ? const Color(0xFF8B7355)
                             : const Color(0xFFB5AFA6),
@@ -1256,6 +1256,7 @@ class _HomeScreenState extends State<HomeScreen>
                   // Paper card
                   Expanded(
                     child: PaperCard(
+                      leftMargin: 4,
                       paper: paper,
                       showChinese: _showChinese,
                       isRead: _readDois.contains(paper.trackingId),
