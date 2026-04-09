@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../data/journals.dart';
 import '../data/cepm_journals.dart';
+import '../data/cnki_journals.dart';
 import '../data/source_config.dart';
 import '../models/paper.dart';
 import '../widgets/paper_card.dart';
@@ -1030,7 +1031,7 @@ class _HomeScreenState extends State<HomeScreen>
         date: p['date'] as String? ?? '',
         journalId: p['journal_id'] as String? ?? '',
         journalName: p['journal_name'] as String? ?? '',
-        tier: 3,
+        tier: p['tier'] as int? ?? 3,
         topics: [],
         citedBy: 0,
         isOa: false,
@@ -1039,7 +1040,7 @@ class _HomeScreenState extends State<HomeScreen>
     }).toList();
 
     // Fix tiers from journal registry
-    final jMap = _currentSource == DataSource.ft50 ? journalMap : _currentSource == DataSource.cepm ? cepmJournalMap : <String, dynamic>{};
+    final jMap = _currentSource == DataSource.ft50 ? journalMap : _currentSource == DataSource.cepm ? cepmJournalMap : cnkiJournalMap;
     for (final p in ideaPaperObjects) {
       if (jMap.containsKey(p.journalId)) {
         p.tier = jMap[p.journalId]!.tier;

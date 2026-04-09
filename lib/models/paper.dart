@@ -65,6 +65,7 @@ class Paper {
         'date': date,
         'abstract': abstract_,
         'abstract_cn': abstractCn,
+        'tier': tier,
         'added_date': addedDate,
       };
 
