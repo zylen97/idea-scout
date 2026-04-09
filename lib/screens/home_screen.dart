@@ -46,7 +46,7 @@ class _HomeScreenState extends State<HomeScreen>
   Set<String> get _deletedDois => _deletedDoisBySource[_currentSource] ?? {};
   List<Map<String, dynamic>> get _ideaPapers => _ideaPapersBySource[_currentSource] ?? [];
   Set<String> get _readDois => _readDoisBySource[_currentSource] ?? {};
-  Set<String> get _ideaTrackingIds => _ideaPapers.map((p) => p['doi'] as String).toSet();
+  Set<String> get _ideaTrackingIds => _ideaPapers.map((p) => (p['tracking_id'] ?? p['doi']) as String).toSet();
 
   bool _isLoading = true;
   String _statusText = '';
@@ -323,7 +323,7 @@ class _HomeScreenState extends State<HomeScreen>
   void _deletePaper(Paper paper) {
     setState(() {
       (_deletedDoisBySource[_currentSource] ??= {}).add(paper.trackingId);
-      (_ideaPapersBySource[_currentSource] ?? []).removeWhere((p) => p['doi'] == paper.trackingId);
+      (_ideaPapersBySource[_currentSource] ?? []).removeWhere((p) => (p['tracking_id'] ?? p['doi']) == paper.trackingId);
       _applyFilters();
     });
     _saveLocalState();
@@ -345,7 +345,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   void _removeFromIdea(String trackingId) {
     setState(() {
-      (_ideaPapersBySource[_currentSource] ?? []).removeWhere((p) => p['doi'] == trackingId);
+      (_ideaPapersBySource[_currentSource] ?? []).removeWhere((p) => (p['tracking_id'] ?? p['doi']) == trackingId);
       _applyFilters();
     });
     _saveLocalState();
@@ -1036,6 +1036,7 @@ class _HomeScreenState extends State<HomeScreen>
         citedBy: 0,
         isOa: false,
         authors: (p['authors'] as List?)?.cast<String>() ?? [],
+        stableId: p['tracking_id'] as String? ?? '',
       );
     }).toList();
 
