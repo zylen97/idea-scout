@@ -361,8 +361,11 @@ class _HomeScreenState extends State<HomeScreen>
       return;
     }
 
+    final exportedPapers = List<Map<String, dynamic>>.from(_ideaPapers);
+    final exportedCount = exportedPapers.length;
+
     final buffer = StringBuffer();
-    for (final p in _ideaPapers) {
+    for (final p in exportedPapers) {
       buffer.writeln('TY  - JOUR');
       buffer.writeln('TI  - ${p['title'] ?? ''}');
       final authors = p['authors'] as List? ?? [];
@@ -400,6 +403,59 @@ class _HomeScreenState extends State<HomeScreen>
       ..setAttribute('download', filename)
       ..click();
     html.Url.revokeObjectUrl(url);
+
+    // Ask whether to clear exported papers from Idea
+    _showClearExportedDialog(exportedPapers, exportedCount);
+  }
+
+  void _showClearExportedDialog(List<Map<String, dynamic>> exportedPapers, int count) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(_showChinese ? '导出成功' : 'Export Complete'),
+        content: Text(
+          _showChinese
+              ? '已导出 $count 篇论文。\n是否从 Idea 中移除这些已导出的记录？'
+              : 'Exported $count papers.\nRemove these exported papers from Idea?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(_showChinese ? '保留' : 'Keep'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              _clearExportedPapers(exportedPapers);
+            },
+            child: Text(_showChinese ? '移除' : 'Remove'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _clearExportedPapers(List<Map<String, dynamic>> exportedPapers) {
+    final deletedSet = _deletedDoisBySource[_currentSource] ??= {};
+    final trackingIds = exportedPapers
+        .map((p) => (p['tracking_id'] ?? p['doi']) as String)
+        .toSet();
+
+    setState(() {
+      // Add to deleted so they won't reappear in Pending
+      deletedSet.addAll(trackingIds);
+      // Clear from Idea
+      (_ideaPapersBySource[_currentSource] ?? [])
+          .removeWhere((p) => trackingIds.contains((p['tracking_id'] ?? p['doi']) as String));
+      _applyFilters();
+    });
+    _saveLocalState();
+    _pushToGitHub();
+    _showMessage(
+      _showChinese
+          ? '已移除 ${trackingIds.length} 篇已导出论文'
+          : 'Removed ${trackingIds.length} exported papers',
+    );
   }
 
   // ──────────────────────────────────────────
