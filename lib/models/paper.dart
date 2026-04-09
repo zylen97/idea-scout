@@ -15,6 +15,10 @@ class Paper {
   final String? pdfUrl;
   final String scanDate; // from scan_date in papers.json
   final List<String> authors;
+  final String stableId; // CNKI stable ID (md5 of title+journal_id)
+
+  /// Stable tracking key: stableId for CNKI, doi for FT50/CEPM
+  String get trackingId => stableId.isNotEmpty ? stableId : doi;
 
   Paper({
     required this.id,
@@ -33,6 +37,7 @@ class Paper {
     this.pdfUrl,
     this.scanDate = '',
     this.authors = const [],
+    this.stableId = '',
   });
 
   Map<String, dynamic> toJson() => {
@@ -52,11 +57,12 @@ class Paper {
         'pdf_url': pdfUrl,
         'scan_date': scanDate,
         'authors': authors,
+        if (stableId.isNotEmpty) 'stable_id': stableId,
       };
 
   /// Convert to idea_papers entry for user_state.json
   Map<String, dynamic> toIdeaJson(String addedDate) => {
-        'doi': doi,
+        'doi': trackingId,
         'title': title,
         'title_cn': titleCn,
         'authors': authors,
@@ -91,6 +97,7 @@ class Paper {
       authors: json['authors'] != null
           ? List<String>.from(json['authors'] as List)
           : [],
+      stableId: json['stable_id'] as String? ?? '',
     );
   }
 }

@@ -46,7 +46,7 @@ class _HomeScreenState extends State<HomeScreen>
   Set<String> get _deletedDois => _deletedDoisBySource[_currentSource] ?? {};
   List<Map<String, dynamic>> get _ideaPapers => _ideaPapersBySource[_currentSource] ?? [];
   Set<String> get _readDois => _readDoisBySource[_currentSource] ?? {};
-  Set<String> get _ideaDois => _ideaPapers.map((p) => p['doi'] as String).toSet();
+  Set<String> get _ideaTrackingIds => _ideaPapers.map((p) => p['doi'] as String).toSet();
 
   bool _isLoading = true;
   String _statusText = '';
@@ -308,10 +308,10 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
-  Future<void> _markAsRead(String doi) async {
+  Future<void> _markAsRead(String trackingId) async {
     final readSet = _readDoisBySource[_currentSource] ?? {};
-    if (readSet.contains(doi)) return;
-    readSet.add(doi);
+    if (readSet.contains(trackingId)) return;
+    readSet.add(trackingId);
     _readDoisBySource[_currentSource] = readSet;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList('${_currentSource.stateKey}_read_dois', readSet.toList());
@@ -322,8 +322,8 @@ class _HomeScreenState extends State<HomeScreen>
   // ──────────────────────────────────────────
   void _deletePaper(Paper paper) {
     setState(() {
-      (_deletedDoisBySource[_currentSource] ??= {}).add(paper.doi);
-      (_ideaPapersBySource[_currentSource] ?? []).removeWhere((p) => p['doi'] == paper.doi);
+      (_deletedDoisBySource[_currentSource] ??= {}).add(paper.trackingId);
+      (_ideaPapersBySource[_currentSource] ?? []).removeWhere((p) => p['doi'] == paper.trackingId);
       _applyFilters();
     });
     _saveLocalState();
@@ -331,7 +331,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   void _addToIdea(Paper paper) {
-    if (_ideaDois.contains(paper.doi)) return;
+    if (_ideaTrackingIds.contains(paper.trackingId)) return;
     final today = DateTime.now();
     final addedDate =
         '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
@@ -343,9 +343,9 @@ class _HomeScreenState extends State<HomeScreen>
     _pushToGitHub();
   }
 
-  void _removeFromIdea(String doi) {
+  void _removeFromIdea(String trackingId) {
     setState(() {
-      (_ideaPapersBySource[_currentSource] ?? []).removeWhere((p) => p['doi'] == doi);
+      (_ideaPapersBySource[_currentSource] ?? []).removeWhere((p) => p['doi'] == trackingId);
       _applyFilters();
     });
     _saveLocalState();
@@ -497,13 +497,13 @@ class _HomeScreenState extends State<HomeScreen>
   void _applyFilters() {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final deletedDois = _deletedDoisBySource[_currentSource] ?? {};
-    final ideaDois = _ideaDois;
+    final deletedIds = _deletedDoisBySource[_currentSource] ?? {};
+    final ideaIds = _ideaTrackingIds;
 
     _filteredBySource[_currentSource] = (_papersBySource[_currentSource] ?? []).where((p) {
       // Hide deleted and idea papers from pending
-      if (deletedDois.contains(p.doi)) return false;
-      if (ideaDois.contains(p.doi)) return false;
+      if (deletedIds.contains(p.trackingId)) return false;
+      if (ideaIds.contains(p.trackingId)) return false;
 
       if (_selectedTier != null && p.tier != _selectedTier) return false;
       if (_selectedJournalId != null && p.journalId != _selectedJournalId) {
@@ -600,7 +600,7 @@ class _HomeScreenState extends State<HomeScreen>
     for (final key in sortedKeys) {
       final papers = groups[key]!;
       final unreadCount =
-          papers.where((p) => !_readDois.contains(p.doi)).length;
+          papers.where((p) => !_readDois.contains(p.trackingId)).length;
       final isExpanded = _scanGroupExpanded[key] ?? false;
       items.add(_ListItem.header(
         label: key,
@@ -1111,12 +1111,12 @@ class _HomeScreenState extends State<HomeScreen>
               return PaperCard(
                 paper: paper,
                 showChinese: _showChinese,
-                isRead: _readDois.contains(paper.doi),
+                isRead: _readDois.contains(paper.trackingId),
                 isIdeaZone: true,
                 showTier: _currentSource.hasTiers,
-                onRemoveFromIdea: () => _removeFromIdea(paper.doi),
+                onRemoveFromIdea: () => _removeFromIdea(paper.trackingId),
                 onTap: () async {
-                  await _markAsRead(paper.doi);
+                  await _markAsRead(paper.trackingId);
                   if (!mounted) return;
                   setState(() {});
                   Navigator.push(
@@ -1168,13 +1168,13 @@ class _HomeScreenState extends State<HomeScreen>
     return PaperCard(
       paper: paper,
       showChinese: _showChinese,
-      isRead: _readDois.contains(paper.doi),
-      isInIdea: _ideaDois.contains(paper.doi),
+      isRead: _readDois.contains(paper.trackingId),
+      isInIdea: _ideaTrackingIds.contains(paper.trackingId),
       showTier: _currentSource.hasTiers,
       onDelete: () => _deletePaper(paper),
       onIdea: () => _addToIdea(paper),
       onTap: () async {
-        await _markAsRead(paper.doi);
+        await _markAsRead(paper.trackingId);
         if (!mounted) return;
         setState(() {});
         Navigator.push(
@@ -1607,8 +1607,8 @@ class _HomeScreenState extends State<HomeScreen>
     final count = currentPapers
         .where((p) =>
             p.tier == tier &&
-            !deletedDois.contains(p.doi) &&
-            !_ideaDois.contains(p.doi))
+            !deletedDois.contains(p.trackingId) &&
+            !_ideaTrackingIds.contains(p.trackingId))
         .length;
     final label = _tierLabels[tier] ?? 'C';
 
