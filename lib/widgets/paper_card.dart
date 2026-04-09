@@ -133,6 +133,7 @@ class PaperCard extends StatefulWidget {
   final bool isInIdea;
   final bool isIdeaZone; // true when displayed in the Idea tab
   final bool showTier;
+  final String? tierLabel; // e.g. "管理A", "Ops & IS" — shown in badge
   final double leftMargin;
 
   const PaperCard({
@@ -147,6 +148,7 @@ class PaperCard extends StatefulWidget {
     this.isInIdea = false,
     this.isIdeaZone = false,
     this.showTier = true,
+    this.tierLabel,
     this.leftMargin = 16,
   });
 
@@ -169,7 +171,7 @@ class _PaperCardState extends State<PaperCard> {
   };
 
 
-  static String _tierLabel(int tier) {
+  static String _defaultTierLabel(int tier) {
     const labels = {1: 'A', 2: 'B', 3: 'C'};
     return labels[tier] ?? 'C';
   }
@@ -252,7 +254,7 @@ class _PaperCardState extends State<PaperCard> {
                             ),
                             child: Text(
                               widget.showTier
-                                  ? '${paper.journalName} · ${_tierLabel(paper.tier)}'
+                                  ? '${paper.journalName} · ${widget.tierLabel ?? _defaultTierLabel(paper.tier)}'
                                   : paper.journalName,
                               style: const TextStyle(
                                 color: Colors.white,

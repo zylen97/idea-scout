@@ -7,12 +7,14 @@ class PaperDetailScreen extends StatelessWidget {
   final Paper paper;
   final bool showChinese;
   final bool showTier;
+  final String? tierLabel;
 
   const PaperDetailScreen({
     super.key,
     required this.paper,
     required this.showChinese,
     this.showTier = true,
+    this.tierLabel,
   });
 
   static const _tierColors = {
@@ -113,7 +115,7 @@ class PaperDetailScreen extends StatelessWidget {
                               ),
                               if (showTier)
                                 TextSpan(
-                                  text: ' \u00b7 ${_catLabel(paper.tier)}',
+                                  text: ' \u00b7 ${tierLabel ?? _catLabel(paper.tier)}',
                                   style: TextStyle(
                                     color: tierColor.withValues(alpha: 0.6),
                                     fontSize: 12,

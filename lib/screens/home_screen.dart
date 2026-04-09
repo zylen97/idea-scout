@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../data/journals.dart';
+import '../models/journal.dart';
 import '../data/cepm_journals.dart';
 import '../data/cnki_journals.dart';
 import '../data/source_config.dart';
@@ -1389,6 +1390,7 @@ class _HomeScreenState extends State<HomeScreen>
                       isRead: _readDois.contains(paper.trackingId),
                       isIdeaZone: true,
                       showTier: _currentSource.hasTiers,
+                      tierLabel: _tierFieldNames[paper.tier],
                       onTap: () async {
                         await _markAsRead(paper.trackingId);
                         if (!mounted) return;
@@ -1400,6 +1402,7 @@ class _HomeScreenState extends State<HomeScreen>
                               paper: paper,
                               showChinese: _showChinese,
                               showTier: _currentSource.hasTiers,
+                              tierLabel: _tierFieldNames[paper.tier],
                             ),
                           ),
                         );
@@ -1448,6 +1451,7 @@ class _HomeScreenState extends State<HomeScreen>
       isRead: _readDois.contains(paper.trackingId),
       isInIdea: _ideaTrackingIds.contains(paper.trackingId),
       showTier: _currentSource.hasTiers,
+      tierLabel: _tierFieldNames[paper.tier],
       onDelete: () => _deletePaper(paper),
       onIdea: () => _addToIdea(paper),
       onTap: () async {
@@ -1461,6 +1465,7 @@ class _HomeScreenState extends State<HomeScreen>
               paper: paper,
               showChinese: _showChinese,
               showTier: _currentSource.hasTiers,
+              tierLabel: _tierFieldNames[paper.tier],
             ),
           ),
         );
@@ -1887,7 +1892,7 @@ class _HomeScreenState extends State<HomeScreen>
             !deletedDois.contains(p.trackingId) &&
             !_ideaTrackingIds.contains(p.trackingId))
         .length;
-    final label = _tierLabels[tier] ?? 'C';
+    final label = _tierFieldNames[tier] ?? (_tierLabels[tier] ?? 'C');
 
     return Padding(
       padding: const EdgeInsets.only(right: 6),
@@ -1953,16 +1958,33 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   List<DropdownMenuItem<String>> _cnkiJournalItems() {
+    // Build journal -> tier lookup from registry
+    final tierMap = <String, int>{};
+    for (final j in cnkiJournals) {
+      tierMap[j.id] = j.tier;
+    }
     final papers = _papersBySource[DataSource.cnki] ?? [];
     final journalMap_ = <String, String>{};
     for (final p in papers) {
       journalMap_.putIfAbsent(p.journalId, () => p.journalName);
     }
-    final sorted = journalMap_.entries.toList()..sort((a, b) => a.value.compareTo(b.value));
-    return sorted.map((e) => DropdownMenuItem(
-      value: e.key,
-      child: Text(e.value, style: const TextStyle(fontSize: 13)),
-    )).toList();
+    // Sort by tier first, then by name
+    final sorted = journalMap_.entries.toList()
+      ..sort((a, b) {
+        final ta = tierMap[a.key] ?? 9;
+        final tb = tierMap[b.key] ?? 9;
+        if (ta != tb) return ta.compareTo(tb);
+        return a.value.compareTo(b.value);
+      });
+    return sorted.map((e) {
+      final tier = tierMap[e.key];
+      final tierName = tier != null ? (_cnkiTierFieldNames[tier] ?? '') : '';
+      final prefix = tierName.isNotEmpty ? '[$tierName] ' : '';
+      return DropdownMenuItem(
+        value: e.key,
+        child: Text('$prefix${e.value}', style: const TextStyle(fontSize: 13)),
+      );
+    }).toList();
   }
 
   Widget _buildJournalDropdown() {
@@ -1994,13 +2016,28 @@ class _HomeScreenState extends State<HomeScreen>
               child: Text(_showChinese ? '全部' : 'All')),
           if (_currentSource.isCnki)
             ..._cnkiJournalItems()
-          else
-            ...(_currentSource == DataSource.cepm ? cepmJournals : journals).map(
+          else if (_currentSource == DataSource.cepm)
+            ...cepmJournals.map(
               (j) => DropdownMenuItem(
                 value: j.id,
-                child: Text('${j.id} - ${j.name}',
+                child: Text(j.name,
                     style: const TextStyle(fontSize: 13)),
               ),
+            )
+          else
+            ...([...journals]..sort((a, b) {
+              if (a.tier != b.tier) return a.tier.compareTo(b.tier);
+              return a.name.compareTo(b.name);
+            })).map(
+              (j) {
+                final tierName = _ft50TierFieldNames[j.tier] ?? '';
+                final prefix = tierName.isNotEmpty ? '[$tierName] ' : '';
+                return DropdownMenuItem(
+                  value: j.id,
+                  child: Text('$prefix${j.name}',
+                      style: const TextStyle(fontSize: 13)),
+                );
+              },
             ),
         ],
         onChanged: (v) {
