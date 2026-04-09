@@ -1,4 +1,4 @@
-enum DataSource { ft50, cepm, cnki }
+enum DataSource { cnki, ft50, cepm }
 
 extension DataSourceExt on DataSource {
   String get label {

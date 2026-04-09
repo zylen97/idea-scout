@@ -32,7 +32,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   // Source switcher
-  DataSource _currentSource = DataSource.ft50;
+  DataSource _currentSource = DataSource.cnki;
 
   // Per-source state
   final Map<DataSource, List<Paper>> _papersBySource = {};
