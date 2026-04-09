@@ -328,6 +328,8 @@ class _HomeScreenState extends State<HomeScreen>
     setState(() {
       (_deletedDoisBySource[_currentSource] ??= {}).add(paper.trackingId);
       (_ideaPapersBySource[_currentSource] ?? []).removeWhere((p) => (p['tracking_id'] ?? p['doi']) == paper.trackingId);
+      _selectedIdeaIds.remove(paper.trackingId);
+      _knownIdeaIds.remove(paper.trackingId);
       _applyFilters();
     });
     _saveLocalState();
@@ -352,6 +354,7 @@ class _HomeScreenState extends State<HomeScreen>
       (_deletedDoisBySource[_currentSource] ??= {}).add(trackingId);
       (_ideaPapersBySource[_currentSource] ?? []).removeWhere((p) => (p['tracking_id'] ?? p['doi']) == trackingId);
       _selectedIdeaIds.remove(trackingId);
+      _knownIdeaIds.remove(trackingId);
       _applyFilters();
     });
     _saveLocalState();
@@ -475,6 +478,7 @@ class _HomeScreenState extends State<HomeScreen>
           .removeWhere((p) => trackingIds.contains((p['tracking_id'] ?? p['doi']) as String));
       // Clear selection state
       _selectedIdeaIds.removeAll(trackingIds);
+      _knownIdeaIds.removeAll(trackingIds);
       _applyFilters();
     });
     _saveLocalState();
