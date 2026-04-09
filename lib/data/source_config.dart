@@ -30,7 +30,7 @@ extension DataSourceExt on DataSource {
       case DataSource.cepm:
         return 'data/cepm_papers.json';
       case DataSource.cnki:
-        return 'data/cnki_latest.json';
+        return 'data/cnki_papers.json';
     }
   }
 
