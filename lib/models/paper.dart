@@ -63,7 +63,7 @@ class Paper {
   /// Convert to idea_papers entry for user_state.json
   Map<String, dynamic> toIdeaJson(String addedDate) => {
         'doi': doi,
-        if (stableId.isNotEmpty) 'tracking_id': stableId,
+        'tracking_id': trackingId,
         'title': title,
         'title_cn': titleCn,
         'authors': authors,

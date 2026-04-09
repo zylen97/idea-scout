@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:html' as html;
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -182,6 +183,9 @@ class _HomeScreenState extends State<HomeScreen>
         }
       } catch (_) {}
 
+      // Fix CNKI deleted_dois that contain URLs instead of stable_ids
+      _fixCnkiDeletedIds();
+
       // Compute scan date for current source
       _updateScanDate();
 
@@ -252,11 +256,69 @@ class _HomeScreenState extends State<HomeScreen>
           _ideaPapersBySource[DataSource.cepm] = [];
         }
 
+        // Backfill missing tracking_id in CNKI idea_papers
+        _fixCnkiIdeaTrackingIds();
+
         // Save merged state locally
         await _saveLocalState();
       }
     } catch (e) {
       debugPrint('GitHub sync failed: $e');
+    }
+  }
+
+  /// Compute CNKI stable_id: md5(title|journal_id)
+  static String _cnkiStableId(String title, String journalId) {
+    final input = '$title|$journalId';
+    return md5.convert(utf8.encode(input)).toString();
+  }
+
+  /// Backfill missing tracking_id in CNKI idea_papers (can run before papers load)
+  void _fixCnkiIdeaTrackingIds() {
+    final ideas = _ideaPapersBySource[DataSource.cnki];
+    if (ideas == null) return;
+
+    bool dirty = false;
+    for (final p in ideas) {
+      if (p['tracking_id'] == null || (p['tracking_id'] as String).isEmpty) {
+        final title = p['title'] as String? ?? '';
+        final journalId = p['journal_id'] as String? ?? '';
+        if (title.isNotEmpty && journalId.isNotEmpty) {
+          p['tracking_id'] = _cnkiStableId(title, journalId);
+          dirty = true;
+        }
+      }
+    }
+    if (dirty) debugPrint('Backfilled CNKI idea tracking IDs');
+  }
+
+  /// Fix CNKI deleted_dois: replace URLs with stable_ids (must run after papers load)
+  void _fixCnkiDeletedIds() {
+    final deleted = _deletedDoisBySource[DataSource.cnki];
+    if (deleted == null) return;
+
+    final urlEntries = deleted.where((id) => id.startsWith('http')).toSet();
+    if (urlEntries.isEmpty) return;
+
+    // Build URL -> stable_id lookup from loaded papers
+    final papersByDoi = <String, Paper>{};
+    for (final p in _papersBySource[DataSource.cnki] ?? <Paper>[]) {
+      if (p.doi.isNotEmpty) papersByDoi[p.doi] = p;
+    }
+
+    bool dirty = false;
+    for (final url in urlEntries) {
+      final paper = papersByDoi[url];
+      if (paper != null && paper.stableId.isNotEmpty) {
+        deleted.remove(url);
+        deleted.add(paper.stableId);
+        dirty = true;
+      }
+    }
+    if (dirty) {
+      debugPrint('Fixed ${urlEntries.length} CNKI deleted IDs from URL to stable_id');
+      _saveLocalState();
+      _pushToGitHub();
     }
   }
 
