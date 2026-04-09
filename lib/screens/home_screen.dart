@@ -490,6 +490,52 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
+  void _batchRemoveFromIdea() {
+    final count = _selectedIdeaIds.length;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(_showChinese ? '确认删除' : 'Confirm Delete'),
+        content: Text(
+          _showChinese
+              ? '确定要从 Idea 中移除选中的 $count 篇论文吗？'
+              : 'Remove $count selected papers from Idea?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(_showChinese ? '取消' : 'Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFC25B3F),
+            ),
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              final idsToRemove = Set<String>.from(_selectedIdeaIds);
+              setState(() {
+                (_deletedDoisBySource[_currentSource] ??= {}).addAll(idsToRemove);
+                (_ideaPapersBySource[_currentSource] ?? [])
+                    .removeWhere((p) => idsToRemove.contains((p['tracking_id'] ?? p['doi']) as String));
+                _selectedIdeaIds.removeAll(idsToRemove);
+                _knownIdeaIds.removeAll(idsToRemove);
+                _applyFilters();
+              });
+              _saveLocalState();
+              _pushToGitHub();
+              _showMessage(
+                _showChinese
+                    ? '已移除 ${idsToRemove.length} 篇论文'
+                    : 'Removed ${idsToRemove.length} papers',
+              );
+            },
+            child: Text(_showChinese ? '删除' : 'Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ──────────────────────────────────────────
   // Token settings dialog
   // ──────────────────────────────────────────
@@ -1197,6 +1243,29 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ),
               const Spacer(),
+              // Batch delete button
+              GestureDetector(
+                onTap: _selectedIdeaIds.isEmpty ? null : _batchRemoveFromIdea,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 8),
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: BoxDecoration(
+                    color: _selectedIdeaIds.isEmpty
+                        ? const Color(0xFFD8D4CA)
+                        : const Color(0xFFC25B3F),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.delete_outline,
+                    size: 16,
+                    color: _selectedIdeaIds.isEmpty
+                        ? const Color(0xFFB5AFA6)
+                        : Colors.white,
+                  ),
+                ),
+              ),
+              // Export RIS button
               GestureDetector(
                 onTap: _exportRis,
                 child: Container(
@@ -1204,7 +1273,7 @@ class _HomeScreenState extends State<HomeScreen>
                       horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
                     color: _selectedIdeaIds.isEmpty
-                        ? const Color(0xFFB5AFA6)
+                        ? const Color(0xFFD8D4CA)
                         : const Color(0xFF8B7355),
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -1270,7 +1339,6 @@ class _HomeScreenState extends State<HomeScreen>
                       isRead: _readDois.contains(paper.trackingId),
                       isIdeaZone: true,
                       showTier: _currentSource.hasTiers,
-                      onRemoveFromIdea: () => _removeFromIdea(paper.trackingId),
                       onTap: () async {
                         await _markAsRead(paper.trackingId);
                         if (!mounted) return;
