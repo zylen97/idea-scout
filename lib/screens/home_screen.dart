@@ -77,6 +77,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   // Idea tab: selected papers for export
   final Set<String> _selectedIdeaIds = {};
+  final Set<String> _knownIdeaIds = {}; // tracks which IDs have been auto-selected
 
   // Tab controller
   late TabController _tabController;
@@ -819,6 +820,7 @@ class _HomeScreenState extends State<HomeScreen>
                           _selectedJournalId = null;
                           _selectedTier = null;
                           _selectedIdeaIds.clear();
+                          _knownIdeaIds.clear();
                           _updateScanDate();
                           _applyFilters();
                         });
@@ -1132,12 +1134,14 @@ class _HomeScreenState extends State<HomeScreen>
       }
     }
 
-    // Sync selection: remove stale IDs, auto-select new papers
+    // Sync selection: remove stale IDs, auto-select only truly new papers
     final allIdeaIds = ideaPaperObjects.map((p) => p.trackingId).toSet();
     _selectedIdeaIds.removeWhere((id) => !allIdeaIds.contains(id));
-    // Auto-select newly added papers
+    _knownIdeaIds.removeWhere((id) => !allIdeaIds.contains(id));
+    // Auto-select papers we haven't seen before (newly added)
     for (final id in allIdeaIds) {
-      if (!_selectedIdeaIds.contains(id)) {
+      if (!_knownIdeaIds.contains(id)) {
+        _knownIdeaIds.add(id);
         _selectedIdeaIds.add(id);
       }
     }
