@@ -75,6 +75,9 @@ class _HomeScreenState extends State<HomeScreen>
   // Journal group view: which groups are expanded
   final Map<String, bool> _journalGroupExpanded = {};
 
+  // Idea tab: selected papers for export
+  final Set<String> _selectedIdeaIds = {};
+
   // Tab controller
   late TabController _tabController;
 
@@ -345,7 +348,9 @@ class _HomeScreenState extends State<HomeScreen>
 
   void _removeFromIdea(String trackingId) {
     setState(() {
+      (_deletedDoisBySource[_currentSource] ??= {}).add(trackingId);
       (_ideaPapersBySource[_currentSource] ?? []).removeWhere((p) => (p['tracking_id'] ?? p['doi']) == trackingId);
+      _selectedIdeaIds.remove(trackingId);
       _applyFilters();
     });
     _saveLocalState();
@@ -361,7 +366,17 @@ class _HomeScreenState extends State<HomeScreen>
       return;
     }
 
-    final exportedPapers = List<Map<String, dynamic>>.from(_ideaPapers);
+    // Export only selected papers
+    final exportedPapers = _ideaPapers.where((p) {
+      final tid = (p['tracking_id'] ?? p['doi']) as String;
+      return _selectedIdeaIds.contains(tid);
+    }).toList();
+
+    if (exportedPapers.isEmpty) {
+      _showMessage(_showChinese ? '请先勾选要导出的论文' : 'Please select papers to export');
+      return;
+    }
+
     final exportedCount = exportedPapers.length;
 
     final buffer = StringBuffer();
@@ -398,11 +413,21 @@ class _HomeScreenState extends State<HomeScreen>
     final bytes = utf8.encode(content);
     final blob = html.Blob([bytes], 'application/x-research-info-systems');
     final url = html.Url.createObjectUrlFromBlob(blob);
-    final filename = _currentSource == DataSource.cepm ? 'cepm_idea_papers.ris' : 'idea_papers.ris';
+    final filename = _currentSource == DataSource.cepm
+        ? 'cepm_idea_papers.ris'
+        : _currentSource == DataSource.cnki
+            ? 'cnki_idea_papers.ris'
+            : 'idea_papers.ris';
     final anchor = html.AnchorElement(href: url)
       ..setAttribute('download', filename)
-      ..click();
-    html.Url.revokeObjectUrl(url);
+      ..style.display = 'none';
+    html.document.body!.append(anchor);
+    anchor.click();
+    anchor.remove();
+    // Delay revoking so browser has time to start the download
+    Future.delayed(const Duration(seconds: 1), () {
+      html.Url.revokeObjectUrl(url);
+    });
 
     // Ask whether to clear exported papers from Idea
     _showClearExportedDialog(exportedPapers, exportedCount);
@@ -447,6 +472,8 @@ class _HomeScreenState extends State<HomeScreen>
       // Clear from Idea
       (_ideaPapersBySource[_currentSource] ?? [])
           .removeWhere((p) => trackingIds.contains((p['tracking_id'] ?? p['doi']) as String));
+      // Clear selection state
+      _selectedIdeaIds.removeAll(trackingIds);
       _applyFilters();
     });
     _saveLocalState();
@@ -791,6 +818,7 @@ class _HomeScreenState extends State<HomeScreen>
                           _currentSource = source;
                           _selectedJournalId = null;
                           _selectedTier = null;
+                          _selectedIdeaIds.clear();
                           _updateScanDate();
                           _applyFilters();
                         });
@@ -1104,9 +1132,21 @@ class _HomeScreenState extends State<HomeScreen>
       }
     }
 
+    // Sync selection: remove stale IDs, auto-select new papers
+    final allIdeaIds = ideaPaperObjects.map((p) => p.trackingId).toSet();
+    _selectedIdeaIds.removeWhere((id) => !allIdeaIds.contains(id));
+    // Auto-select newly added papers
+    for (final id in allIdeaIds) {
+      if (!_selectedIdeaIds.contains(id)) {
+        _selectedIdeaIds.add(id);
+      }
+    }
+
+    final allSelected = _selectedIdeaIds.length == ideaPaperObjects.length;
+
     return Column(
       children: [
-        // Export RIS button bar
+        // Top bar: select all + count + export
         Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -1117,11 +1157,31 @@ class _HomeScreenState extends State<HomeScreen>
           ),
           child: Row(
             children: [
-              const Icon(Icons.lightbulb,
-                  size: 16, color: Color(0xFFB8963E)),
+              // Select all / deselect all
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    if (allSelected) {
+                      _selectedIdeaIds.clear();
+                    } else {
+                      _selectedIdeaIds.addAll(allIdeaIds);
+                    }
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(2),
+                  child: Icon(
+                    allSelected ? Icons.check_box : Icons.check_box_outline_blank,
+                    size: 20,
+                    color: const Color(0xFF8B7355),
+                  ),
+                ),
+              ),
               const SizedBox(width: 8),
               Text(
-                '${_ideaPapers.length} ${_showChinese ? "篇" : "papers"}',
+                _selectedIdeaIds.isEmpty
+                    ? '${_ideaPapers.length} ${_showChinese ? "篇" : "papers"}'
+                    : '${_selectedIdeaIds.length}/${_ideaPapers.length} ${_showChinese ? "篇" : "papers"}',
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
@@ -1135,7 +1195,9 @@ class _HomeScreenState extends State<HomeScreen>
                   padding: const EdgeInsets.symmetric(
                       horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF8B7355),
+                    color: _selectedIdeaIds.isEmpty
+                        ? const Color(0xFFB5AFA6)
+                        : const Color(0xFF8B7355),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
@@ -1165,28 +1227,59 @@ class _HomeScreenState extends State<HomeScreen>
             itemCount: ideaPaperObjects.length,
             itemBuilder: (ctx, i) {
               final paper = ideaPaperObjects[i];
-              return PaperCard(
-                paper: paper,
-                showChinese: _showChinese,
-                isRead: _readDois.contains(paper.trackingId),
-                isIdeaZone: true,
-                showTier: _currentSource.hasTiers,
-                onRemoveFromIdea: () => _removeFromIdea(paper.trackingId),
-                onTap: () async {
-                  await _markAsRead(paper.trackingId);
-                  if (!mounted) return;
-                  setState(() {});
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => PaperDetailScreen(
-                        paper: paper,
-                        showChinese: _showChinese,
-                        showTier: _currentSource.hasTiers,
+              final isSelected = _selectedIdeaIds.contains(paper.trackingId);
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Checkbox
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        if (isSelected) {
+                          _selectedIdeaIds.remove(paper.trackingId);
+                        } else {
+                          _selectedIdeaIds.add(paper.trackingId);
+                        }
+                      });
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 16, top: 22),
+                      child: Icon(
+                        isSelected ? Icons.check_box : Icons.check_box_outline_blank,
+                        size: 20,
+                        color: isSelected
+                            ? const Color(0xFF8B7355)
+                            : const Color(0xFFB5AFA6),
                       ),
                     ),
-                  );
-                },
+                  ),
+                  // Paper card
+                  Expanded(
+                    child: PaperCard(
+                      paper: paper,
+                      showChinese: _showChinese,
+                      isRead: _readDois.contains(paper.trackingId),
+                      isIdeaZone: true,
+                      showTier: _currentSource.hasTiers,
+                      onRemoveFromIdea: () => _removeFromIdea(paper.trackingId),
+                      onTap: () async {
+                        await _markAsRead(paper.trackingId);
+                        if (!mounted) return;
+                        setState(() {});
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => PaperDetailScreen(
+                              paper: paper,
+                              showChinese: _showChinese,
+                              showTier: _currentSource.hasTiers,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               );
             },
           ),
