@@ -11,6 +11,7 @@ import '../data/cnki_journals.dart';
 import '../data/source_config.dart';
 import '../models/paper.dart';
 import '../widgets/paper_card.dart';
+import '../widgets/stats_panel.dart';
 import 'paper_detail_screen.dart';
 
 // ──────────────────────────────────────────
@@ -38,14 +39,14 @@ class _HomeScreenState extends State<HomeScreen>
   // Per-source state
   final Map<DataSource, List<Paper>> _papersBySource = {};
   final Map<DataSource, List<Paper>> _filteredBySource = {};
-  final Map<DataSource, Set<String>> _deletedDoisBySource = {};
+  final Map<DataSource, Map<String, String>> _deletedDoisBySource = {};
   final Map<DataSource, List<Map<String, dynamic>>> _ideaPapersBySource = {};
   final Map<DataSource, Set<String>> _readDoisBySource = {};
 
   // Convenience getters for current source
   List<Paper> get _papers => _papersBySource[_currentSource] ?? [];
   List<Paper> get _filteredPapers => _filteredBySource[_currentSource] ?? [];
-  Set<String> get _deletedDois => _deletedDoisBySource[_currentSource] ?? {};
+  Set<String> get _deletedDois => _deletedDoisBySource[_currentSource]?.keys.toSet() ?? {};
   List<Map<String, dynamic>> get _ideaPapers => _ideaPapersBySource[_currentSource] ?? [];
   Set<String> get _readDois => _readDoisBySource[_currentSource] ?? {};
   Set<String> get _ideaTrackingIds => _ideaPapers.map((p) => (p['tracking_id'] ?? p['doi']) as String).toSet();
@@ -124,7 +125,14 @@ class _HomeScreenState extends State<HomeScreen>
         }
 
         _readDoisBySource[source] = (prefs.getStringList('${prefix}_read_dois') ?? []).toSet();
-        _deletedDoisBySource[source] = (prefs.getStringList('${prefix}_deleted_dois') ?? []).toSet();
+        // Load deleted_dois: try v2 (Map<id,date>) first, fallback to old string list
+        final deletedV2 = prefs.getString('${prefix}_deleted_dois_v2');
+        if (deletedV2 != null) {
+          _deletedDoisBySource[source] = Map<String, String>.from(jsonDecode(deletedV2));
+        } else {
+          final oldList = prefs.getStringList('${prefix}_deleted_dois') ?? [];
+          _deletedDoisBySource[source] = {for (final id in oldList) id: '2026-04-09'};
+        }
         final ideaJson = prefs.getString('${prefix}_idea_papers');
         if (ideaJson != null) {
           _ideaPapersBySource[source] = List<Map<String, dynamic>>.from(
@@ -242,15 +250,42 @@ class _HomeScreenState extends State<HomeScreen>
           for (final source in DataSource.values) {
             final key = source.stateKey;
             final sourceState = state[key] as Map<String, dynamic>? ?? {};
-            _deletedDoisBySource[source] = Set<String>.from(
-                (sourceState['deleted_dois'] as List?)?.cast<String>() ?? []);
+            // deleted_dois: handle both old ["id",...] and new [{"id":..,"date":..},...] formats
+            final rawDeleted = sourceState['deleted_dois'] as List? ?? [];
+            if (rawDeleted.isEmpty) {
+              _deletedDoisBySource[source] = {};
+            } else if (rawDeleted.first is String) {
+              _deletedDoisBySource[source] = {
+                for (final id in rawDeleted.cast<String>()) id: '2026-04-09'
+              };
+            } else {
+              _deletedDoisBySource[source] = {
+                for (final item in rawDeleted.cast<Map<String, dynamic>>())
+                  item['id'] as String: item['date'] as String
+              };
+            }
             _ideaPapersBySource[source] = List<Map<String, dynamic>>.from(
                 sourceState['idea_papers'] as List? ?? []);
+            // read_dois: merge remote + local (additive, never shrinks)
+            final remoteRead = Set<String>.from(
+                (sourceState['read_dois'] as List?)?.cast<String>() ?? []);
+            _readDoisBySource[source] = (_readDoisBySource[source] ?? {}).union(remoteRead);
           }
         } else {
           // Legacy flat format -> migrate to ft50
-          _deletedDoisBySource[DataSource.ft50] = Set<String>.from(
-              (state['deleted_dois'] as List?)?.cast<String>() ?? []);
+          final rawDeleted = state['deleted_dois'] as List? ?? [];
+          if (rawDeleted.isEmpty) {
+            _deletedDoisBySource[DataSource.ft50] = {};
+          } else if (rawDeleted.first is String) {
+            _deletedDoisBySource[DataSource.ft50] = {
+              for (final id in rawDeleted.cast<String>()) id: '2026-04-09'
+            };
+          } else {
+            _deletedDoisBySource[DataSource.ft50] = {
+              for (final item in rawDeleted.cast<Map<String, dynamic>>())
+                item['id'] as String: item['date'] as String
+            };
+          }
           _ideaPapersBySource[DataSource.ft50] = List<Map<String, dynamic>>.from(
               state['idea_papers'] as List? ?? []);
           _deletedDoisBySource[DataSource.cepm] = {};
@@ -298,7 +333,7 @@ class _HomeScreenState extends State<HomeScreen>
     final deleted = _deletedDoisBySource[DataSource.cnki];
     if (deleted == null) return;
 
-    final urlEntries = deleted.where((id) => id.startsWith('http')).toSet();
+    final urlEntries = deleted.keys.where((id) => id.startsWith('http')).toList();
     if (urlEntries.isEmpty) return;
 
     // Build URL -> stable_id lookup from loaded papers
@@ -308,11 +343,12 @@ class _HomeScreenState extends State<HomeScreen>
     }
 
     bool dirty = false;
+    final today = _todayString();
     for (final url in urlEntries) {
       final paper = papersByDoi[url];
       if (paper != null && paper.stableId.isNotEmpty) {
-        deleted.remove(url);
-        deleted.add(paper.stableId);
+        final date = deleted.remove(url) ?? today;
+        deleted[paper.stableId] = date;
         dirty = true;
       }
     }
@@ -329,8 +365,12 @@ class _HomeScreenState extends State<HomeScreen>
       final stateJson = jsonEncode({
         for (final source in DataSource.values)
           source.stateKey: {
-            'deleted_dois': (_deletedDoisBySource[source] ?? {}).toList(),
+            'deleted_dois': (_deletedDoisBySource[source] ?? {})
+                .entries
+                .map((e) => {'id': e.key, 'date': e.value})
+                .toList(),
             'idea_papers': _ideaPapersBySource[source] ?? [],
+            'read_dois': (_readDoisBySource[source] ?? {}).toList(),
           },
       });
       final encoded = base64Encode(utf8.encode(stateJson));
@@ -368,10 +408,12 @@ class _HomeScreenState extends State<HomeScreen>
     final prefs = await SharedPreferences.getInstance();
     for (final source in DataSource.values) {
       final prefix = source.stateKey;
-      await prefs.setStringList('${prefix}_deleted_dois',
-          (_deletedDoisBySource[source] ?? {}).toList());
+      await prefs.setString('${prefix}_deleted_dois_v2',
+          jsonEncode(_deletedDoisBySource[source] ?? {}));
       await prefs.setString('${prefix}_idea_papers',
           jsonEncode(_ideaPapersBySource[source] ?? []));
+      await prefs.setStringList('${prefix}_read_dois',
+          (_readDoisBySource[source] ?? {}).toList());
     }
   }
 
@@ -387,9 +429,14 @@ class _HomeScreenState extends State<HomeScreen>
   // ──────────────────────────────────────────
   // Actions: delete and idea
   // ──────────────────────────────────────────
+  String _todayString() {
+    final now = DateTime.now();
+    return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+  }
+
   void _deletePaper(Paper paper) {
     setState(() {
-      (_deletedDoisBySource[_currentSource] ??= {}).add(paper.trackingId);
+      (_deletedDoisBySource[_currentSource] ??= {})[paper.trackingId] = _todayString();
       (_ideaPapersBySource[_currentSource] ?? []).removeWhere((p) => (p['tracking_id'] ?? p['doi']) == paper.trackingId);
       _selectedIdeaIds.remove(paper.trackingId);
       _knownIdeaIds.remove(paper.trackingId);
@@ -401,9 +448,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   void _addToIdea(Paper paper) {
     if (_ideaTrackingIds.contains(paper.trackingId)) return;
-    final today = DateTime.now();
-    final addedDate =
-        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+    final addedDate = _todayString();
     setState(() {
       (_ideaPapersBySource[_currentSource] ??= []).add(paper.toIdeaJson(addedDate));
       _applyFilters();
@@ -516,14 +561,17 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   void _clearExportedPapers(List<Map<String, dynamic>> exportedPapers) {
-    final deletedSet = _deletedDoisBySource[_currentSource] ??= {};
+    final deletedMap = _deletedDoisBySource[_currentSource] ??= {};
     final trackingIds = exportedPapers
         .map((p) => (p['tracking_id'] ?? p['doi']) as String)
         .toSet();
 
     setState(() {
       // Add to deleted so they won't reappear in Pending
-      deletedSet.addAll(trackingIds);
+      final today = _todayString();
+      for (final id in trackingIds) {
+        deletedMap[id] = today;
+      }
       // Clear from Idea
       (_ideaPapersBySource[_currentSource] ?? [])
           .removeWhere((p) => trackingIds.contains((p['tracking_id'] ?? p['doi']) as String));
@@ -565,7 +613,11 @@ class _HomeScreenState extends State<HomeScreen>
               Navigator.of(ctx).pop();
               final idsToRemove = Set<String>.from(_selectedIdeaIds);
               setState(() {
-                (_deletedDoisBySource[_currentSource] ??= {}).addAll(idsToRemove);
+                final deletedMap = _deletedDoisBySource[_currentSource] ??= {};
+                final today = _todayString();
+                for (final id in idsToRemove) {
+                  deletedMap[id] = today;
+                }
                 (_ideaPapersBySource[_currentSource] ?? [])
                     .removeWhere((p) => idsToRemove.contains((p['tracking_id'] ?? p['doi']) as String));
                 _selectedIdeaIds.removeAll(idsToRemove);
@@ -590,6 +642,30 @@ class _HomeScreenState extends State<HomeScreen>
   // ──────────────────────────────────────────
   // Token settings dialog
   // ──────────────────────────────────────────
+  void _showStatsPanel() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFFE8E6DC),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.55,
+        maxChildSize: 0.85,
+        minChildSize: 0.3,
+        expand: false,
+        builder: (_, scrollController) => StatsPanel(
+          deletedDoisBySource: _deletedDoisBySource,
+          readDoisBySource: _readDoisBySource,
+          ideaPapersBySource: _ideaPapersBySource,
+          showChinese: _showChinese,
+          scrollController: scrollController,
+        ),
+      ),
+    );
+  }
+
   void _showTokenDialog() {
     final controller = TextEditingController(text: _githubToken ?? '');
     showDialog(
@@ -687,7 +763,7 @@ class _HomeScreenState extends State<HomeScreen>
 
     _filteredBySource[_currentSource] = (_papersBySource[_currentSource] ?? []).where((p) {
       // Hide deleted and idea papers from pending
-      if (deletedIds.contains(p.trackingId)) return false;
+      if (deletedIds.containsKey(p.trackingId)) return false;
       if (ideaIds.contains(p.trackingId)) return false;
 
       if (_selectedTier != null && p.tier != _selectedTier) return false;
@@ -1685,6 +1761,24 @@ class _HomeScreenState extends State<HomeScreen>
             ],
           ),
           const Spacer(),
+          // Statistics panel
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: _showStatsPanel,
+              child: Container(
+                width: 40,
+                height: 40,
+                alignment: Alignment.center,
+                child: const Icon(
+                  Icons.bar_chart_rounded,
+                  size: 22,
+                  color: Color(0xFF6B6560),
+                ),
+              ),
+            ),
+          ),
           // Settings (GitHub token)
           Material(
             color: Colors.transparent,
@@ -1889,7 +1983,7 @@ class _HomeScreenState extends State<HomeScreen>
     final count = currentPapers
         .where((p) =>
             p.tier == tier &&
-            !deletedDois.contains(p.trackingId) &&
+            !deletedDois.containsKey(p.trackingId) &&
             !_ideaTrackingIds.contains(p.trackingId))
         .length;
     final label = _tierFieldNames[tier] ?? (_tierLabels[tier] ?? 'C');
