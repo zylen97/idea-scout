@@ -198,15 +198,16 @@ class StatsPanel extends StatelessWidget {
 
   Widget _buildMonthBar(String month, Map<DataSource, int> counts, int maxTotal) {
     final total = counts.values.fold(0, (a, b) => a + b);
-    // Format "2026-04" -> "4月" or "Apr"
+    // Format "2026-04" -> "26年4月" or "Apr 26"
+    final year = month.substring(2, 4);
     final monthNum = int.tryParse(month.substring(5, 7)) ?? 0;
     const monthNames = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    final label = showChinese ? '${monthNum}月' : monthNames[monthNum];
+    final label = showChinese ? '$year.$monthNum' : '${monthNames[monthNum]} \'$year';
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(children: [
-        SizedBox(width: 40, child: Text(label,
+        SizedBox(width: 48, child: Text(label,
             style: const TextStyle(fontSize: 12, color: Color(0xFF6B6560), fontWeight: FontWeight.w600))),
         Expanded(child: LayoutBuilder(builder: (context, constraints) {
           final maxWidth = constraints.maxWidth;
