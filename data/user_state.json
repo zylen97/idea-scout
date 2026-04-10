@@ -158,7 +158,8 @@
         "tier": 1,
         "added_date": "2026-04-09"
       }
-    ]
+    ],
+    "idea_ever_count": 9
   },
   "cepm": {
     "deleted_dois": [
@@ -184,7 +185,8 @@
       "https://doi.org/10.1016/j.autcon.2026.106939",
       "https://doi.org/10.1108/ecam-04-2025-0672"
     ],
-    "idea_papers": []
+    "idea_papers": [],
+    "idea_ever_count": 0
   },
   "cnki": {
     "deleted_dois": [
@@ -798,6 +800,7 @@
         "tier": 2,
         "added_date": "2026-04-09"
       }
-    ]
+    ],
+    "idea_ever_count": 48
   }
 }
