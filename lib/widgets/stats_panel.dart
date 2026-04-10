@@ -1,19 +1,11 @@
 import 'package:flutter/material.dart';
 import '../data/source_config.dart';
 
-/// Statistics panel shown as a bottom sheet.
-///
-/// Metrics:
-///   已读 (Reviewed) = deleted_dois + current idea_papers
-///     (every paper you processed from Pending — either deleted or saved to Idea)
-///   Idea = current idea_papers count
-///     (papers currently in your Idea list)
-///
-/// Weekly trend: counts of papers processed (deleted + added to Idea) per day.
-class StatsPanel extends StatelessWidget {
+class StatsPanel extends StatefulWidget {
   final Map<DataSource, Map<String, String>> deletedDoisBySource;
   final Map<DataSource, Set<String>> readDoisBySource;
   final Map<DataSource, List<Map<String, dynamic>>> ideaPapersBySource;
+  final Map<DataSource, int> ideaEverCountBySource;
   final bool showChinese;
   final VoidCallback? onClose;
 
@@ -22,16 +14,24 @@ class StatsPanel extends StatelessWidget {
     required this.deletedDoisBySource,
     required this.readDoisBySource,
     required this.ideaPapersBySource,
+    required this.ideaEverCountBySource,
     required this.showChinese,
     this.onClose,
   });
 
+  @override
+  State<StatsPanel> createState() => _StatsPanelState();
+}
+
+class _StatsPanelState extends State<StatsPanel> {
   static const _sources = DataSource.values;
   static const _sourceColors = {
     DataSource.cnki: Color(0xFFC25B3F),
     DataSource.ft50: Color(0xFF8B7355),
     DataSource.cepm: Color(0xFF2E7D6F),
   };
+
+  String _selectedRange = '7d';
 
   @override
   Widget build(BuildContext context) {
@@ -40,24 +40,19 @@ class StatsPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Title + close
           Row(
             children: [
               const Icon(Icons.bar_chart_rounded, size: 22, color: Color(0xFF8B7355)),
               const SizedBox(width: 8),
               Text(
-                showChinese ? '浏览统计' : 'Statistics',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF2D2A26),
-                ),
+                widget.showChinese ? '浏览统计' : 'Statistics',
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF2D2A26)),
               ),
               const Spacer(),
-              if (onClose != null)
+              if (widget.onClose != null)
                 IconButton(
                   icon: const Icon(Icons.close, size: 20, color: Color(0xFF9B9488)),
-                  onPressed: onClose,
+                  onPressed: widget.onClose,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                 ),
@@ -65,31 +60,53 @@ class StatsPanel extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           _buildSummaryTable(),
-          const SizedBox(height: 28),
-          Text(
-            showChinese ? '最近 7 天处理量' : 'Last 7 Days',
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF2D2A26),
-            ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Text(widget.showChinese ? '处理趋势' : 'Activity Trend',
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF2D2A26))),
+              const Spacer(),
+              _buildRangeChip('7d', widget.showChinese ? '7天' : '7D'),
+              const SizedBox(width: 6),
+              _buildRangeChip('30d', widget.showChinese ? '30天' : '30D'),
+              const SizedBox(width: 6),
+              _buildRangeChip('all', widget.showChinese ? '全部' : 'All'),
+            ],
           ),
           const SizedBox(height: 12),
-          _buildWeeklyTrend(),
+          _buildTrendBars(),
         ],
       ),
     );
   }
 
+  Widget _buildRangeChip(String value, String label) {
+    final selected = _selectedRange == value;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedRange = value),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFF8B7355) : const Color(0xFFE8E6DC),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(label, style: TextStyle(
+          fontSize: 11, fontWeight: FontWeight.w600,
+          color: selected ? Colors.white : const Color(0xFF6B6560),
+        )),
+      ),
+    );
+  }
+
   Widget _buildSummaryTable() {
-    // 已读 = deleted (processed from Pending) + current idea (also processed from Pending)
     final reviewedCounts = <DataSource, int>{};
     final ideaCounts = <DataSource, int>{};
     for (final s in _sources) {
-      final deleted = deletedDoisBySource[s]?.length ?? 0;
-      final ideas = ideaPapersBySource[s]?.length ?? 0;
-      reviewedCounts[s] = deleted + ideas;
-      ideaCounts[s] = ideas;
+      final deleted = widget.deletedDoisBySource[s]?.length ?? 0;
+      final currentIdeas = widget.ideaPapersBySource[s]?.length ?? 0;
+      reviewedCounts[s] = deleted + currentIdeas;
+      final everCount = widget.ideaEverCountBySource[s] ?? 0;
+      ideaCounts[s] = everCount > currentIdeas ? everCount : currentIdeas;
     }
 
     return Container(
@@ -100,139 +117,61 @@ class StatsPanel extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Header row
-          _buildTableRow(
-            label: '',
-            values: {for (final s in _sources) s: s.label},
-            isHeader: true,
-            showTotal: true,
-            totalLabel: showChinese ? '合计' : 'Total',
-          ),
+          _buildHeaderRow(),
           const Divider(height: 1, color: Color(0xFFD8D4CA)),
-          _buildMetricRow(
-            label: showChinese ? '已读' : 'Reviewed',
-            counts: reviewedCounts,
-            color: const Color(0xFF8B7355),
-          ),
+          _buildMetricRow(label: widget.showChinese ? '已读' : 'Reviewed', counts: reviewedCounts, color: const Color(0xFF8B7355)),
           const Divider(height: 1, indent: 12, endIndent: 12, color: Color(0xFFE8E6DC)),
-          _buildMetricRow(
-            label: 'Idea',
-            counts: ideaCounts,
-            color: const Color(0xFF5A8A6A),
-          ),
+          _buildMetricRow(label: widget.showChinese ? '收藏' : 'Idea', counts: ideaCounts, color: const Color(0xFF5A8A6A)),
         ],
       ),
     );
   }
 
-  Widget _buildTableRow({
-    required String label,
-    required Map<DataSource, String> values,
-    bool isHeader = false,
-    bool showTotal = false,
-    String totalLabel = '',
-  }) {
-    final style = TextStyle(
-      fontSize: 12,
-      fontWeight: isHeader ? FontWeight.w600 : FontWeight.w500,
-      color: isHeader ? const Color(0xFF9B9488) : const Color(0xFF2D2A26),
-    );
+  Widget _buildHeaderRow() {
+    const style = TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF9B9488));
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Row(
         children: [
-          SizedBox(width: 56, child: Text(label, style: style)),
-          for (final s in _sources)
-            Expanded(
-              child: Text(
-                values[s] ?? '',
-                textAlign: TextAlign.center,
-                style: style,
-              ),
-            ),
-          if (showTotal)
-            SizedBox(
-              width: 48,
-              child: Text(totalLabel, textAlign: TextAlign.center, style: style),
-            ),
+          const SizedBox(width: 56),
+          for (final s in _sources) Expanded(child: Text(s.label, textAlign: TextAlign.center, style: style)),
+          SizedBox(width: 48, child: Text(widget.showChinese ? '合计' : 'Total', textAlign: TextAlign.center, style: style)),
         ],
       ),
     );
   }
 
-  Widget _buildMetricRow({
-    required String label,
-    required Map<DataSource, int> counts,
-    required Color color,
-  }) {
+  Widget _buildMetricRow({required String label, required Map<DataSource, int> counts, required Color color}) {
     final total = counts.values.fold(0, (a, b) => a + b);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Row(
         children: [
-          SizedBox(
-            width: 56,
-            child: Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF6B6560),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          SizedBox(width: 56, child: Row(children: [
+            Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+            const SizedBox(width: 6),
+            Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFF6B6560))),
+          ])),
           for (final s in _sources)
-            Expanded(
-              child: Text(
-                '${counts[s] ?? 0}',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: (counts[s] ?? 0) > 0 ? const Color(0xFF2D2A26) : const Color(0xFFBDB8B0),
-                ),
-              ),
-            ),
-          SizedBox(
-            width: 48,
-            child: Text(
-              '$total',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF2D2A26),
-              ),
-            ),
-          ),
+            Expanded(child: Text('${counts[s] ?? 0}', textAlign: TextAlign.center, style: TextStyle(
+              fontSize: 14, fontWeight: FontWeight.w700,
+              color: (counts[s] ?? 0) > 0 ? const Color(0xFF2D2A26) : const Color(0xFFBDB8B0),
+            ))),
+          SizedBox(width: 48, child: Text('$total', textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF2D2A26)))),
         ],
       ),
     );
   }
 
-  // Daily counts: deletions + new ideas (all count as "processed")
   Map<String, Map<DataSource, int>> _computeDailyCounts() {
     final result = <String, Map<DataSource, int>>{};
-
     for (final source in _sources) {
-      // Deletions (have dates as values in the map)
-      final deleted = deletedDoisBySource[source] ?? {};
-      for (final date in deleted.values) {
+      for (final date in (widget.deletedDoisBySource[source] ?? {}).values) {
         result.putIfAbsent(date, () => {});
         result[date]![source] = (result[date]![source] ?? 0) + 1;
       }
-      // Ideas added (have added_date field)
-      for (final idea in ideaPapersBySource[source] ?? []) {
+      for (final idea in widget.ideaPapersBySource[source] ?? []) {
         final date = idea['added_date'] as String?;
         if (date != null) {
           result.putIfAbsent(date, () => {});
@@ -243,125 +182,81 @@ class StatsPanel extends StatelessWidget {
     return result;
   }
 
-  Widget _buildWeeklyTrend() {
+  Widget _buildTrendBars() {
     final dailyCounts = _computeDailyCounts();
     final now = DateTime.now();
-    final days = List.generate(7, (i) {
-      final d = now.subtract(Duration(days: i));
-      return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-    });
+    List<String> displayDays;
 
-    // Find max total for scaling
+    if (_selectedRange == 'all') {
+      displayDays = dailyCounts.keys.toList()..sort((a, b) => b.compareTo(a));
+    } else {
+      final rangeDays = _selectedRange == '30d' ? 30 : 7;
+      final allDays = List.generate(rangeDays, (i) {
+        final d = now.subtract(Duration(days: i));
+        return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+      });
+      displayDays = allDays.where((d) => dailyCounts.containsKey(d)).toList();
+    }
+
+    if (displayDays.isEmpty) {
+      return Center(child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        child: Text(widget.showChinese ? '暂无数据' : 'No activity',
+            style: const TextStyle(fontSize: 13, color: Color(0xFF9B9488))),
+      ));
+    }
+
     int maxTotal = 0;
-    for (final date in days) {
-      final counts = dailyCounts[date] ?? {};
-      final total = counts.values.fold(0, (a, b) => a + b);
+    for (final date in displayDays) {
+      final total = (dailyCounts[date] ?? {}).values.fold(0, (a, b) => a + b);
       if (total > maxTotal) maxTotal = total;
     }
-    if (maxTotal == 0) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 24),
-          child: Text(
-            showChinese ? '暂无数据' : 'No activity',
-            style: const TextStyle(fontSize: 13, color: Color(0xFF9B9488)),
-          ),
-        ),
-      );
-    }
 
-    return Column(
-      children: [
-        // Legend
-        Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Row(
-            children: [
-              for (final source in _sources) ...[
-                Container(
-                  width: 10,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    color: _sourceColors[source],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  source.label,
-                  style: const TextStyle(fontSize: 11, color: Color(0xFF6B6560)),
-                ),
-                const SizedBox(width: 12),
-              ],
-            ],
-          ),
-        ),
-        // Bars
-        for (final date in days) _buildDayBar(date, dailyCounts[date] ?? {}, maxTotal),
-      ],
-    );
+    return Column(children: [
+      Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Row(children: [
+          for (final source in _sources) ...[
+            Container(width: 10, height: 10, decoration: BoxDecoration(
+              color: _sourceColors[source], borderRadius: BorderRadius.circular(2))),
+            const SizedBox(width: 4),
+            Text(source.label, style: const TextStyle(fontSize: 11, color: Color(0xFF6B6560))),
+            const SizedBox(width: 12),
+          ],
+        ]),
+      ),
+      for (final date in displayDays) _buildDayBar(date, dailyCounts[date] ?? {}, maxTotal),
+    ]);
   }
 
   Widget _buildDayBar(String date, Map<DataSource, int> counts, int maxTotal) {
     final total = counts.values.fold(0, (a, b) => a + b);
-    final shortDate = date.substring(5); // "04-10"
-
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 44,
-            child: Text(
-              shortDate,
-              style: const TextStyle(fontSize: 11, color: Color(0xFF9B9488), fontWeight: FontWeight.w500),
-            ),
-          ),
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final maxWidth = constraints.maxWidth;
-                return Row(
-                  children: [
-                    for (final source in _sources)
-                      if ((counts[source] ?? 0) > 0)
-                        Container(
-                          width: maxWidth * (counts[source]! / maxTotal),
-                          height: 20,
-                          decoration: BoxDecoration(
-                            color: _sourceColors[source]!.withOpacity(0.8),
-                            borderRadius: source == _sources.first
-                                ? const BorderRadius.horizontal(left: Radius.circular(4))
-                                : source == _sources.last || counts.keys.last == source
-                                    ? const BorderRadius.horizontal(right: Radius.circular(4))
-                                    : BorderRadius.zero,
-                          ),
-                        ),
-                    if (total == 0)
-                      Container(
-                        height: 20,
-                        width: 1,
-                        color: const Color(0xFFE8E6DC),
-                      ),
-                  ],
-                );
-              },
-            ),
-          ),
-          SizedBox(
-            width: 32,
-            child: Text(
-              total > 0 ? '$total' : '',
-              textAlign: TextAlign.right,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF6B6560),
-              ),
-            ),
-          ),
-        ],
-      ),
+      child: Row(children: [
+        SizedBox(width: 44, child: Text(date.substring(5),
+            style: const TextStyle(fontSize: 11, color: Color(0xFF9B9488), fontWeight: FontWeight.w500))),
+        Expanded(child: LayoutBuilder(builder: (context, constraints) {
+          final maxWidth = constraints.maxWidth;
+          final bars = <Widget>[];
+          for (final source in _sources) {
+            final count = counts[source] ?? 0;
+            if (count > 0) {
+              bars.add(Container(
+                width: maxWidth * (count / maxTotal), height: 20,
+                color: _sourceColors[source]!.withOpacity(0.8),
+              ));
+            }
+          }
+          if (bars.isEmpty) return const SizedBox(height: 20);
+          return ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: Row(children: bars),
+          );
+        })),
+        SizedBox(width: 32, child: Text(total > 0 ? '$total' : '', textAlign: TextAlign.right,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF6B6560)))),
+      ]),
     );
   }
 }

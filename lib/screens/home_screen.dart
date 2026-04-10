@@ -42,6 +42,7 @@ class _HomeScreenState extends State<HomeScreen>
   final Map<DataSource, Map<String, String>> _deletedDoisBySource = {};
   final Map<DataSource, List<Map<String, dynamic>>> _ideaPapersBySource = {};
   final Map<DataSource, Set<String>> _readDoisBySource = {};
+  final Map<DataSource, int> _ideaEverCountBySource = {};
 
   // Convenience getters for current source
   List<Paper> get _papers => _papersBySource[_currentSource] ?? [];
@@ -125,6 +126,7 @@ class _HomeScreenState extends State<HomeScreen>
         }
 
         _readDoisBySource[source] = (prefs.getStringList('${prefix}_read_dois') ?? []).toSet();
+        _ideaEverCountBySource[source] = prefs.getInt('${prefix}_idea_ever_count') ?? 0;
         // Load deleted_dois: try v2 (Map<id,date>) first, fallback to old string list
         final deletedV2 = prefs.getString('${prefix}_deleted_dois_v2');
         if (deletedV2 != null) {
@@ -270,6 +272,10 @@ class _HomeScreenState extends State<HomeScreen>
             final remoteRead = Set<String>.from(
                 (sourceState['read_dois'] as List?)?.cast<String>() ?? []);
             _readDoisBySource[source] = (_readDoisBySource[source] ?? {}).union(remoteRead);
+            // idea_ever_count: take max of remote and local (monotonically increasing)
+            final remoteIdeaEver = sourceState['idea_ever_count'] as int? ?? 0;
+            final localIdeaEver = _ideaEverCountBySource[source] ?? 0;
+            _ideaEverCountBySource[source] = remoteIdeaEver > localIdeaEver ? remoteIdeaEver : localIdeaEver;
           }
         } else {
           // Legacy flat format -> migrate to ft50
@@ -371,6 +377,7 @@ class _HomeScreenState extends State<HomeScreen>
                 .toList(),
             'idea_papers': _ideaPapersBySource[source] ?? [],
             'read_dois': (_readDoisBySource[source] ?? {}).toList(),
+            'idea_ever_count': _ideaEverCountBySource[source] ?? 0,
           },
       });
       final encoded = base64Encode(utf8.encode(stateJson));
@@ -414,6 +421,8 @@ class _HomeScreenState extends State<HomeScreen>
           jsonEncode(_ideaPapersBySource[source] ?? []));
       await prefs.setStringList('${prefix}_read_dois',
           (_readDoisBySource[source] ?? {}).toList());
+      await prefs.setInt('${prefix}_idea_ever_count',
+          _ideaEverCountBySource[source] ?? 0);
     }
   }
 
@@ -451,6 +460,7 @@ class _HomeScreenState extends State<HomeScreen>
     final addedDate = _todayString();
     setState(() {
       (_ideaPapersBySource[_currentSource] ??= []).add(paper.toIdeaJson(addedDate));
+      _ideaEverCountBySource[_currentSource] = (_ideaEverCountBySource[_currentSource] ?? 0) + 1;
       _applyFilters();
     });
     _saveLocalState();
@@ -655,6 +665,7 @@ class _HomeScreenState extends State<HomeScreen>
             deletedDoisBySource: _deletedDoisBySource,
             readDoisBySource: _readDoisBySource,
             ideaPapersBySource: _ideaPapersBySource,
+            ideaEverCountBySource: _ideaEverCountBySource,
             showChinese: _showChinese,
             onClose: () => Navigator.of(ctx).pop(),
           ),
