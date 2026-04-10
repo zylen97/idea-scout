@@ -1,12 +1,21 @@
 import 'package:flutter/material.dart';
 import '../data/source_config.dart';
 
+/// Statistics panel shown as a bottom sheet.
+///
+/// Metrics:
+///   已读 (Reviewed) = deleted_dois + current idea_papers
+///     (every paper you processed from Pending — either deleted or saved to Idea)
+///   Idea = current idea_papers count
+///     (papers currently in your Idea list)
+///
+/// Weekly trend: counts of papers processed (deleted + added to Idea) per day.
 class StatsPanel extends StatelessWidget {
   final Map<DataSource, Map<String, String>> deletedDoisBySource;
   final Map<DataSource, Set<String>> readDoisBySource;
   final Map<DataSource, List<Map<String, dynamic>>> ideaPapersBySource;
   final bool showChinese;
-  final ScrollController scrollController;
+  final VoidCallback? onClose;
 
   const StatsPanel({
     super.key,
@@ -14,7 +23,7 @@ class StatsPanel extends StatelessWidget {
     required this.readDoisBySource,
     required this.ideaPapersBySource,
     required this.showChinese,
-    required this.scrollController,
+    this.onClose,
   });
 
   static const _sources = DataSource.values;
@@ -27,24 +36,11 @@ class StatsPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      controller: scrollController,
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Drag handle
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: const Color(0xFFD8D4CA),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Title
+          // Title + close
           Row(
             children: [
               const Icon(Icons.bar_chart_rounded, size: 22, color: Color(0xFF8B7355)),
@@ -57,13 +53,21 @@ class StatsPanel extends StatelessWidget {
                   color: Color(0xFF2D2A26),
                 ),
               ),
+              const Spacer(),
+              if (onClose != null)
+                IconButton(
+                  icon: const Icon(Icons.close, size: 20, color: Color(0xFF9B9488)),
+                  onPressed: onClose,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
             ],
           ),
           const SizedBox(height: 20),
           _buildSummaryTable(),
           const SizedBox(height: 28),
           Text(
-            showChinese ? '最近 7 天' : 'Last 7 Days',
+            showChinese ? '最近 7 天处理量' : 'Last 7 Days',
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -78,9 +82,15 @@ class StatsPanel extends StatelessWidget {
   }
 
   Widget _buildSummaryTable() {
-    final deletedCounts = {for (final s in _sources) s: (deletedDoisBySource[s]?.length ?? 0)};
-    final readCounts = {for (final s in _sources) s: (readDoisBySource[s]?.length ?? 0)};
-    final ideaCounts = {for (final s in _sources) s: (ideaPapersBySource[s]?.length ?? 0)};
+    // 已读 = deleted (processed from Pending) + current idea (also processed from Pending)
+    final reviewedCounts = <DataSource, int>{};
+    final ideaCounts = <DataSource, int>{};
+    for (final s in _sources) {
+      final deleted = deletedDoisBySource[s]?.length ?? 0;
+      final ideas = ideaPapersBySource[s]?.length ?? 0;
+      reviewedCounts[s] = deleted + ideas;
+      ideaCounts[s] = ideas;
+    }
 
     return Container(
       decoration: BoxDecoration(
@@ -100,8 +110,8 @@ class StatsPanel extends StatelessWidget {
           ),
           const Divider(height: 1, color: Color(0xFFD8D4CA)),
           _buildMetricRow(
-            label: showChinese ? '已读' : 'Read',
-            counts: readCounts,
+            label: showChinese ? '已读' : 'Reviewed',
+            counts: reviewedCounts,
             color: const Color(0xFF8B7355),
           ),
           const Divider(height: 1, indent: 12, endIndent: 12, color: Color(0xFFE8E6DC)),
@@ -109,12 +119,6 @@ class StatsPanel extends StatelessWidget {
             label: 'Idea',
             counts: ideaCounts,
             color: const Color(0xFF5A8A6A),
-          ),
-          const Divider(height: 1, indent: 12, endIndent: 12, color: Color(0xFFE8E6DC)),
-          _buildMetricRow(
-            label: showChinese ? '已删' : 'Deleted',
-            counts: deletedCounts,
-            color: const Color(0xFFC25B3F),
           ),
         ],
       ),
@@ -216,18 +220,18 @@ class StatsPanel extends StatelessWidget {
     );
   }
 
-  // Aggregate daily counts for deletions + ideas across all sources
+  // Daily counts: deletions + new ideas (all count as "processed")
   Map<String, Map<DataSource, int>> _computeDailyCounts() {
     final result = <String, Map<DataSource, int>>{};
 
     for (final source in _sources) {
-      // Deletions (have dates as values)
+      // Deletions (have dates as values in the map)
       final deleted = deletedDoisBySource[source] ?? {};
       for (final date in deleted.values) {
         result.putIfAbsent(date, () => {});
         result[date]![source] = (result[date]![source] ?? 0) + 1;
       }
-      // Ideas (have added_date field)
+      // Ideas added (have added_date field)
       for (final idea in ideaPapersBySource[source] ?? []) {
         final date = idea['added_date'] as String?;
         if (date != null) {

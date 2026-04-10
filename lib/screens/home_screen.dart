@@ -643,24 +643,21 @@ class _HomeScreenState extends State<HomeScreen>
   // Token settings dialog
   // ──────────────────────────────────────────
   void _showStatsPanel() {
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: const Color(0xFFE8E6DC),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => DraggableScrollableSheet(
-        initialChildSize: 0.55,
-        maxChildSize: 0.85,
-        minChildSize: 0.3,
-        expand: false,
-        builder: (_, scrollController) => StatsPanel(
-          deletedDoisBySource: _deletedDoisBySource,
-          readDoisBySource: _readDoisBySource,
-          ideaPapersBySource: _ideaPapersBySource,
-          showChinese: _showChinese,
-          scrollController: scrollController,
+      builder: (ctx) => Dialog(
+        backgroundColor: const Color(0xFFF5F3ED),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: StatsPanel(
+            deletedDoisBySource: _deletedDoisBySource,
+            readDoisBySource: _readDoisBySource,
+            ideaPapersBySource: _ideaPapersBySource,
+            showChinese: _showChinese,
+            onClose: () => Navigator.of(ctx).pop(),
+          ),
         ),
       ),
     );
