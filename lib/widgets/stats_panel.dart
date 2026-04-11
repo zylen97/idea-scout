@@ -22,7 +22,7 @@ class StatsPanel extends StatelessWidget {
   static const _sources = DataSource.values;
   static const _sourceColors = {
     DataSource.cnki: Color(0xFFC25B3F),
-    DataSource.ft50: Color(0xFF8B7355),
+    DataSource.ft50: Color(0xFFB08A5E),
     DataSource.cepm: Color(0xFF2E7D6F),
   };
 
@@ -35,14 +35,14 @@ class StatsPanel extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.bar_chart_rounded, size: 22, color: Color(0xFF8B7355)),
+              const Icon(Icons.bar_chart_rounded, size: 22, color: Color(0xFFC9714E)),
               const SizedBox(width: 8),
               Text(showChinese ? '浏览统计' : 'Statistics',
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF2D2A26))),
               const Spacer(),
               if (onClose != null)
                 IconButton(
-                  icon: const Icon(Icons.close, size: 20, color: Color(0xFF9B9488)),
+                  icon: const Icon(Icons.close, size: 20, color: Color(0xFFA8A29A)),
                   onPressed: onClose,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
@@ -56,7 +56,7 @@ class StatsPanel extends StatelessWidget {
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF2D2A26))),
           const SizedBox(height: 4),
           Text(showChinese ? '每月已读论文数（按模块）' : 'Papers reviewed per month by source',
-              style: const TextStyle(fontSize: 11, color: Color(0xFF9B9488))),
+              style: const TextStyle(fontSize: 11, color: Color(0xFFA8A29A))),
           const SizedBox(height: 16),
           _buildMonthlyChart(),
         ],
@@ -77,16 +77,16 @@ class StatsPanel extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F3ED),
+        color: const Color(0xFFFAF9F6),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFD8D4CA)),
+        border: Border.all(color: const Color(0xFFE3E1DB)),
       ),
       child: Column(
         children: [
           _buildHeaderRow(),
-          const Divider(height: 1, color: Color(0xFFD8D4CA)),
-          _buildMetricRow(label: showChinese ? '已读' : 'Reviewed', counts: reviewedCounts, color: const Color(0xFF8B7355)),
-          const Divider(height: 1, indent: 12, endIndent: 12, color: Color(0xFFE8E6DC)),
+          const Divider(height: 1, color: Color(0xFFE3E1DB)),
+          _buildMetricRow(label: showChinese ? '已读' : 'Reviewed', counts: reviewedCounts, color: const Color(0xFFC9714E)),
+          const Divider(height: 1, indent: 12, endIndent: 12, color: Color(0xFFF4F3EE)),
           _buildMetricRow(label: showChinese ? '收藏' : 'Idea', counts: ideaCounts, color: const Color(0xFF5A8A6A)),
         ],
       ),
@@ -94,7 +94,7 @@ class StatsPanel extends StatelessWidget {
   }
 
   Widget _buildHeaderRow() {
-    const style = TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF9B9488));
+    const style = TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFA8A29A));
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Row(
@@ -116,12 +116,12 @@ class StatsPanel extends StatelessWidget {
           SizedBox(width: 56, child: Row(children: [
             Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
             const SizedBox(width: 6),
-            Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFF6B6560))),
+            Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFF7A7872))),
           ])),
           for (final s in _sources)
             Expanded(child: Text('${counts[s] ?? 0}', textAlign: TextAlign.center, style: TextStyle(
               fontSize: 14, fontWeight: FontWeight.w700,
-              color: (counts[s] ?? 0) > 0 ? const Color(0xFF2D2A26) : const Color(0xFFBDB8B0),
+              color: (counts[s] ?? 0) > 0 ? const Color(0xFF2D2A26) : const Color(0xFFC8C4BC),
             ))),
           SizedBox(width: 48, child: Text('$total', textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF2D2A26)))),
@@ -161,7 +161,7 @@ class StatsPanel extends StatelessWidget {
       return Center(child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 24),
         child: Text(showChinese ? '暂无数据' : 'No activity',
-            style: const TextStyle(fontSize: 13, color: Color(0xFF9B9488))),
+            style: const TextStyle(fontSize: 13, color: Color(0xFFA8A29A))),
       ));
     }
 
@@ -184,7 +184,7 @@ class StatsPanel extends StatelessWidget {
               Container(width: 10, height: 10, decoration: BoxDecoration(
                 color: _sourceColors[source], borderRadius: BorderRadius.circular(2))),
               const SizedBox(width: 4),
-              Text(source.label, style: const TextStyle(fontSize: 11, color: Color(0xFF6B6560))),
+              Text(source.label, style: const TextStyle(fontSize: 11, color: Color(0xFF7A7872))),
               const SizedBox(width: 12),
             ],
           ]),
@@ -208,7 +208,7 @@ class StatsPanel extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(children: [
         SizedBox(width: 48, child: Text(label,
-            style: const TextStyle(fontSize: 12, color: Color(0xFF6B6560), fontWeight: FontWeight.w600))),
+            style: const TextStyle(fontSize: 12, color: Color(0xFF7A7872), fontWeight: FontWeight.w600))),
         Expanded(child: LayoutBuilder(builder: (context, constraints) {
           final maxWidth = constraints.maxWidth;
           final bars = <Widget>[];

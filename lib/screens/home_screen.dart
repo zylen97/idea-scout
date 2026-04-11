@@ -457,6 +457,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   void _addToIdea(Paper paper) {
     if (_ideaTrackingIds.contains(paper.trackingId)) return;
+    if ((_deletedDoisBySource[_currentSource] ?? {}).containsKey(paper.trackingId)) return;
     final addedDate = _todayString();
     setState(() {
       (_ideaPapersBySource[_currentSource] ??= []).add(paper.toIdeaJson(addedDate));
@@ -656,7 +657,7 @@ class _HomeScreenState extends State<HomeScreen>
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
-        backgroundColor: const Color(0xFFF5F3ED),
+        backgroundColor: const Color(0xFFFAF9F6),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
         child: ConstrainedBox(
@@ -680,7 +681,7 @@ class _HomeScreenState extends State<HomeScreen>
       context: context,
       builder: (ctx) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        backgroundColor: const Color(0xFFF5F3ED),
+        backgroundColor: const Color(0xFFFAF9F6),
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -689,7 +690,7 @@ class _HomeScreenState extends State<HomeScreen>
             children: [
               const Row(
                 children: [
-                  Icon(Icons.settings, size: 20, color: Color(0xFF8B7355)),
+                  Icon(Icons.settings, size: 20, color: Color(0xFFC9714E)),
                   SizedBox(width: 8),
                   Text(
                     'GitHub Token',
@@ -704,14 +705,14 @@ class _HomeScreenState extends State<HomeScreen>
               const SizedBox(height: 8),
               const Text(
                 'Set a GitHub personal access token to enable cross-device sync.',
-                style: TextStyle(fontSize: 12, color: Color(0xFF9B9488)),
+                style: TextStyle(fontSize: 12, color: Color(0xFFA8A29A)),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: controller,
                 decoration: const InputDecoration(
                   hintText: 'ghp_...',
-                  hintStyle: TextStyle(color: Color(0xFFB5AFA6)),
+                  hintStyle: TextStyle(color: Color(0xFFC0BBB3)),
                 ),
                 style: const TextStyle(fontSize: 13, fontFamily: 'monospace'),
                 obscureText: true,
@@ -723,7 +724,7 @@ class _HomeScreenState extends State<HomeScreen>
                   TextButton(
                     onPressed: () => Navigator.pop(ctx),
                     child: const Text('Cancel',
-                        style: TextStyle(color: Color(0xFF9B9488))),
+                        style: TextStyle(color: Color(0xFFA8A29A))),
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton(
@@ -747,7 +748,7 @@ class _HomeScreenState extends State<HomeScreen>
                       if (ctx.mounted) Navigator.pop(ctx);
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF8B7355),
+                      backgroundColor: const Color(0xFFC9714E),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10)),
@@ -976,7 +977,7 @@ class _HomeScreenState extends State<HomeScreen>
     final ideaCount = _ideaPapers.length;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFE8E6DC),
+      backgroundColor: const Color(0xFFF4F3EE),
       body: SafeArea(
         child: Column(
           children: [
@@ -987,15 +988,15 @@ class _HomeScreenState extends State<HomeScreen>
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: const BoxDecoration(
-                color: Color(0xFFF0EEE6),
-                border: Border(bottom: BorderSide(color: Color(0xFFD8D4CA))),
+                color: Color(0xFFF5F4EF),
+                border: Border(bottom: BorderSide(color: Color(0xFFE3E1DB))),
               ),
               child: Row(
                 children: DataSource.values.map((source) {
                   final isActive = _currentSource == source;
                   final color = source == DataSource.cepm
                       ? const Color(0xFF2E7D6F)
-                      : const Color(0xFF8B7355);
+                      : const Color(0xFFC9714E);
                   return Expanded(
                     child: GestureDetector(
                       onTap: () {
@@ -1018,7 +1019,7 @@ class _HomeScreenState extends State<HomeScreen>
                           color: isActive ? color : Colors.transparent,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: isActive ? color : const Color(0xFFD8D4CA),
+                            color: isActive ? color : const Color(0xFFE3E1DB),
                           ),
                         ),
                         alignment: Alignment.center,
@@ -1027,7 +1028,7 @@ class _HomeScreenState extends State<HomeScreen>
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
-                            color: isActive ? Colors.white : const Color(0xFF6B6560),
+                            color: isActive ? Colors.white : const Color(0xFF7A7872),
                           ),
                         ),
                       ),
@@ -1048,7 +1049,7 @@ class _HomeScreenState extends State<HomeScreen>
                   decoration: const BoxDecoration(
                     color: Color(0xFFFAF6ED),
                     border: Border(
-                      bottom: BorderSide(color: Color(0xFFD8D4CA)),
+                      bottom: BorderSide(color: Color(0xFFE3E1DB)),
                     ),
                   ),
                   child: const Row(
@@ -1080,22 +1081,22 @@ class _HomeScreenState extends State<HomeScreen>
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 decoration: const BoxDecoration(
-                  color: Color(0xFFECE9E1),
+                  color: Color(0xFFF2F0EA),
                   border: Border(
-                    bottom: BorderSide(color: Color(0xFFD8D4CA)),
+                    bottom: BorderSide(color: Color(0xFFE3E1DB)),
                   ),
                 ),
                 child: Row(
                   children: [
                     const Icon(Icons.radar,
-                        size: 14, color: Color(0xFF8B7355)),
+                        size: 14, color: Color(0xFFC9714E)),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         'Scanned: ${_scanHistory.map(_formatScanSummary).join(' | ')}',
                         style: const TextStyle(
                           fontSize: 12,
-                          color: Color(0xFF6B6560),
+                          color: Color(0xFF7A7872),
                           fontWeight: FontWeight.w500,
                         ),
                         overflow: TextOverflow.ellipsis,
@@ -1109,15 +1110,15 @@ class _HomeScreenState extends State<HomeScreen>
             if (!_isLoading)
               Container(
                 decoration: const BoxDecoration(
-                  color: Color(0xFFF0EEE6),
+                  color: Color(0xFFF5F4EF),
                   border: Border(
-                    bottom: BorderSide(color: Color(0xFFD8D4CA)),
+                    bottom: BorderSide(color: Color(0xFFE3E1DB)),
                   ),
                 ),
                 child: TabBar(
                   controller: _tabController,
                   labelColor: const Color(0xFF2D2A26),
-                  unselectedLabelColor: const Color(0xFF9B9488),
+                  unselectedLabelColor: const Color(0xFFA8A29A),
                   labelStyle: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -1126,7 +1127,7 @@ class _HomeScreenState extends State<HomeScreen>
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
-                  indicatorColor: const Color(0xFF8B7355),
+                  indicatorColor: const Color(0xFFC9714E),
                   indicatorWeight: 3,
                   tabs: [
                     Tab(
@@ -1163,10 +1164,10 @@ class _HomeScreenState extends State<HomeScreen>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           CircularProgressIndicator(
-                              color: Color(0xFF8B7355)),
+                              color: Color(0xFFC9714E)),
                           SizedBox(height: 16),
                           Text('Loading papers...',
-                              style: TextStyle(color: Color(0xFF9B9488))),
+                              style: TextStyle(color: Color(0xFFA8A29A))),
                         ],
                       ),
                     )
@@ -1198,7 +1199,7 @@ class _HomeScreenState extends State<HomeScreen>
                 const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             decoration: const BoxDecoration(
               border: Border(
-                bottom: BorderSide(color: Color(0xFFD8D4CA)),
+                bottom: BorderSide(color: Color(0xFFE3E1DB)),
               ),
             ),
             child: Row(
@@ -1217,7 +1218,7 @@ class _HomeScreenState extends State<HomeScreen>
                     '${_papers.length} papers  \u00b7  $_scanDate',
                     style: const TextStyle(
                       fontSize: 12,
-                      color: Color(0xFF6B6560),
+                      color: Color(0xFF7A7872),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -1226,14 +1227,14 @@ class _HomeScreenState extends State<HomeScreen>
                   padding: const EdgeInsets.symmetric(
                       horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE8E6DC),
+                    color: const Color(0xFFF4F3EE),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
                     '${_filteredPapers.length}/${_papers.length}',
                     style: const TextStyle(
                       fontSize: 11,
-                      color: Color(0xFF9B9488),
+                      color: Color(0xFFA8A29A),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -1263,7 +1264,7 @@ class _HomeScreenState extends State<HomeScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.lightbulb_outline,
-                size: 56, color: Color(0xFFC5BFB5)),
+                size: 56, color: Color(0xFFD0CBC3)),
             const SizedBox(height: 20),
             Text(
               _showChinese ? '暂无 Idea 论文' : 'No idea papers yet',
@@ -1281,7 +1282,7 @@ class _HomeScreenState extends State<HomeScreen>
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 14,
-                color: Color(0xFF9B9488),
+                color: Color(0xFFA8A29A),
                 height: 1.5,
               ),
             ),
@@ -1341,7 +1342,7 @@ class _HomeScreenState extends State<HomeScreen>
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: const BoxDecoration(
             border: Border(
-              bottom: BorderSide(color: Color(0xFFD8D4CA)),
+              bottom: BorderSide(color: Color(0xFFE3E1DB)),
             ),
           ),
           child: Row(
@@ -1362,7 +1363,7 @@ class _HomeScreenState extends State<HomeScreen>
                   child: Icon(
                     allSelected ? Icons.check_box : Icons.check_box_outline_blank,
                     size: 20,
-                    color: const Color(0xFF8B7355),
+                    color: const Color(0xFFC9714E),
                   ),
                 ),
               ),
@@ -1387,7 +1388,7 @@ class _HomeScreenState extends State<HomeScreen>
                   margin: const EdgeInsets.only(right: 8),
                   decoration: BoxDecoration(
                     color: _selectedIdeaIds.isEmpty
-                        ? const Color(0xFFD8D4CA)
+                        ? const Color(0xFFE3E1DB)
                         : const Color(0xFFC25B3F),
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -1395,7 +1396,7 @@ class _HomeScreenState extends State<HomeScreen>
                     Icons.delete_outline,
                     size: 16,
                     color: _selectedIdeaIds.isEmpty
-                        ? const Color(0xFFB5AFA6)
+                        ? const Color(0xFFC0BBB3)
                         : Colors.white,
                   ),
                 ),
@@ -1408,8 +1409,8 @@ class _HomeScreenState extends State<HomeScreen>
                       horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
                     color: _selectedIdeaIds.isEmpty
-                        ? const Color(0xFFD8D4CA)
-                        : const Color(0xFF8B7355),
+                        ? const Color(0xFFE3E1DB)
+                        : const Color(0xFFC9714E),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
@@ -1460,8 +1461,8 @@ class _HomeScreenState extends State<HomeScreen>
                         isSelected ? Icons.check_box : Icons.check_box_outline_blank,
                         size: 22,
                         color: isSelected
-                            ? const Color(0xFF8B7355)
-                            : const Color(0xFFB5AFA6),
+                            ? const Color(0xFFC9714E)
+                            : const Color(0xFFC0BBB3),
                       ),
                     ),
                   ),
@@ -1571,9 +1572,9 @@ class _HomeScreenState extends State<HomeScreen>
         margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: const Color(0xFFECE9E1),
+          color: const Color(0xFFF2F0EA),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFD8D4CA)),
+          border: Border.all(color: const Color(0xFFE3E1DB)),
         ),
         child: Row(
           children: [
@@ -1582,7 +1583,7 @@ class _HomeScreenState extends State<HomeScreen>
                   ? Icons.keyboard_arrow_down
                   : Icons.keyboard_arrow_right,
               size: 20,
-              color: const Color(0xFF8B7355),
+              color: const Color(0xFFC9714E),
             ),
             const SizedBox(width: 8),
             Text(
@@ -1598,7 +1599,7 @@ class _HomeScreenState extends State<HomeScreen>
               '(${item.count}${_showChinese ? "篇" : ""}$unreadStr)',
               style: const TextStyle(
                 fontSize: 12,
-                color: Color(0xFF9B9488),
+                color: Color(0xFFA8A29A),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -1686,9 +1687,9 @@ class _HomeScreenState extends State<HomeScreen>
         margin: const EdgeInsets.fromLTRB(32, 4, 16, 4),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: const Color(0xFFF5F3ED),
+          color: const Color(0xFFFAF9F6),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: const Color(0xFFD8D4CA)),
+          border: Border.all(color: const Color(0xFFE3E1DB)),
         ),
         child: Row(
           children: [
@@ -1697,7 +1698,7 @@ class _HomeScreenState extends State<HomeScreen>
                   ? Icons.keyboard_arrow_down
                   : Icons.keyboard_arrow_right,
               size: 18,
-              color: const Color(0xFF6B6560),
+              color: const Color(0xFF7A7872),
             ),
             const SizedBox(width: 6),
             Expanded(
@@ -1716,7 +1717,7 @@ class _HomeScreenState extends State<HomeScreen>
               '(${item.count}${_showChinese ? "篇" : ""})',
               style: const TextStyle(
                 fontSize: 11,
-                color: Color(0xFF9B9488),
+                color: Color(0xFFA8A29A),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -1730,8 +1731,8 @@ class _HomeScreenState extends State<HomeScreen>
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 12, 8),
       decoration: const BoxDecoration(
-        color: Color(0xFFF0EEE6),
-        border: Border(bottom: BorderSide(color: Color(0xFFD8D4CA))),
+        color: Color(0xFFF5F4EF),
+        border: Border(bottom: BorderSide(color: Color(0xFFE3E1DB))),
       ),
       child: Row(
         children: [
@@ -1739,7 +1740,7 @@ class _HomeScreenState extends State<HomeScreen>
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: const Color(0xFF8B7355),
+              color: const Color(0xFFC9714E),
               borderRadius: BorderRadius.circular(10),
             ),
             child:
@@ -1762,7 +1763,7 @@ class _HomeScreenState extends State<HomeScreen>
                 _currentSource.subtitle,
                 style: const TextStyle(
                   fontSize: 11,
-                  color: Color(0xFF9B9488),
+                  color: Color(0xFFA8A29A),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -1782,7 +1783,7 @@ class _HomeScreenState extends State<HomeScreen>
                 child: const Icon(
                   Icons.bar_chart_rounded,
                   size: 22,
-                  color: Color(0xFF6B6560),
+                  color: Color(0xFF7A7872),
                 ),
               ),
             ),
@@ -1802,7 +1803,7 @@ class _HomeScreenState extends State<HomeScreen>
                   size: 22,
                   color: _githubToken != null && _githubToken!.isNotEmpty
                       ? const Color(0xFF5A8A6A)
-                      : const Color(0xFF6B6560),
+                      : const Color(0xFF7A7872),
                 ),
               ),
             ),
@@ -1820,7 +1821,7 @@ class _HomeScreenState extends State<HomeScreen>
                 child: Icon(
                   _showChinese ? Icons.translate : Icons.abc,
                   size: 22,
-                  color: const Color(0xFF6B6560),
+                  color: const Color(0xFF7A7872),
                 ),
               ),
             ),
@@ -1892,13 +1893,13 @@ class _HomeScreenState extends State<HomeScreen>
               const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
             color: isActive
-                ? const Color(0xFF8B7355)
-                : const Color(0xFFF5F3ED),
+                ? const Color(0xFFC9714E)
+                : const Color(0xFFFAF9F6),
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color: isActive
-                  ? const Color(0xFF8B7355)
-                  : const Color(0xFFD8D4CA),
+                  ? const Color(0xFFC9714E)
+                  : const Color(0xFFE3E1DB),
             ),
           ),
           child: Text(
@@ -1906,7 +1907,7 @@ class _HomeScreenState extends State<HomeScreen>
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: isActive ? Colors.white : const Color(0xFF6B6560),
+              color: isActive ? Colors.white : const Color(0xFF7A7872),
             ),
           ),
         ),
@@ -1929,13 +1930,13 @@ class _HomeScreenState extends State<HomeScreen>
             const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
         decoration: BoxDecoration(
           color: isGrouped
-              ? const Color(0xFF8B7355)
-              : const Color(0xFFF5F3ED),
+              ? const Color(0xFFC9714E)
+              : const Color(0xFFFAF9F6),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: isGrouped
-                ? const Color(0xFF8B7355)
-                : const Color(0xFFD8D4CA),
+                ? const Color(0xFFC9714E)
+                : const Color(0xFFE3E1DB),
           ),
         ),
         child: Row(
@@ -1944,7 +1945,7 @@ class _HomeScreenState extends State<HomeScreen>
             Icon(
               isGrouped ? Icons.account_tree : Icons.view_list,
               size: 14,
-              color: isGrouped ? Colors.white : const Color(0xFF6B6560),
+              color: isGrouped ? Colors.white : const Color(0xFF7A7872),
             ),
             const SizedBox(width: 4),
             Text(
@@ -1955,7 +1956,7 @@ class _HomeScreenState extends State<HomeScreen>
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color:
-                    isGrouped ? Colors.white : const Color(0xFF6B6560),
+                    isGrouped ? Colors.white : const Color(0xFF7A7872),
               ),
             ),
           ],
@@ -2010,10 +2011,10 @@ class _HomeScreenState extends State<HomeScreen>
           padding:
               const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
-            color: isSelected ? color : const Color(0xFFF5F3ED),
+            color: isSelected ? color : const Color(0xFFFAF9F6),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: isSelected ? color : const Color(0xFFD8D4CA),
+              color: isSelected ? color : const Color(0xFFE3E1DB),
             ),
           ),
           child: Row(
@@ -2026,7 +2027,7 @@ class _HomeScreenState extends State<HomeScreen>
                   fontWeight: FontWeight.w600,
                   color: isSelected
                       ? Colors.white
-                      : const Color(0xFF6B6560),
+                      : const Color(0xFF7A7872),
                 ),
               ),
               if (count > 0) ...[
@@ -2037,7 +2038,7 @@ class _HomeScreenState extends State<HomeScreen>
                   decoration: BoxDecoration(
                     color: isSelected
                         ? Colors.white.withValues(alpha: 0.25)
-                        : const Color(0xFFECE9E1),
+                        : const Color(0xFFF2F0EA),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
@@ -2047,7 +2048,7 @@ class _HomeScreenState extends State<HomeScreen>
                       fontWeight: FontWeight.w700,
                       color: isSelected
                           ? Colors.white
-                          : const Color(0xFF9B9488),
+                          : const Color(0xFFA8A29A),
                     ),
                   ),
                 ),
@@ -2094,24 +2095,24 @@ class _HomeScreenState extends State<HomeScreen>
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         color: _selectedJournalId != null
-            ? const Color(0xFFECE9E1)
-            : const Color(0xFFF5F3ED),
+            ? const Color(0xFFF2F0EA)
+            : const Color(0xFFFAF9F6),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: _selectedJournalId != null
-              ? const Color(0xFF8B7355).withValues(alpha: 0.4)
-              : const Color(0xFFD8D4CA),
+              ? const Color(0xFFC9714E).withValues(alpha: 0.4)
+              : const Color(0xFFE3E1DB),
         ),
       ),
       child: DropdownButton<String?>(
         value: _selectedJournalId,
         hint: Text(_showChinese ? '全部' : 'All',
             style: const TextStyle(
-                fontSize: 13, color: Color(0xFF9B9488))),
+                fontSize: 13, color: Color(0xFFA8A29A))),
         underline: const SizedBox(),
         isDense: true,
         icon: const Icon(Icons.keyboard_arrow_down,
-            size: 18, color: Color(0xFF9B9488)),
+            size: 18, color: Color(0xFFA8A29A)),
         items: [
           DropdownMenuItem(
               value: null,
@@ -2159,7 +2160,7 @@ class _HomeScreenState extends State<HomeScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.cloud_off,
-                size: 56, color: Color(0xFFC5BFB5)),
+                size: 56, color: Color(0xFFD0CBC3)),
             const SizedBox(height: 20),
             Text(
               _showChinese ? '暂无数据' : 'No data available',
@@ -2177,7 +2178,7 @@ class _HomeScreenState extends State<HomeScreen>
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 14,
-                color: Color(0xFF9B9488),
+                color: Color(0xFFA8A29A),
                 height: 1.5,
               ),
             ),
@@ -2190,12 +2191,12 @@ class _HomeScreenState extends State<HomeScreen>
         mainAxisSize: MainAxisSize.min,
         children: [
           const Icon(Icons.search_off,
-              size: 48, color: Color(0xFFC5BFB5)),
+              size: 48, color: Color(0xFFD0CBC3)),
           const SizedBox(height: 12),
           Text(
             _showChinese ? '无匹配结果' : 'No matching results',
             style: const TextStyle(
-                color: Color(0xFF9B9488), fontSize: 15),
+                color: Color(0xFFA8A29A), fontSize: 15),
           ),
         ],
       ),

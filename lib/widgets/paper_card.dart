@@ -182,10 +182,10 @@ class _PaperCardState extends State<PaperCard> {
     final paper = widget.paper;
     final tierColor = widget.showTier
         ? (_tierColors[paper.tier] ?? _tierColors[3]!)
-        : const Color(0xFF6B5B4E);
+        : const Color(0xFF7A6E62);
     final tierBg = widget.showTier
         ? (_tierBgColors[paper.tier] ?? _tierBgColors[3]!)
-        : const Color(0xFFF0EDE8);
+        : const Color(0xFFF5F3EF);
     final title = widget.showChinese && paper.titleCn.isNotEmpty
         ? paper.titleCn
         : paper.title;
@@ -199,11 +199,11 @@ class _PaperCardState extends State<PaperCard> {
       margin: EdgeInsets.only(left: widget.leftMargin, right: 16, top: 5, bottom: 5),
       decoration: BoxDecoration(
         color: isRead
-            ? const Color(0xFFF0EEE8)
-            : const Color(0xFFF5F3ED),
+            ? const Color(0xFFF5F4EF)
+            : const Color(0xFFFAF9F6),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFFD8D4CA),
+          color: const Color(0xFFE3E1DB),
         ),
         boxShadow: const [
           BoxShadow(
@@ -270,8 +270,8 @@ class _PaperCardState extends State<PaperCard> {
                             paper.date,
                             style: TextStyle(
                               color: isRead
-                                  ? const Color(0xFFB5AFA6)
-                                  : const Color(0xFF9B9488),
+                                  ? const Color(0xFFC0BBB3)
+                                  : const Color(0xFFA8A29A),
                               fontSize: 12,
                             ),
                           ),
@@ -369,7 +369,7 @@ class _PaperCardState extends State<PaperCard> {
                             fontWeight: isRead ? FontWeight.w400 : FontWeight.w600,
                             height: 1.4,
                             color: isRead
-                                ? const Color(0xFF6B6560)
+                                ? const Color(0xFF7A7872)
                                 : const Color(0xFF2D2A26),
                           ),
                         ),
@@ -386,8 +386,8 @@ class _PaperCardState extends State<PaperCard> {
                             TextStyle(
                               fontSize: 13,
                               color: isRead
-                                  ? const Color(0xFF9B9488)
-                                  : const Color(0xFF6B6560),
+                                  ? const Color(0xFFA8A29A)
+                                  : const Color(0xFF7A7872),
                               height: 1.6,
                             ),
                           ),
@@ -401,20 +401,20 @@ class _PaperCardState extends State<PaperCard> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFECE9E1),
+                            color: const Color(0xFFF2F0EA),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(Icons.format_quote_rounded,
-                                  size: 12, color: Color(0xFF9B9488)),
+                                  size: 12, color: Color(0xFFA8A29A)),
                               const SizedBox(width: 3),
                               Text(
                                 '${paper.citedBy}',
                                 style: const TextStyle(
                                   fontSize: 11,
-                                  color: Color(0xFF6B6560),
+                                  color: Color(0xFF7A7872),
                                 ),
                               ),
                             ],

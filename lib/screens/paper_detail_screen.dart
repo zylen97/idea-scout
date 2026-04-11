@@ -38,27 +38,27 @@ class PaperDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final tierColor = showTier
         ? (_tierColors[paper.tier] ?? _tierColors[3]!)
-        : const Color(0xFF6B5B4E);
+        : const Color(0xFF7A6E62);
     final tierBg = showTier
         ? (_tierBgColors[paper.tier] ?? _tierBgColors[3]!)
-        : const Color(0xFFF0EDE8);
+        : const Color(0xFFF5F3EF);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFE8E6DC),
+      backgroundColor: const Color(0xFFF4F3EE),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF0EEE6),
+        backgroundColor: const Color(0xFFF5F4EF),
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new,
-              size: 18, color: Color(0xFF6B6560)),
+              size: 18, color: Color(0xFF7A7872)),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           paper.journalName,
           style: const TextStyle(
             fontSize: 14,
-            color: Color(0xFF6B6560),
+            color: Color(0xFF7A7872),
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -74,9 +74,9 @@ class PaperDetailScreen extends StatelessWidget {
               margin: const EdgeInsets.all(16),
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: const Color(0xFFF5F3ED),
+                color: const Color(0xFFFAF9F6),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFD8D4CA)),
+                border: Border.all(color: const Color(0xFFE3E1DB)),
                 boxShadow: const [
                   BoxShadow(
                     color: Color(0x0A000000),
@@ -130,13 +130,13 @@ class PaperDetailScreen extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFECE9E1),
+                          color: const Color(0xFFF2F0EA),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           paper.date,
                           style: const TextStyle(
-                            color: Color(0xFF6B6560),
+                            color: Color(0xFF7A7872),
                             fontSize: 13,
                           ),
                         ),
@@ -171,19 +171,19 @@ class PaperDetailScreen extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFECE9E1),
+                            color: const Color(0xFFF2F0EA),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(Icons.format_quote,
-                                  size: 14, color: Color(0xFF6B6560)),
+                                  size: 14, color: Color(0xFF7A7872)),
                               const SizedBox(width: 4),
                               Text(
                                 'Cited ${paper.citedBy}',
                                 style: const TextStyle(
-                                  color: Color(0xFF6B6560),
+                                  color: Color(0xFF7A7872),
                                   fontSize: 12,
                                 ),
                               ),
@@ -220,7 +220,7 @@ class PaperDetailScreen extends StatelessWidget {
                             ? FontWeight.w400
                             : FontWeight.w700,
                         color: (paper.titleCn.isNotEmpty && paper.titleCn != paper.title)
-                            ? const Color(0xFF6B6560)
+                            ? const Color(0xFF7A7872)
                             : const Color(0xFF2D2A26),
                         height: 1.5,
                       ),
@@ -236,15 +236,15 @@ class PaperDetailScreen extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFECE9E1),
+                          color: const Color(0xFFF2F0EA),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                              color: const Color(0xFFD8D4CA)),
+                              color: const Color(0xFFE3E1DB)),
                         ),
                         child: Row(
                           children: [
                             const Icon(Icons.link,
-                                size: 16, color: Color(0xFF8B7355)),
+                                size: 16, color: Color(0xFFC9714E)),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
@@ -253,14 +253,14 @@ class PaperDetailScreen extends StatelessWidget {
                                     : paper.doi,
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: Color(0xFF8B7355),
+                                  color: Color(0xFFC9714E),
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             const Icon(Icons.open_in_new,
-                                size: 14, color: Color(0xFF8B7355)),
+                                size: 14, color: Color(0xFFC9714E)),
                           ],
                         ),
                       ),
@@ -279,7 +279,7 @@ class PaperDetailScreen extends StatelessWidget {
                     width: 6,
                     height: 6,
                     decoration: const BoxDecoration(
-                      color: Color(0xFF8B7355),
+                      color: Color(0xFFC9714E),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -297,7 +297,7 @@ class PaperDetailScreen extends StatelessWidget {
                   Expanded(
                     child: Container(
                       height: 1,
-                      color: const Color(0xFFD8D4CA),
+                      color: const Color(0xFFE3E1DB),
                     ),
                   ),
                 ],
@@ -310,9 +310,9 @@ class PaperDetailScreen extends StatelessWidget {
               margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: const Color(0xFFF5F3ED),
+                color: const Color(0xFFFAF9F6),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFD8D4CA)),
+                border: Border.all(color: const Color(0xFFE3E1DB)),
                 boxShadow: const [
                   BoxShadow(
                     color: Color(0x0A000000),
@@ -338,10 +338,10 @@ class PaperDetailScreen extends StatelessWidget {
                     const SizedBox(height: 20),
                     Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFFECE9E1),
+                        color: const Color(0xFFF2F0EA),
                         borderRadius: BorderRadius.circular(12),
                         border:
-                            Border.all(color: const Color(0xFFD8D4CA)),
+                            Border.all(color: const Color(0xFFE3E1DB)),
                       ),
                       child: ExpansionTile(
                         shape: RoundedRectangleBorder(
@@ -350,7 +350,7 @@ class PaperDetailScreen extends StatelessWidget {
                           'English Abstract',
                           style: TextStyle(
                             fontSize: 13,
-                            color: Color(0xFF6B6560),
+                            color: Color(0xFF7A7872),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -362,7 +362,7 @@ class PaperDetailScreen extends StatelessWidget {
                                 paper.abstract_,
                                 const TextStyle(
                                   fontSize: 13,
-                                  color: Color(0xFF6B6560),
+                                  color: Color(0xFF7A7872),
                                   height: 1.7,
                                 ),
                               ),
@@ -390,7 +390,7 @@ class PaperDetailScreen extends StatelessWidget {
                           'No abstract available',
                           style: TextStyle(
                             fontSize: 14,
-                            color: Color(0xFF9B9488),
+                            color: Color(0xFFA8A29A),
                             fontStyle: FontStyle.italic,
                           ),
                         ),
@@ -413,7 +413,7 @@ class PaperDetailScreen extends StatelessWidget {
                     icon: const Icon(Icons.picture_as_pdf),
                     label: const Text('View PDF'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF8B7355),
+                      backgroundColor: const Color(0xFFC9714E),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(

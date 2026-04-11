@@ -20,19 +20,19 @@ class IdeaScoutApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF8B7355), // warm brown
+          seedColor: const Color(0xFFC9714E), // warm terracotta
           brightness: Brightness.light,
         ),
         textTheme: textTheme,
         useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFFE8E6DC),
+        scaffoldBackgroundColor: const Color(0xFFF4F3EE),
         appBarTheme: AppBarTheme(
-          backgroundColor: const Color(0xFFF0EEE6),
+          backgroundColor: const Color(0xFFF5F4EF),
           surfaceTintColor: Colors.transparent,
           elevation: 0,
           titleTextStyle: GoogleFonts.inter(
             fontSize: 14,
-            color: const Color(0xFF6B6560),
+            color: const Color(0xFF7A7872),
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -40,12 +40,12 @@ class IdeaScoutApp extends StatelessWidget {
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: Color(0xFFD8D4CA)),
+            side: const BorderSide(color: Color(0xFFE3E1DB)),
           ),
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: const Color(0xFFF0EEE6),
+          fillColor: const Color(0xFFF5F4EF),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
@@ -56,7 +56,7 @@ class IdeaScoutApp extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF8B7355), width: 1.5),
+            borderSide: const BorderSide(color: Color(0xFFC9714E), width: 1.5),
           ),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
