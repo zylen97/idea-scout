@@ -1,1 +1,0 @@
- /Users/zylen/Library/CloudStorage/Dropbox/04-Coding/idea_scout/.dart_tool/flutter_build/a1e5b1d09500f6827c79e6282f253956/dart_build_result.json:  /Users/zylen/Library/CloudStorage/Dropbox/04-Coding/idea_scout/.dart_tool/package_config.json /Users/zylen/Library/CloudStorage/Dropbox/04-Coding/idea_scout/pubspec.yaml /Users/zylen/develop/flutter/bin/cache/dart-sdk/version
