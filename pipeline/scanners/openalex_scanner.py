@@ -169,14 +169,14 @@ def translate_papers(papers, api_key):
 
     print("Translating titles...")
     titles = [p["title"] for p in papers]
-    with concurrent.futures.ThreadPoolExecutor(max_workers=50) as ex:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as ex:
         title_results = list(ex.map(translate, titles))
     for i, t in enumerate(title_results):
         papers[i]["title_cn"] = t
 
     print("Translating abstracts...")
     abstracts = [p["abstract"] for p in papers]
-    with concurrent.futures.ThreadPoolExecutor(max_workers=50) as ex:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as ex:
         abstract_results = list(ex.map(translate, abstracts))
     for i, a in enumerate(abstract_results):
         papers[i]["abstract_cn"] = a
