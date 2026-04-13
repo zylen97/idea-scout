@@ -5,7 +5,7 @@ Browse the latest papers from 79 journals across 3 sources — FT50/UTD24, Const
 ## Architecture
 
 ```
-Daily automated scans (launchd)          This App (Flutter PWA)
+Daily scans (journal-scout)              This App (Flutter PWA)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━          ━━━━━━━━━━━━━━━━━━━━━━
 
 09:00  FT50 (25 journals)  ─┐
@@ -20,7 +20,7 @@ Daily automated scans (launchd)          This App (Flutter PWA)
 Each scan → email digest (Gmail SMTP, BCC)
 ```
 
-**Scans = data pipeline** (fetch + translate + push). **App = viewer/selector** (browse + select + export).
+**Scan pipeline**: [`journal-scout`](https://github.com/zylen97/journal-scout) (fetch + translate + push). **App = viewer/selector** (browse + select + export).
 
 ## Features
 
