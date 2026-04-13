@@ -14,14 +14,14 @@ LOCK_WAIT=0
 while ! mkdir "$LOCKDIR" 2>/dev/null; do
     # 防腐：锁超过 10 分钟视为残留，强制清除
     if [ -d "$LOCKDIR" ] && [ "$(( $(date +%s) - $(stat -f %m "$LOCKDIR") ))" -gt 600 ]; then
-        echo "WARN: stale lock detected (>10min), force removing" >> "${LOG_DIR:-/tmp}/journal-scout-lock.log"
+        echo "WARN: stale lock detected (>10min), force removing" >> "${LOG_DIR:-/tmp}/idea-scout-lock.log"
         rmdir "$LOCKDIR" 2>/dev/null || rm -rf "$LOCKDIR"
         continue
     fi
     sleep 10
     LOCK_WAIT=$((LOCK_WAIT + 10))
     if [ $LOCK_WAIT -ge 300 ]; then
-        echo "ERROR: lock wait timeout (5min), aborting" >> "${LOG_DIR:-/tmp}/journal-scout-lock.log"
+        echo "ERROR: lock wait timeout (5min), aborting" >> "${LOG_DIR:-/tmp}/idea-scout-lock.log"
         exit 1
     fi
 done

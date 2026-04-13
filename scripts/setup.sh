@@ -1,5 +1,5 @@
 #!/bin/bash
-# Journal Scout — Setup Script
+# Idea Scout — Setup Script
 # Generates launchd plists from templates and loads them.
 
 set -euo pipefail
@@ -8,7 +8,7 @@ REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 PLIST_DIR="$HOME/Library/LaunchAgents"
 LOG_DIR="${LOG_DIR:-$REPO_DIR/logs}"
 
-echo "Journal Scout Setup"
+echo "Idea Scout Setup"
 echo "==================="
 echo "Repo:    $REPO_DIR"
 echo "Logs:    $LOG_DIR"
@@ -26,8 +26,8 @@ mkdir -p "$LOG_DIR"
 
 # Generate plists from templates
 for pipeline in ft50 cepm cnki; do
-    TEMPLATE="$REPO_DIR/config/launchd/com.journal-scout.${pipeline}.plist"
-    OUTPUT="$PLIST_DIR/com.journal-scout.${pipeline}.plist"
+    TEMPLATE="$REPO_DIR/config/launchd/com.idea-scout.${pipeline}.plist"
+    OUTPUT="$PLIST_DIR/com.idea-scout.${pipeline}.plist"
 
     if [ ! -f "$TEMPLATE" ]; then
         echo "SKIP: template not found: $TEMPLATE"
@@ -52,4 +52,4 @@ echo "  CE/PM: daily at 9:10"
 echo "  CNKI:  daily at 9:20"
 echo ""
 echo "Test manually:"
-echo "  bash $REPO_DIR/pipelines/ft50-daily.sh"
+echo "  bash $REPO_DIR/pipeline/ft50-daily.sh"

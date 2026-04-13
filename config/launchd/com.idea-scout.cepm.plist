@@ -3,12 +3,12 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.journal-scout.cepm</string>
+    <string>com.idea-scout.cepm</string>
 
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>
-        <string>{INSTALL_PATH}/pipelines/cepm-daily.sh</string>
+        <string>{INSTALL_PATH}/pipeline/cepm-daily.sh</string>
     </array>
 
     <!-- Daily at 9:10 -->
