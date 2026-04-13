@@ -1,0 +1,228 @@
+{
+  "source": "cnki",
+  "journals": [
+    {
+      "id": "JJYJ",
+      "name": "经济研究",
+      "category": "管理A"
+    },
+    {
+      "id": "JCYJ",
+      "name": "管理科学学报",
+      "category": "管理A"
+    },
+    {
+      "id": "GLSJ",
+      "name": "管理世界",
+      "category": "管理A"
+    },
+    {
+      "id": "ZSHK",
+      "name": "中国社会科学",
+      "category": "管理A"
+    },
+    {
+      "id": "XTLL",
+      "name": "系统工程理论与实践",
+      "category": "管理B1"
+    },
+    {
+      "id": "SLJY",
+      "name": "数量经济技术经济研究",
+      "category": "管理B1"
+    },
+    {
+      "id": "JRYJ",
+      "name": "金融研究",
+      "category": "管理B1"
+    },
+    {
+      "id": "ZGRK",
+      "name": "中国软科学",
+      "category": "管理B1"
+    },
+    {
+      "id": "ZGGK",
+      "name": "中国管理科学",
+      "category": "管理B1"
+    },
+    {
+      "id": "KJYJ",
+      "name": "会计研究",
+      "category": "管理B1"
+    },
+    {
+      "id": "WGJG",
+      "name": "外国经济与管理",
+      "category": "管理B1"
+    },
+    {
+      "id": "ZWGD",
+      "name": "管理评论",
+      "category": "管理B1"
+    },
+    {
+      "id": "LKGP",
+      "name": "南开管理评论",
+      "category": "管理B1"
+    },
+    {
+      "id": "KYGL",
+      "name": "科研管理",
+      "category": "管理B1"
+    },
+    {
+      "id": "GLGU",
+      "name": "管理工程学报",
+      "category": "管理B1"
+    },
+    {
+      "id": "XTGC",
+      "name": "系统工程学报",
+      "category": "管理B1"
+    },
+    {
+      "id": "XTGL",
+      "name": "系统管理学报",
+      "category": "管理B1"
+    },
+    {
+      "id": "GGGL",
+      "name": "公共管理学报",
+      "category": "管理B1"
+    },
+    {
+      "id": "JCJJ",
+      "name": "管理科学",
+      "category": "管理B2"
+    },
+    {
+      "id": "GLXB",
+      "name": "管理学报",
+      "category": "管理B2"
+    },
+    {
+      "id": "YCGL",
+      "name": "运筹与管理",
+      "category": "管理B2"
+    },
+    {
+      "id": "GCXT",
+      "name": "系统工程",
+      "category": "管理B2"
+    },
+    {
+      "id": "KZYC",
+      "name": "控制与决策",
+      "category": "管理B2"
+    },
+    {
+      "id": "STYS",
+      "name": "系统科学与数学",
+      "category": "管理B2"
+    },
+    {
+      "id": "GYGC",
+      "name": "工业工程与管理",
+      "category": "工程"
+    },
+    {
+      "id": "JZJJ",
+      "name": "建筑经济",
+      "category": "工程"
+    },
+    {
+      "id": "GCZJ",
+      "name": "工程造价管理",
+      "category": "工程"
+    },
+    {
+      "id": "XMGJ",
+      "name": "项目管理技术",
+      "category": "工程"
+    },
+    {
+      "id": "TMGC",
+      "name": "土木工程学报",
+      "category": "工程"
+    },
+    {
+      "id": "YJYF",
+      "name": "研究与发展管理",
+      "category": "管理B2"
+    },
+    {
+      "id": "ZGRZ",
+      "name": "中国人口·资源与环境",
+      "category": "管理B2"
+    },
+    {
+      "id": "SLTJ",
+      "name": "数理统计与管理",
+      "category": "管理B2"
+    },
+    {
+      "id": "KXXG",
+      "name": "科学学与科学技术管理",
+      "category": "管理B2"
+    },
+    {
+      "id": "GGYY",
+      "name": "中国工业经济",
+      "category": "管理B2"
+    },
+    {
+      "id": "SJJJ",
+      "name": "世界经济",
+      "category": "管理B2"
+    },
+    {
+      "id": "JJDL",
+      "name": "经济地理",
+      "category": "管理B2"
+    },
+    {
+      "id": "CYJJ",
+      "name": "产业经济研究",
+      "category": "管理B2"
+    },
+    {
+      "id": "KXYJ",
+      "name": "科学学研究",
+      "category": "管理B2"
+    },
+    {
+      "id": "TJYJ",
+      "name": "统计研究",
+      "category": "管理B2"
+    },
+    {
+      "id": "TJLT",
+      "name": "统计与信息论坛",
+      "category": "管理B2"
+    },
+    {
+      "id": "XUXI",
+      "name": "软科学",
+      "category": "管理B2"
+    },
+    {
+      "id": "ZHXU",
+      "name": "灾害学",
+      "category": "其他"
+    },
+    {
+      "id": "YSXT",
+      "name": "交通运输系统工程与信息",
+      "category": "其他"
+    },
+    {
+      "id": "DLXB",
+      "name": "地理学报",
+      "category": "其他"
+    }
+  ],
+  "rss_base_url": "https://rss.cnki.net/knavi/rss/",
+  "rss_suffix": "?pcode=CJFD,CCJD",
+  "note": "44 journals (added ZSHK 2026-04-10)"
+}

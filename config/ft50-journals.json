@@ -1,0 +1,297 @@
+{
+  "openalex_mailto": "your-email@example.com",
+  "source": "ft50",
+  "journals": [
+    {
+      "id": "MS",
+      "name": "Management Science",
+      "openalex_id": "S33323087",
+      "issn": "0025-1909",
+      "tier": 1,
+      "tags": [
+        "博弈论",
+        "优化",
+        "决策",
+        "机制设计"
+      ]
+    },
+    {
+      "id": "OR",
+      "name": "Operations Research",
+      "openalex_id": "S125775545",
+      "issn": "0030-364X",
+      "tier": 1,
+      "tags": [
+        "网络优化",
+        "调度",
+        "鲁棒优化"
+      ]
+    },
+    {
+      "id": "MSOM",
+      "name": "Manufacturing & Service Operations Management",
+      "openalex_id": "S81410195",
+      "issn": "1523-4614",
+      "tier": 1,
+      "tags": [
+        "供应链博弈",
+        "服务运营",
+        "平台"
+      ]
+    },
+    {
+      "id": "POM",
+      "name": "Production and Operations Management",
+      "openalex_id": "S149070780",
+      "issn": "1059-1478",
+      "tier": 1,
+      "tags": [
+        "生产系统",
+        "运营优化"
+      ]
+    },
+    {
+      "id": "JOM",
+      "name": "Journal of Operations Management",
+      "openalex_id": "S142306484",
+      "issn": "0272-6963",
+      "tier": 1,
+      "tags": [
+        "运营管理",
+        "韧性",
+        "供应链"
+      ]
+    },
+    {
+      "id": "ISR",
+      "name": "Information Systems Research",
+      "openalex_id": "S202812398",
+      "issn": "1047-7047",
+      "tier": 1,
+      "tags": [
+        "平台",
+        "数字化",
+        "AI采纳"
+      ]
+    },
+    {
+      "id": "MISQ",
+      "name": "MIS Quarterly",
+      "openalex_id": "S57293258",
+      "issn": "0276-7783",
+      "tier": 1,
+      "tags": [
+        "信息系统",
+        "技术采纳"
+      ]
+    },
+    {
+      "id": "SMJ",
+      "name": "Strategic Management Journal",
+      "openalex_id": "S102949365",
+      "issn": "0143-2095",
+      "tier": 2,
+      "tags": [
+        "竞合策略",
+        "资源基础观",
+        "联盟"
+      ]
+    },
+    {
+      "id": "OS",
+      "name": "Organization Science",
+      "openalex_id": "S206124708",
+      "issn": "1047-7039",
+      "tier": 3,
+      "tags": [
+        "组织网络",
+        "协调机制"
+      ]
+    },
+    {
+      "id": "AMJ",
+      "name": "Academy of Management Journal",
+      "openalex_id": "S117778295",
+      "issn": "0001-4273",
+      "tier": 3,
+      "tags": [
+        "实证方法",
+        "组织行为"
+      ]
+    },
+    {
+      "id": "RP",
+      "name": "Research Policy",
+      "openalex_id": "S9731383",
+      "issn": "0048-7333",
+      "tier": 2,
+      "tags": [
+        "创新扩散",
+        "技术采纳",
+        "政策"
+      ]
+    },
+    {
+      "id": "JMS",
+      "name": "Journal of Management Studies",
+      "openalex_id": "S151705444",
+      "issn": "0022-2380",
+      "tier": 3,
+      "tags": [
+        "制度理论",
+        "跨层分析"
+      ]
+    },
+    {
+      "id": "JSCM",
+      "name": "Journal of Supply Chain Management",
+      "openalex_id": "S59007373",
+      "issn": "1523-2409",
+      "tier": 1,
+      "tags": [
+        "供应链治理",
+        "采购"
+      ]
+    },
+    {
+      "id": "AMR",
+      "name": "Academy of Management Review",
+      "openalex_id": "S46763546",
+      "issn": "0363-7425",
+      "tier": 3,
+      "tags": [
+        "理论构建",
+        "概念框架"
+      ]
+    },
+    {
+      "id": "ASQ",
+      "name": "Administrative Science Quarterly",
+      "openalex_id": "S143668711",
+      "issn": "0001-8392",
+      "tier": 3,
+      "tags": [
+        "深度案例",
+        "定性方法"
+      ]
+    },
+    {
+      "id": "DS",
+      "name": "Decision Sciences",
+      "openalex_id": "S177792750",
+      "issn": "0011-7315",
+      "tier": 1,
+      "tags": [
+        "决策分析",
+        "行为运筹"
+      ]
+    },
+    {
+      "id": "JBV",
+      "name": "Journal of Business Venturing",
+      "openalex_id": "S66201313",
+      "issn": "0883-9026",
+      "tier": 3,
+      "tags": [
+        "创业",
+        "不确定性决策"
+      ]
+    },
+    {
+      "id": "JOM2",
+      "name": "Journal of Management",
+      "openalex_id": "S122767448",
+      "issn": "0149-2063",
+      "tier": 3,
+      "tags": [
+        "管理理论",
+        "综述"
+      ]
+    },
+    {
+      "id": "JBE",
+      "name": "Journal of Business Ethics",
+      "openalex_id": "S76633192",
+      "issn": "0167-4544",
+      "tier": 3,
+      "tags": [
+        "商业伦理",
+        "ESG",
+        "可持续",
+        "利益相关方"
+      ]
+    },
+    {
+      "id": "AER",
+      "name": "American Economic Review",
+      "openalex_id": "S23254222",
+      "issn": "0002-8282",
+      "tier": 2,
+      "tags": [
+        "机制设计",
+        "公共经济学",
+        "博弈论"
+      ]
+    },
+    {
+      "id": "JIBS",
+      "name": "Journal of International Business Studies",
+      "openalex_id": "S38024979",
+      "issn": "0047-2506",
+      "tier": 2,
+      "tags": [
+        "跨国运营",
+        "制度距离",
+        "国际化"
+      ]
+    },
+    {
+      "id": "OBHDP",
+      "name": "Organizational Behavior and Human Decision Processes",
+      "openalex_id": "S64744539",
+      "issn": "0749-5978",
+      "tier": 3,
+      "tags": [
+        "行为决策",
+        "团队决策",
+        "判断偏差"
+      ]
+    },
+    {
+      "id": "OrgStudies",
+      "name": "Organization Studies",
+      "openalex_id": "S28882882",
+      "issn": "0170-8406",
+      "tier": 3,
+      "tags": [
+        "组织理论",
+        "制度逻辑",
+        "实践理论"
+      ]
+    },
+    {
+      "id": "JAP",
+      "name": "Journal of Applied Psychology",
+      "openalex_id": "S166002381",
+      "issn": "0021-9010",
+      "tier": 3,
+      "tags": [
+        "团队效能",
+        "领导力",
+        "安全行为"
+      ]
+    },
+    {
+      "id": "HR",
+      "name": "Human Relations",
+      "openalex_id": "S61446109",
+      "issn": "0018-7267",
+      "tier": 3,
+      "tags": [
+        "工作关系",
+        "组织公正",
+        "员工行为"
+      ]
+    }
+  ]
+}

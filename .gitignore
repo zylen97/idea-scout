@@ -43,3 +43,11 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Pipeline (scanning scripts)
+config/local.sh
+config/email-config.sh
+gmail_credentials.json
+gmail_token.json
+logs/
+__pycache__/

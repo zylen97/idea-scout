@@ -1,105 +1,158 @@
 # Idea Scout
 
-Browse the latest papers from 79 journals across 3 sources — FT50/UTD24, Construction Engineering / Project Management, and CNKI Chinese journals — with Chinese-translated abstracts. Built for researchers seeking cross-disciplinary idea migration.
+Full-stack academic paper radar — automated daily scanning of 80 journals + a Flutter PWA for browsing and selecting papers on mobile.
 
 ## Architecture
 
 ```
-Daily scans (journal-scout)              This App (Flutter PWA)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━          ━━━━━━━━━━━━━━━━━━━━━━
+Daily Pipelines (launchd)                    App (Flutter PWA)
+━━━━━━━━━━━━━━━━━━━━━━━━━                    ━━━━━━━━━━━━━━━━
 
 09:00  FT50 (25 journals)  ─┐
-  OpenAlex + ChatAnywhere    │
+  OpenAlex + LLM translation │
                              ├→  data/*.json  →  Source switcher
-09:10  CE/PM (11 journals) ─┤    git push        Browse & filter
-  OpenAlex + ChatAnywhere    │    gh-pages        Select papers
-                             │                    Export selected.json
-09:20  CNKI (43 journals)  ─┘                         ↓
-  CNKI RSS                                      /idea-mine (deep analysis)
+09:10  CE/PM (12 journals) ─┤    git push        Browse & filter
+  OpenAlex + LLM translation │    gh-pages        Select papers
+                             │                    Export → /idea-mine
+09:20  CNKI (43 journals)  ─┘
+  CNKI RSS
 
-Each scan → email digest (Gmail SMTP, BCC)
+Each pipeline → HTML email digest (Gmail API / SMTP)
 ```
 
-**Scan pipeline**: [`journal-scout`](https://github.com/zylen97/journal-scout) (fetch + translate + push). **App = viewer/selector** (browse + select + export).
+**Pipelines** = data fetching + LLM translation + email delivery (in `pipeline/`).
+**App** = viewer/selector for browsing papers on mobile (in `lib/`).
 
-## Features
-
-- **3 Data Sources**: Source switcher in-app (FT50/UTD24 · CE/PM · CNKI)
-- **79 Journals**: 25 FT50/UTD24 + 11 CE/PM + 43 CNKI Chinese journals
-- **Tiered Classification**: Ranked by relevance to engineering management research
-- **Chinese/English Toggle**: Pre-translated titles and abstracts
-- **Search & Filter**: By keyword, journal, or tier
-- **Paper Selection & Export**: Select papers and export as JSON for `/idea-mine` analysis
-- **Daily Email Digests**: Automated summary emails with new papers
-
-## Live App
-
-**https://zylen97.github.io/idea-scout/**
-
-On mobile: open the link → browser menu → "Add to Home Screen" for app-like experience.
-
-## Data Sources
+## Pipelines
 
 ### FT50/UTD24 (25 journals)
 
-Source: OpenAlex API. Scan window: last 5 days.
+Top management & operations journals. Source: [OpenAlex](https://openalex.org) API.
 
 | Tier | Journals |
 |:-----|:---------|
-| A (9) | MS · OR · MSOM · POM · JOM · ISR · MISQ · JSCM · DS |
-| B (4) | SMJ · RP · AER · JIBS |
-| C (12) | OS · AMJ · JMS · AMR · ASQ · JBV · JOM2 · JBE · OBHDP · OrgStudies · JAP · HR |
+| A (9) | MS, OR, MSOM, POM, JOM, ISR, MISQ, JSCM, DS |
+| B (4) | SMJ, RP, AER, JIBS |
+| C (12) | OS, AMJ, JMS, AMR, ASQ, JBV, JOM2, JBE, OBHDP, OrgStudies, JAP, HR |
 
-### CE/PM (11 journals)
+### CE/PM (12 journals)
 
-Source: OpenAlex API. Scan window: last 5 days.
+Construction engineering & project management. Source: OpenAlex API.
 
-AEI · AIC · BAE · ECAM · IJPM · JBE2 · JCEM · JME · PMJ · SS · SCS
+AEI, AIC, BAE, ECAM, IJPM, JBE2, JCEM, JME, PMJ, SS, SCS, TEM
 
 ### CNKI (43 journals)
 
-Source: CNKI RSS feeds. Scan window: last 30 days. Titles translated to English.
+Chinese core journals across management and engineering. Source: CNKI RSS feeds.
 
-| Category | Count |
-|:---------|:------|
-| 管理A | 3 |
-| 管理B1 | 14 |
-| 管理B2 | 18 |
-| 工程 | 5 |
-| 其他 | 3 |
+## App Features
 
-## Development
+- **3 Data Sources**: In-app source switcher (FT50/UTD24, CE/PM, CNKI)
+- **Chinese/English Toggle**: Pre-translated titles and abstracts
+- **Search & Filter**: By keyword, journal, or tier
+- **Paper Selection & Export**: Select papers and export as JSON for deep analysis
+- **Daily Email Digests**: Automated HTML summary emails with new papers
 
-### Prerequisites
+**Live App**: https://zylen97.github.io/idea-scout/
 
-- [Flutter SDK](https://docs.flutter.dev/get-started/install) (3.x+)
+On mobile: open the link → browser menu → "Add to Home Screen" for app-like experience.
 
-### Run locally
+## How Pipelines Work
+
+Each pipeline follows the same pattern:
+
+1. **Acquire lock** — File lock prevents concurrent git operations
+2. **Sync app state** — `git pull` to get user's paper selections
+3. **Scan journals** — Fetch new papers via OpenAlex API or CNKI RSS
+4. **Translate** — Batch translate titles and abstracts (50 concurrent threads)
+5. **Merge & deduplicate** — Filter user-deleted papers, apply time cutoff
+6. **Email digest** — Send HTML email via Gmail API (primary) or SMTP (fallback)
+7. **Push to GitHub** — Commit data, deploy to `gh-pages` for the app
+8. **Desktop notification** — macOS notification with paper count
+
+## Quick Start
+
+### App (Flutter PWA)
 
 ```bash
+git clone https://github.com/zylen97/idea-scout.git
+cd idea-scout
 flutter pub get
 flutter run -d chrome
 ```
 
-### Build & deploy
+### Pipeline (Daily Scanning)
 
-```bash
-flutter build web --release --base-href "/idea-scout/"
-# Copy data/ to build/web/data/
-# Deploy build/web/ to gh-pages branch
+1. **Configure credentials**:
+   ```bash
+   cp config/env.example config/local.sh
+   # Edit config/local.sh — set EMAIL_CONFIG_PATH
+   ```
+
+2. **Create email-config.sh** at the path you specified:
+   ```bash
+   SMTP_SERVER=smtp.gmail.com
+   SMTP_PORT=465
+   SMTP_USER=your-email@gmail.com
+   SMTP_PASS=your-gmail-app-password
+   EMAIL_TO=recipient@example.com
+   CHATANYWHERE_API_KEY=your-chatanywhere-api-key
+   ```
+
+3. **Set up daily scheduling** (macOS):
+   ```bash
+   bash scripts/setup.sh
+   ```
+
+4. **Test manually**:
+   ```bash
+   bash pipeline/ft50-daily.sh
+   ```
+
+## Customizing Journals
+
+Journal configs are in `config/`. Each follows this format:
+
+```json
+{
+  "openalex_mailto": "your-email@example.com",
+  "source": "ft50",
+  "journals": [
+    {
+      "id": "MS",
+      "name": "Management Science",
+      "openalex_id": "S33323087",
+      "issn": "0025-1909",
+      "tier": 1,
+      "tags": ["game theory", "optimization"]
+    }
+  ]
+}
 ```
 
-## Data
+Find OpenAlex source IDs at [openalex.org](https://openalex.org).
 
-Paper data lives in `data/`, generated by daily automated scans:
+## Directory Structure
 
-| File | Source | Updated by |
-|:-----|:-------|:-----------|
-| `latest.json` + `papers.json` | FT50 | `idea-scout-daily.sh` (9:00) |
-| `cepm_latest.json` + `cepm_papers.json` | CE/PM | `cepm-daily.sh` (9:10) |
-| `cnki_latest.json` | CNKI | `cnki-daily.sh` (9:20) |
-
-The app loads these files at startup — no API calls from the frontend.
+```
+idea-scout/
+├── lib/                         # Flutter app source
+├── web/                         # PWA configuration
+├── data/                        # Paper data (JSON, auto-updated daily)
+├── pipeline/                    # Scanning pipeline
+│   ├── scanners/                #   OpenAlex + CNKI scanners
+│   ├── email/                   #   HTML email generators
+│   ├── ft50-daily.sh            #   FT50 orchestrator
+│   ├── cepm-daily.sh            #   CE/PM orchestrator
+│   └── cnki-daily.sh            #   CNKI orchestrator
+├── config/                      # Pipeline configuration
+│   ├── ft50-journals.json       #   25 FT50/UTD24 journals
+│   ├── cepm-journals.json       #   12 CE/PM journals
+│   ├── cnki-journals.json       #   43 CNKI journals
+│   └── launchd/                 #   macOS scheduler templates
+├── scripts/setup.sh             # Installation script
+└── pubspec.yaml                 # Flutter dependencies
+```
 
 ## License
 
