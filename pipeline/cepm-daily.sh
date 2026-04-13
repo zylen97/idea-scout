@@ -214,6 +214,7 @@ if ! git checkout gh-pages >> "$LOG_FILE" 2>&1; then
     echo "ERROR: git checkout gh-pages failed, skipping deploy" >> "$LOG_FILE"
     rm -rf /tmp/idea_scout_all_data
     echo "GitHub push done (gh-pages skipped)" >> "$LOG_FILE"
+    find "$LOG_DIR" -name "cepm-*.log" -mtime +30 -delete 2>/dev/null
     exit 0
 fi
 cp /tmp/idea_scout_all_data/*.json data/

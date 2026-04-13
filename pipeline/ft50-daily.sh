@@ -30,7 +30,6 @@ mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/idea-scout-$(date +%Y%m%d-%H%M%S).log"
 TODAY=$(date +%Y-%m-%d)
 SCAN_FROM=$(date -v-5d +%Y-%m-%d)
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # 设置 PATH（launchd 环境不继承 shell 的 PATH）
 export PATH="$HOME/anaconda3/bin:$HOME/.local/bin:$HOME/develop/flutter/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
@@ -213,7 +212,6 @@ if ! git checkout gh-pages >> "$LOG_FILE" 2>&1; then
     rm -rf /tmp/idea_scout_all_data
     echo "GitHub push done (gh-pages skipped)" >> "$LOG_FILE"
     find "$LOG_DIR" -name "idea-scout-*.log" -mtime +30 -delete 2>/dev/null
-    find "$LOG_DIR" -name "cepm-*.log" -mtime +30 -delete 2>/dev/null
     exit 0
 fi
 cp /tmp/idea_scout_all_data/*.json data/
@@ -237,4 +235,3 @@ echo "GitHub push done" >> "$LOG_FILE"
 
 # 清理 30 天前的旧日志
 find "$LOG_DIR" -name "idea-scout-*.log" -mtime +30 -delete 2>/dev/null
-find "$LOG_DIR" -name "cepm-*.log" -mtime +30 -delete 2>/dev/null

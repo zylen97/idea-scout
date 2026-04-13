@@ -30,7 +30,6 @@ LOG_DIR="${LOG_DIR:-$REPO_DIR/logs}"
 mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/cnki-$(date +%Y%m%d-%H%M%S).log"
 TODAY=$(date +%Y-%m-%d)
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # 设置 PATH
 export PATH="$HOME/anaconda3/bin:$HOME/.local/bin:$HOME/develop/flutter/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
