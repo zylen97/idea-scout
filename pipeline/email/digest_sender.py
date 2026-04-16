@@ -137,19 +137,23 @@ def build_email_html(papers, scan_from, source='ft50'):
             authors = p.get('authors', [])
             authors_str = ', '.join(authors) if authors else ''
             abstract_cn = p.get('abstract_cn', '')
+            abstract_en = p.get('abstract', '')
             doi = p.get('doi', '')
             is_oa = p.get('is_oa', False) or p.get('oa', False)
 
             oa_badge = '<span style="background: #5A8A6A; color: white; padding: 1px 5px; border-radius: 3px; font-size: 10px; margin-left: 6px;">OA</span>' if is_oa else ''
             doi_link = f'<a href="{doi}" style="color: #8B7355; text-decoration: none; font-size: 12px;">DOI ↗</a>' if doi else ''
             authors_line = f'<div style="font-size: 12px; color: #9B9488; margin-bottom: 3px;">{authors_str}</div>' if authors_str else ''
+            abstract_cn_block = f'<div style="font-size: 13px; color: #6B6560; line-height: 1.5; margin-bottom: 4px;"><span style="color: #8B7355; font-weight: 600; font-size: 11px; letter-spacing: 0.5px;">中文 · </span>{abstract_cn}</div>' if abstract_cn else ''
+            abstract_en_block = f'<div style="font-size: 12px; color: #8B857D; line-height: 1.5; margin-bottom: 4px; padding-top: 2px;"><span style="color: #8B7355; font-weight: 600; font-size: 11px; letter-spacing: 0.5px;">EN · </span>{abstract_en}</div>' if abstract_en else ''
 
             html += f"""
   <div style="margin-bottom: 16px; padding-left: 12px; border-left: 3px solid #E8E6DC;">
     <div style="font-weight: 600; font-size: 14px; line-height: 1.4; margin-bottom: 2px;">{title_cn}{oa_badge}</div>
     <div style="font-size: 13px; color: #6B6560; line-height: 1.3; margin-bottom: 2px; font-style: italic;">{title_en}</div>
     {authors_line}
-    <div style="font-size: 13px; color: #6B6560; line-height: 1.5; margin-bottom: 4px;">{abstract_cn}</div>
+    {abstract_cn_block}
+    {abstract_en_block}
     <div style="font-size: 12px; color: #9B9488;">{doi_link}</div>
   </div>
 """
