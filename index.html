@@ -102,8 +102,8 @@
   .result-bar .del-btn{font-family:"Inter",sans-serif;font-size:11.5px;font-weight:500;color:var(--danger);padding:3px 8px;border:1px solid var(--line);border-radius:4px;background:var(--surface)}
   .result-bar .del-btn[disabled]{color:var(--ink-4);cursor:not-allowed}
   .th,.tr{display:grid;gap:12px;align-items:center;padding:5px 14px}
-  .pending .th,.pending .tr{grid-template-columns:22px 56px 64px 1fr 160px 70px 36px}
-  .idea .th,.idea .tr{grid-template-columns:22px 56px 72px 1fr 160px 70px}
+  .pending .th,.pending .tr{grid-template-columns:22px 170px 64px 1fr 140px 36px}
+  .idea .th,.idea .tr{grid-template-columns:22px 170px 72px 1fr 140px}
   .th{border-bottom:1px solid var(--line);font-family:"JetBrains Mono",monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);background:var(--surface);position:sticky;top:0;z-index:2;padding:6px 14px}
   .th .sortable{cursor:pointer;display:flex;align-items:center;gap:4px}
   .th .sortable.active{color:var(--ink)}
@@ -119,7 +119,8 @@
   .tr.cursor.selected{box-shadow:inset 2px 0 0 var(--accent),inset 0 0 0 1px var(--accent)}
   .tr .chk{width:14px;height:14px;border:1px solid var(--line);border-radius:3px;background:var(--surface);display:grid;place-items:center;color:transparent;font-size:10px;line-height:1}
   .tr .chk.on{background:var(--accent);border-color:var(--accent);color:#fff}
-  .tr .jid{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--ink);font-weight:600}
+  .tr .journal{font-size:11.5px;color:var(--ink-2);min-width:0}
+  .tr .journal .jname{color:var(--ink);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;max-width:100%}
   .tr .date{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--ink-3)}
   .tr .title-cell{display:flex;align-items:center;gap:8px;min-width:0}
   .tr .tier-chip{font-family:"JetBrains Mono",monospace;font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px;background:var(--ink);color:var(--bg);flex-shrink:0}
@@ -129,7 +130,6 @@
   .tr.unread .ttl{font-weight:600}
   .tr .ttl mark{background:var(--highlight);color:var(--ink);padding:0 1px;border-radius:2px}
   .tr .au{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .tr .cite{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--ink-3);text-align:right}
   .tr .flag{text-align:center;font-size:12px;color:var(--ink-4)}
   .tr .flag.idea{color:var(--idea)}
   .tr.read-already .ttl,.tr.read-already .au{color:var(--ink-3)}
@@ -201,9 +201,27 @@
   .stats-table{width:100%;border-collapse:collapse;font-size:12px}
   .stats-table th,.stats-table td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line-2)}
   .stats-table th{font-family:"JetBrains Mono",monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);font-weight:500;background:var(--bg-2)}
-  .stats-table td.n{font-family:"JetBrains Mono",monospace;text-align:right;color:var(--ink-2)}
-  .stats-table td.src{font-family:"JetBrains Mono",monospace;font-weight:600;color:var(--ink)}
+  .stats-table td.n{font-family:"JetBrains Mono",monospace;text-align:right;color:var(--ink-2);font-size:13px;font-weight:600}
+  .stats-table td.src{font-family:"Inter",sans-serif;font-weight:500;color:var(--ink-2);font-size:11.5px}
+  .stats-table td.zero{color:var(--ink-4)}
   .stats-total{font-size:11.5px;color:var(--ink-3);padding:10px 0 0;border-top:1px solid var(--line-2);margin-top:8px}
+  .stats-chart{margin-top:20px}
+  .stats-chart .title{font-family:"JetBrains Mono",monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);font-weight:500;margin-bottom:6px}
+  .stats-chart .sub{font-size:11px;color:var(--ink-4);margin-bottom:14px}
+  .stats-chart .legend{display:flex;gap:12px;margin-bottom:12px;font-size:11px;color:var(--ink-2)}
+  .stats-chart .legend .sw{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:4px;vertical-align:middle}
+  .stats-chart .bars{display:flex;gap:10px;align-items:flex-end;height:160px;padding:0 4px;border-bottom:1px solid var(--line);margin-bottom:6px}
+  .stats-chart .bar-col{flex:1;min-width:22px;display:flex;flex-direction:column;justify-content:flex-end;gap:1px;position:relative}
+  .stats-chart .bar-col .seg{width:100%;background:var(--ink);transition:opacity .15s}
+  .stats-chart .bar-col .seg.ft50{background:#B08A5E}
+  .stats-chart .bar-col .seg.cepm{background:#2E7D6F}
+  .stats-chart .bar-col .seg.cnki{background:#C25B3F}
+  .stats-chart .bar-col:hover .seg{opacity:.85}
+  .stats-chart .bar-col .total{position:absolute;top:-16px;left:0;right:0;text-align:center;font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--ink-2);font-weight:600}
+  .stats-chart .x-labels{display:flex;gap:10px;padding:0 4px}
+  .stats-chart .x-labels .lab{flex:1;text-align:center;font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--ink-3);min-width:22px}
+  .stats-chart .empty{text-align:center;color:var(--ink-4);padding:24px 0;font-size:12px}
+  #statsWrap .modal{width:640px}
   .cmdk{width:560px;padding:0}
   .cmdk input{width:100%;padding:14px 18px;border:0;outline:0;background:transparent;font-size:14px;font-family:"JetBrains Mono",monospace;color:var(--ink);border-bottom:1px solid var(--line-2)}
   .cmdk-list{max-height:320px;overflow-y:auto}
@@ -346,12 +364,9 @@
           <button class="fchip" data-date="3m">90d</button>
           <button class="fchip on" data-date="all">all</button>
         </div>
-        <label style="margin-top:6px">TIER</label>
-        <div class="chipset" id="tierChips">
-          <button class="fchip on" data-tier="all">all</button>
-          <button class="fchip" data-tier="1">A</button>
-          <button class="fchip" data-tier="2">B</button>
-          <button class="fchip" data-tier="3">C</button>
+        <div id="tierRow" style="display:flex;flex-direction:column;gap:4px">
+          <label id="tierLabel" style="margin-top:6px">TIER</label>
+          <div class="chipset" id="tierChips"></div>
         </div>
         <label style="margin-top:6px">GROUP BY</label>
         <div class="view-toggle" id="viewToggle">
@@ -432,6 +447,7 @@
     <div class="m-body">
       <table class="stats-table" id="statsTable"></table>
       <div class="stats-total" id="statsTotal"></div>
+      <div class="stats-chart" id="statsChart"></div>
     </div>
     <div class="m-foot"><button class="btn primary" id="statsClose">Close</button></div>
   </div>
@@ -845,13 +861,13 @@ const state = {
   status: 'pending',     // pending | idea
   selectedJournal: 'all',
   dateRange: 'all',
-  tier: 'all',
+  group: 'all',             // tier for FT50 · category for CNKI · unused for CE/PM
   view: 'scan',          // scan | journal
-  sortBy: 'cite',        // date | cite | jid | title
+  sortBy: 'date',        // date | jid | title
   sortDir: 'desc',
   query: '',
   lang: 'en',            // en | cn
-  collapsed: {1:false, 2:false, 3:true},
+  collapsed: { 3: true, '管理B2': true, '工程': true, '其他': true },
   cursor: 0,
   selected: new Set(),
   collapsedGroups: new Set(),
@@ -921,8 +937,38 @@ const $$ = s => [...document.querySelectorAll(s)];
 
 function paperTitle(p){ return state.lang==='cn' ? p.titleCn : p.titleEn; }
 function paperAbstract(p){ return state.lang==='cn' ? p.abstractCn : p.abstractEn; }
-function tierClass(t){ return t===1?'':t===2?'b':'c'; }
-function tierLetter(t){ return t===1?'A':t===2?'B':'C'; }
+
+// ── Per-source ranking (tier/category) config ────────────────────
+// FT50/UTD24 uses integer tier 1/2/3 shown as A/B/C.
+// CE/PM has no ranking at all — all journals flat.
+// CNKI uses a Chinese-journal category system (管理A / 管理B1 / 管理B2 / 工程 / 其他).
+const CNKI_CATEGORY = {'JJYJ':'管理A','JCYJ':'管理A','GLSJ':'管理A','ZSHK':'管理A','XTLL':'管理B1','SLJY':'管理B1','JRYJ':'管理B1','ZGRK':'管理B1','ZGGK':'管理B1','KJYJ':'管理B1','WGJG':'管理B1','ZWGD':'管理B1','LKGP':'管理B1','KYGL':'管理B1','GLGU':'管理B1','XTGC':'管理B1','XTGL':'管理B1','GGGL':'管理B1','JCJJ':'管理B2','GLXB':'管理B2','YCGL':'管理B2','GCXT':'管理B2','KZYC':'管理B2','STYS':'管理B2','GYGC':'工程','JZJJ':'工程','GCZJ':'工程','XMGJ':'工程','TMGC':'工程','YJYF':'管理B2','ZGRZ':'管理B2','SLTJ':'管理B2','KXXG':'管理B2','GGYY':'管理B2','SJJJ':'管理B2','JJDL':'管理B2','CYJJ':'管理B2','KXYJ':'管理B2','TJYJ':'管理B2','TJLT':'管理B2','XUXI':'管理B2','ZHXU':'其他','YSXT':'其他','DLXB':'其他'};
+
+const RANK = {
+  ft50: {
+    enabled: true,
+    groupOrder: [1, 2, 3],
+    groupOf: p => p.tier,
+    label: g => ({1:'A',2:'B',3:'C'}[g] || '?'),
+    chipClass: g => ({1:'',2:'b',3:'c'}[g] || 'c'),
+    sidebarPrefix: 'TIER ',
+  },
+  cepm: { enabled: false },
+  cnki: {
+    enabled: true,
+    groupOrder: ['管理A', '管理B1', '管理B2', '工程', '其他'],
+    groupOf: p => CNKI_CATEGORY[p.jid] || '其他',
+    label: g => g,
+    chipClass: g => ({'管理A':'','管理B1':'b','管理B2':'c','工程':'c','其他':'c'}[g] || 'c'),
+    sidebarPrefix: '',
+  },
+};
+
+// Convenience accessors
+function rankCfg(src){ return RANK[src||state.source]; }
+function groupOf(p){ const r = RANK[p.src]; return r.enabled ? r.groupOf(p) : null; }
+function groupLabel(src, g){ return RANK[src].label(g); }
+function groupChipClass(src, g){ return RANK[src].chipClass(g); }
 
 function escapeHtml(s){
   return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -962,8 +1008,8 @@ function visibleRows(){
   rows = rows.filter(p => state.status==='idea' ? p.idea : !p.idea);
   // journal
   if (state.selectedJournal !== 'all') rows = rows.filter(p => p.jid===state.selectedJournal);
-  // tier
-  if (state.tier !== 'all') rows = rows.filter(p => p.tier === +state.tier);
+  // tier / category group
+  if (state.group !== 'all') rows = rows.filter(p => String(groupOf(p)) === String(state.group));
   // date
   rows = rows.filter(p => dateInRange(p.date, state.dateRange));
   // search
@@ -985,10 +1031,9 @@ function sortRows(rows){
   const dir = sortDir==='asc' ? 1 : -1;
   const by = {
     date: (a,b) => (a.date<b.date?-1:a.date>b.date?1:0)*dir,
-    cite: (a,b) => (a.cites-b.cites)*dir,
     jid:  (a,b) => (a.jid<b.jid?-1:a.jid>b.jid?1:0)*dir,
     title:(a,b) => (paperTitle(a)<paperTitle(b)?-1:1)*dir,
-  }[sortBy];
+  }[sortBy] || ((a,b)=>0);
   return [...rows].sort(by);
 }
 
@@ -1025,12 +1070,12 @@ function updateCounts(){
 }
 
 function renderSidebar(){
-  // count by journal (within current status + filters except journal)
+  // Count papers per journal, respecting status + date + group filters (but not the journal filter itself).
   const counts = {};
   for (const p of allPapers(state.source)) {
     if (state.status==='idea' && !p.idea) continue;
     if (state.status==='pending' && p.idea) continue;
-    if (state.tier!=='all' && p.tier !== +state.tier) continue;
+    if (state.group!=='all' && String(groupOf(p)) !== String(state.group)) continue;
     if (!dateInRange(p.date, state.dateRange)) continue;
     counts[p.jid] = (counts[p.jid]||0)+1;
   }
@@ -1040,30 +1085,46 @@ function renderSidebar(){
   html += `<div class="j all ${state.selectedJournal==='all'?'on':''}" data-j="all">
     <span class="all-label">all papers</span><span class="c mono">${totalAll}</span></div>`;
 
-  for (const tier of [1,2,3]) {
-    const jours = JOURNALS[state.source].filter(j=>j.tier===tier);
-    const total = jours.reduce((s,j)=>s+(counts[j.id]||0),0);
-    const cls = tierClass(tier);
-    const isCollapsed = state.collapsed[tier];
-    html += `<div class="tier-grp ${isCollapsed?'collapsed':''}">
-      <div class="tier-head ${cls}" data-toggle="${tier}">
-        <div class="l">
-          <span class="caret">${isCollapsed?'▸':'▾'}</span>
-          <span class="tier-badge">TIER ${tierLetter(tier)}</span>
-        </div>
-        <span class="n">${total}</span>
-      </div>
-      <div class="j-list">`;
-    for (const j of jours) {
-      const n = counts[j.id]||0;
-      const on = state.selectedJournal===j.id;
-      html += `<div class="j ${on?'on':''}" data-j="${j.id}">
-        <span class="id">${j.id}</span>
-        <span class="nm" title="${escapeHtml(j.name)}">${escapeHtml(j.name)}</span>
-        <span class="c">${n}</span>
-      </div>`;
+  const cfg = rankCfg();
+  const journalRow = j => {
+    const n = counts[j.id]||0;
+    const on = state.selectedJournal===j.id;
+    return `<div class="j ${on?'on':''}" data-j="${j.id}">
+      <span class="id">${j.id}</span>
+      <span class="nm" title="${escapeHtml(j.name)}">${escapeHtml(j.name)}</span>
+      <span class="c">${n}</span>
+    </div>`;
+  };
+
+  if (!cfg.enabled) {
+    // Flat list — no grouping (CE/PM).
+    for (const j of JOURNALS[state.source]) html += journalRow(j);
+  } else {
+    // Group journals by rank (tier for FT50, category for CNKI).
+    const groupedJournals = new Map(cfg.groupOrder.map(g => [g, []]));
+    for (const j of JOURNALS[state.source]) {
+      const g = cfg.groupOf({ jid: j.id, tier: j.tier });
+      if (!groupedJournals.has(g)) groupedJournals.set(g, []);
+      groupedJournals.get(g).push(j);
     }
-    html += `</div></div>`;
+    for (const [g, jours] of groupedJournals) {
+      if (!jours.length) continue;
+      const total = jours.reduce((s,j)=>s+(counts[j.id]||0),0);
+      const cls = cfg.chipClass(g);
+      const isCollapsed = !!state.collapsed[g];
+      const lbl = cfg.label(g);
+      html += `<div class="tier-grp ${isCollapsed?'collapsed':''}">
+        <div class="tier-head ${cls}" data-toggle="${escapeHtml(String(g))}">
+          <div class="l">
+            <span class="caret">${isCollapsed?'▸':'▾'}</span>
+            <span class="tier-badge">${escapeHtml(cfg.sidebarPrefix + lbl)}</span>
+          </div>
+          <span class="n">${total}</span>
+        </div>
+        <div class="j-list">`;
+      for (const j of jours) html += journalRow(j);
+      html += `</div></div>`;
+    }
   }
   $('#sidebarScroll').innerHTML = html;
 
@@ -1073,7 +1134,7 @@ function renderSidebar(){
     renderSidebar(); renderTable(); renderPreview();
   }));
   $$('#sidebarScroll .tier-head').forEach(el => el.addEventListener('click', () => {
-    const k = +el.dataset.toggle;
+    const k = el.dataset.toggle;
     state.collapsed[k] = !state.collapsed[k];
     renderSidebar();
   }));
@@ -1092,9 +1153,9 @@ function renderHeaders(){
 
   let th;
   if (state.status==='pending') {
-    th = `<div class="check" id="thCheck" title="Select visible">✓</div>${srt('jid','JID')}${srt('date','DATE')}<div>TITLE</div><div>AUTHORS</div>${srt('cite','CITES')}<div style="text-align:center">★</div>`;
+    th = `<div class="check" id="thCheck" title="Select visible">✓</div>${srt('jid','JOURNAL')}${srt('date','DATE')}<div>TITLE</div><div>AUTHORS</div><div style="text-align:center">★</div>`;
   } else {
-    th = `<div class="check" id="thCheck" title="Select visible">✓</div>${srt('jid','JID')}${srt('date','DATE')}<div>TITLE</div><div>AUTHORS</div>${srt('cite','CITES')}`;
+    th = `<div class="check" id="thCheck" title="Select visible">✓</div>${srt('jid','JOURNAL')}${srt('date','DATE')}<div>TITLE</div><div>AUTHORS</div>`;
   }
   $('#tableHead').innerHTML = th;
 
@@ -1196,21 +1257,23 @@ function renderTable(){
       const isSel = state.selected.has(p.id);
       const readCls = p.read ? 'read-already' : 'unread';
       const cls = `tr ${readCls} ${isCursor?'cursor':''} ${isSel?'selected':''}`;
-      const jcls = tierClass(p.tier);
+      const cfg = RANK[p.src];
       const title = highlight(paperTitle(p));
       const auth = escapeHtml(p.authors);
-      const cite = p.cites;
+      const jName = (JOURNALS[p.src].find(j=>j.id===p.jid)||{}).name || p.jid;
+      const tierChip = cfg.enabled
+        ? `<span class="tier-chip ${cfg.chipClass(groupOf(p))}">${escapeHtml(cfg.label(groupOf(p)))}</span>`
+        : '';
       const flag = state.status==='pending' ? `<div class="flag ${p.idea?'idea':''}">${p.idea?'★':'·'}</div>` : '';
       html += `<div class="${cls}" data-id="${p.id}" data-idx="${myIdx}">
         <div class="chk ${isSel?'on':''}" data-chk="1">✓</div>
-        <div class="jid" style="display:flex;align-items:center;gap:5px">${(!p.read && state.status==='pending')?'<span class="unread-dot"></span>':''}<span>${p.jid}</span></div>
+        <div class="journal" style="display:flex;align-items:center;gap:5px;min-width:0">${(!p.read && state.status==='pending')?'<span class="unread-dot"></span>':''}<span class="jname" title="${escapeHtml(p.jid+' · '+jName)}">${escapeHtml(jName)}</span></div>
         <div class="date">${p.date.slice(5)}</div>
         <div class="title-cell">
-          <span class="tier-chip ${jcls}">${tierLetter(p.tier)}</span>
+          ${tierChip}
           <span class="ttl">${title}</span>
         </div>
         <div class="au" title="${escapeHtml(p.authors)}">${auth}</div>
-        <div class="cite">${cite}</div>
         ${flag}
       </div>`;
     }
@@ -1264,8 +1327,11 @@ function renderPreview(){
   const abs = state.lang==='cn' ? p.abstractCn : p.abstractEn;
   const otherTitle = state.lang==='cn' ? p.titleEn : p.titleCn;
   const showOther = otherTitle && otherTitle !== paperTitle(p);
-  const jcls = tierClass(p.tier);
+  const cfg = RANK[p.src];
   const jName = JOURNALS[p.src].find(j=>j.id===p.jid)?.name || p.jid;
+  const pvTierChip = cfg.enabled
+    ? `<span class="pv-chip tier ${cfg.chipClass(groupOf(p))}">${escapeHtml((cfg.sidebarPrefix||'')+cfg.label(groupOf(p)))}</span>`
+    : '';
 
   const primaryBtn = state.status==='pending'
     ? `<button class="primary ${p.idea?'idea-on':''}" id="pvIdea">${p.idea?'★ In Idea':'+ Add to Idea'}<span class="kbd">I</span></button>`
@@ -1279,7 +1345,7 @@ function renderPreview(){
     <div class="pv">
       <div class="pv-head">
         <div class="pv-chips">
-          <span class="pv-chip tier ${jcls}">TIER ${tierLetter(p.tier)}</span>
+          ${pvTierChip}
           <span class="pv-chip">${p.jid}</span>
           <span class="pv-chip">${p.date}</span>
           ${p.idea?'<span class="pv-chip idea">★ IDEA</span>':''}
@@ -1291,8 +1357,8 @@ function renderPreview(){
       </div>
       <div class="pv-scroll">
         <div class="pv-kv">
-          <div class="row"><span class="k">Journal</span><span class="v" title="${escapeHtml(jName)}">${escapeHtml(jName)}</span></div>
-          <div class="row"><span class="k">Cites</span><span class="v mono">${p.cites}</span></div>
+          <div class="row"><span class="k">Journal</span><span class="v" title="${escapeHtml(p.jid+' · '+jName)}">${escapeHtml(jName)}</span></div>
+          <div class="row"><span class="k">JID</span><span class="v mono">${escapeHtml(p.jid)}</span></div>
           <div class="row"><span class="k">DOI</span><span class="v mono"><a href="#" id="pvDoi" title="${escapeHtml(p.doiUrl||p.doi)}">${escapeHtml(p.doi.length>38 ? p.doi.slice(0,36)+'…' : p.doi)}</a></span></div>
           <div class="row"><span class="k">Scan</span><span class="v mono">${p.scanDate}</span></div>
         </div>
@@ -1467,11 +1533,31 @@ function confirmModal(title, body, onOk){
 }
 
 // ── wire up controls ──────────────────────────────────────────────
+function renderGroupChips(){
+  const cfg = rankCfg();
+  const row = $('#tierRow');
+  if (!cfg.enabled) { row.style.display = 'none'; return; }
+  row.style.display = '';
+  $('#tierLabel').textContent = state.source === 'cnki' ? 'CATEGORY' : 'TIER';
+  const chips = [`<button class="fchip ${state.group==='all'?'on':''}" data-group="all">all</button>`];
+  for (const g of cfg.groupOrder) {
+    const on = String(state.group) === String(g) ? 'on' : '';
+    chips.push(`<button class="fchip ${on}" data-group="${escapeHtml(String(g))}">${escapeHtml(cfg.label(g))}</button>`);
+  }
+  $('#tierChips').innerHTML = chips.join('');
+  $$('#tierChips button').forEach(b => b.addEventListener('click', () => {
+    state.group = b.dataset.group; state.cursor = 0;
+    renderGroupChips(); renderTable();
+  }));
+}
+
 function wireTopbar(){
   $$('#sourceTabs button').forEach(b => b.addEventListener('click', () => {
     state.source = b.dataset.src;
-    state.selectedJournal='all'; state.cursor=0; state.selected.clear(); state.collapsedGroups.clear();
+    state.selectedJournal='all'; state.group='all'; state.cursor=0;
+    state.selected.clear(); state.collapsedGroups.clear();
     $$('#sourceTabs button').forEach(x=>x.classList.toggle('on', x===b));
+    renderGroupChips();
     renderAll();
   }));
   $$('#statusTabs button').forEach(b => b.addEventListener('click', () => {
@@ -1484,11 +1570,6 @@ function wireTopbar(){
   $$('#dateChips button').forEach(b => b.addEventListener('click', () => {
     state.dateRange = b.dataset.date; state.cursor=0;
     $$('#dateChips button').forEach(x=>x.classList.toggle('on', x===b));
-    renderTable();
-  }));
-  $$('#tierChips button').forEach(b => b.addEventListener('click', () => {
-    state.tier = b.dataset.tier; state.cursor=0;
-    $$('#tierChips button').forEach(x=>x.classList.toggle('on', x===b));
     renderTable();
   }));
   $$('#viewToggle button').forEach(b => b.addEventListener('click', () => {
@@ -1602,23 +1683,30 @@ function renderCmdk(){
   }
   rows = rows.slice(0, 40);
   if (state.cmdkIdx >= rows.length) state.cmdkIdx = 0;
-  const html = rows.map((p,i) => `<div class="cmdk-item ${i===state.cmdkIdx?'on':''}" data-i="${i}" data-src="${p.src}" data-id="${p.id}" data-jid="${p.jid}">
-    <span class="jid">${p.src.toUpperCase()}·${p.jid}</span>
-    <span class="tier-chip ${tierClass(p.tier)}">${tierLetter(p.tier)}</span>
-    <span class="ttl">${escapeHtml(paperTitle(p))}</span>
-  </div>`).join('');
+  const html = rows.map((p,i) => {
+    const cfg = RANK[p.src];
+    const chip = cfg.enabled
+      ? `<span class="tier-chip ${cfg.chipClass(groupOf(p))}">${escapeHtml(cfg.label(groupOf(p)))}</span>`
+      : '';
+    return `<div class="cmdk-item ${i===state.cmdkIdx?'on':''}" data-i="${i}" data-src="${p.src}" data-id="${p.id}" data-jid="${p.jid}">
+      <span class="jid">${p.src.toUpperCase()}·${p.jid}</span>
+      ${chip}
+      <span class="ttl">${escapeHtml(paperTitle(p))}</span>
+    </div>`;
+  }).join('');
   $('#cmdkList').innerHTML = html || `<div class="cmdk-item"><span class="ttl" style="color:var(--ink-3)">No results</span></div>`;
   $$('.cmdk-item').forEach(el => el.addEventListener('click', () => cmdkJump(el)));
 }
 function cmdkJump(el){
   const src = el.dataset.src, id = el.dataset.id, jid = el.dataset.jid;
   if (!src || !id) return;
-  state.source = src; state.selectedJournal = 'all'; state.status='pending';
+  state.source = src; state.selectedJournal = 'all'; state.group = 'all'; state.status='pending';
   const p = DB[src].find(x=>x.id===id);
   if (p && p.idea) state.status='idea';
   $$('#sourceTabs button').forEach(x=>x.classList.toggle('on', x.dataset.src===src));
   $$('#statusTabs button').forEach(x=>x.classList.toggle('on', x.dataset.status===state.status));
   $('#cmdkWrap').classList.remove('show');
+  renderGroupChips();
   renderAll();
   // find row and set cursor
   const rows = sortRows(visibleRows());
@@ -1631,26 +1719,100 @@ $('#cmdkInput')?.addEventListener('input', e => { state.cmdkQuery=e.target.value
 // ── stats modal ─────────────────────────────────────────────────
 function openStats(){
   const srcLabel = { ft50:'FT50/UTD24', cepm:'CE/PM', cnki:'CNKI' };
-  let tot = { read:0, idea:0, total:0 };
-  let html = `<thead><tr><th>Source</th><th style="text-align:right">Total</th><th style="text-align:right">Read</th><th style="text-align:right">Idea</th><th style="text-align:right">Progress</th></tr></thead><tbody>`;
-  for (const src of ['ft50','cepm','cnki']) {
-    const ps = allPapers(src);
-    const read = ps.filter(p=>p.read).length;
-    const idea = ps.filter(p=>p.idea).length;
-    const pct = ps.length ? Math.round(read/ps.length*100) : 0;
-    html += `<tr>
-      <td class="src">${srcLabel[src]}</td>
-      <td class="n">${ps.length}</td>
-      <td class="n">${read}</td>
-      <td class="n" style="color:var(--accent);font-weight:600">${idea}</td>
-      <td class="n">${pct}%</td>
-    </tr>`;
-    tot.read+=read; tot.idea+=idea; tot.total+=ps.length;
+  const sources = ['ft50','cepm','cnki'];
+  const raw = window.ISSync.raw || {};
+
+  // ── Summary: Reviewed = deleted + current_idea; Idea = max(idea_ever_count, current)
+  const reviewed = {}, idea = {};
+  for (const src of sources) {
+    const ps = DB[src] || [];
+    const curIdea = ps.filter(p => p.idea).length;
+    const st = raw[src] || {};
+    const deleted = (st.deleted_dois || []).length;
+    const ever = st.idea_ever_count || 0;
+    reviewed[src] = deleted + curIdea;
+    idea[src] = Math.max(ever, curIdea);
   }
-  html += '</tbody>';
+  const tReviewed = sources.reduce((s,k)=>s+reviewed[k],0);
+  const tIdea = sources.reduce((s,k)=>s+idea[k],0);
+
+  const cell = (v) => `<td class="n ${v===0?'zero':''}">${v}</td>`;
+  let html = `
+    <thead><tr>
+      <th></th>
+      ${sources.map(s=>`<th style="text-align:right">${srcLabel[s]}</th>`).join('')}
+      <th style="text-align:right">Total</th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td class="src">Reviewed</td>
+        ${sources.map(s=>cell(reviewed[s])).join('')}
+        ${cell(tReviewed)}
+      </tr>
+      <tr>
+        <td class="src" style="color:var(--accent-2);font-weight:600">Idea</td>
+        ${sources.map(s=>cell(idea[s])).join('')}
+        ${cell(tIdea)}
+      </tr>
+    </tbody>`;
   $('#statsTable').innerHTML = html;
-  const pct = tot.total ? Math.round(tot.read/tot.total*100) : 0;
-  $('#statsTotal').innerHTML = `<span class="mono">Overall · ${tot.total} papers · ${tot.read} read (${pct}%) · <span style="color:var(--accent);font-weight:600">${tot.idea} ideas</span></span>`;
+  $('#statsTotal').innerHTML = `<span class="mono">Reviewed = deleted + current idea · Idea = lifetime cumulative (from idea_ever_count)</span>`;
+
+  // ── Monthly bar chart: deletions + idea adds, grouped by YYYY-MM per source
+  const monthly = new Map();   // month → { ft50, cepm, cnki }
+  const bump = (month, src) => {
+    if (!monthly.has(month)) monthly.set(month, { ft50:0, cepm:0, cnki:0 });
+    monthly.get(month)[src] += 1;
+  };
+  for (const src of sources) {
+    const st = raw[src] || {};
+    for (const d of (st.deleted_dois || [])) {
+      const date = d.date || '';
+      if (date.length >= 7) bump(date.slice(0,7), src);
+    }
+    for (const ip of (st.idea_papers || [])) {
+      const date = ip.added_date || '';
+      if (date.length >= 7) bump(date.slice(0,7), src);
+    }
+  }
+  const months = [...monthly.keys()].sort();
+
+  let chart;
+  if (!months.length) {
+    chart = `<div class="empty">No activity yet — review some papers to see the monthly trend.</div>`;
+  } else {
+    const maxTotal = Math.max(...months.map(m => {
+      const c = monthly.get(m); return c.ft50+c.cepm+c.cnki;
+    }));
+    const rowHeight = 160;
+    const bars = months.map(m => {
+      const c = monthly.get(m);
+      const total = c.ft50+c.cepm+c.cnki;
+      const seg = (n, cls) => n > 0
+        ? `<div class="seg ${cls}" style="height:${(n/maxTotal)*rowHeight}px" title="${cls.toUpperCase()} · ${n}"></div>`
+        : '';
+      return `<div class="bar-col">
+        ${total>0?`<div class="total">${total}</div>`:''}
+        ${seg(c.cnki,'cnki')}
+        ${seg(c.cepm,'cepm')}
+        ${seg(c.ft50,'ft50')}
+      </div>`;
+    }).join('');
+    const labels = months.map(m => `<div class="lab">${m.slice(2).replace('-','/')}</div>`).join('');
+    chart = `
+      <div class="legend">
+        <span><span class="sw" style="background:#B08A5E"></span>FT50/UTD24</span>
+        <span><span class="sw" style="background:#2E7D6F"></span>CE/PM</span>
+        <span><span class="sw" style="background:#C25B3F"></span>CNKI</span>
+      </div>
+      <div class="bars">${bars}</div>
+      <div class="x-labels">${labels}</div>`;
+  }
+  $('#statsChart').innerHTML = `
+    <div class="title">Monthly activity</div>
+    <div class="sub">Reviewed papers per month (deleted + added to idea), stacked by source</div>
+    ${chart}`;
+
   $('#statsWrap').classList.add('show');
 }
 
@@ -1708,8 +1870,10 @@ function onKey(e){
 }
 
 function setSource(s){
-  state.source=s; state.selectedJournal='all'; state.cursor=0; state.selected.clear(); state.collapsedGroups.clear();
+  state.source=s; state.selectedJournal='all'; state.group='all'; state.cursor=0;
+  state.selected.clear(); state.collapsedGroups.clear();
   $$('#sourceTabs button').forEach(x=>x.classList.toggle('on', x.dataset.src===s));
+  renderGroupChips();
   renderAll();
 }
 
@@ -1783,6 +1947,7 @@ function init(){
   window.ISSync.onChange(updateSyncUI);
   updateSyncUI();
   wireTopbar();
+  renderGroupChips();
   window.addEventListener('keydown', onKey);
   wireResponsive();
   renderAll();
