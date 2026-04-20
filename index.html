@@ -1,0 +1,1812 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>idea-scout · workbench v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+SC:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5F4EE;--bg-2:#EEEBE2;--bg-3:#E4E0D4;--surface:#FAF9F5;
+    --ink:#1F1E1D;--ink-2:#3D3D3A;--ink-3:#6F6E69;--ink-4:#A09F99;
+    --line:#D9D5C9;--line-2:#E7E3D8;
+    --accent:#D97757;--accent-2:#C96442;--accent-soft:#F3E3D8;
+    --ok:#6B7F58;--warn:#B88A3E;--warn-bg:#FAF1DC;--danger:#B04A3A;
+    --idea:#D97757;--highlight:#FFF3CD;--row-h:30px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%;overflow:hidden}
+  body{font-family:"Inter",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:13px;line-height:1.45;-webkit-font-smoothing:antialiased}
+  .mono{font-family:"JetBrains Mono",monospace}
+  button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+  input{font:inherit;color:inherit}
+  .app{height:100vh;display:flex;flex-direction:column}
+  .topbar{height:44px;display:flex;align-items:center;gap:14px;padding:0 14px;border-bottom:1px solid var(--line);background:var(--bg-2);flex-shrink:0}
+  .brand{display:flex;align-items:center;gap:8px;font-weight:600}
+  .brand .mark{width:20px;height:20px;border-radius:5px;background:var(--accent);color:#fff;display:grid;place-items:center;font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:600}
+  .brand .name{font-size:13.5px}
+  .brand .meta{color:var(--ink-3);font-size:11px;margin-left:6px;font-family:"JetBrains Mono",monospace;letter-spacing:.04em}
+  .topbar .divider{width:1px;height:20px;background:var(--line)}
+  .source-tabs{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:2px}
+  .source-tabs button{padding:4px 10px;font-size:11.5px;font-weight:500;color:var(--ink-3);border-radius:4px;font-family:"JetBrains Mono",monospace;letter-spacing:.02em}
+  .source-tabs button.on{background:var(--bg-2);color:var(--ink);font-weight:600}
+  .source-tabs button .c{color:var(--ink-4);margin-left:5px;font-size:10.5px}
+  .source-tabs button.on .c{color:var(--ink-3)}
+  .status-tabs{display:flex;gap:16px;margin-left:6px}
+  .status-tabs button{padding:4px 0;font-size:12px;color:var(--ink-3);border-bottom:2px solid transparent;height:26px;display:flex;align-items:center;gap:6px}
+  .status-tabs button.on{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+  .status-tabs button .c{font-family:"JetBrains Mono",monospace;font-size:10.5px;padding:0 5px;border-radius:999px;background:var(--bg-3);color:var(--ink-3)}
+  .status-tabs button.on .c{background:var(--accent);color:#fff}
+  .topbar .right{margin-left:auto;display:flex;align-items:center;gap:8px}
+  .kbd{display:inline-block;font-family:"JetBrains Mono",monospace;font-size:10px;padding:1px 5px;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;background:var(--surface);color:var(--ink-2);line-height:1.2}
+  .icon-btn{width:26px;height:26px;border:1px solid var(--line);border-radius:5px;background:var(--surface);display:grid;place-items:center;color:var(--ink-2);font-family:"JetBrains Mono",monospace;font-size:11px;position:relative}
+  .icon-btn:hover{background:var(--bg-2);color:var(--ink)}
+  .icon-btn.synced{color:var(--ok)}
+  .icon-btn.synced::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--ok);position:absolute;top:3px;right:3px;border:1.5px solid var(--surface)}
+  .banner{padding:5px 14px;background:var(--warn-bg);border-bottom:1px solid #EDDDB4;display:flex;align-items:center;gap:8px;cursor:pointer;flex-shrink:0;font-size:11.5px;color:#916d2b}
+  .banner .arrow{margin-left:auto;font-size:10px}
+  .banner:hover{background:#F7EAC7}
+  .scanbar{padding:5px 14px;background:var(--bg-2);border-bottom:1px solid var(--line-2);display:flex;align-items:center;gap:8px;flex-shrink:0;font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--ink-3)}
+  .scanbar .ico{color:var(--accent)}
+  .scanbar .txt{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .main{flex:1;display:grid;grid-template-columns:240px 1fr 380px;min-height:0}
+  .col{min-height:0;display:flex;flex-direction:column}
+  .col.left{background:var(--bg-2);border-right:1px solid var(--line)}
+  .col.mid{background:var(--surface)}
+  .col.right{background:var(--bg-2);border-left:1px solid var(--line)}
+  .sect{font-family:"JetBrains Mono",monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);font-weight:500;padding:12px 14px 4px;display:flex;align-items:center;justify-content:space-between}
+  .tier-head{padding:5px 14px;font-size:11px;color:var(--ink-2);display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+  .tier-head .caret{width:10px;color:var(--ink-4);font-family:"JetBrains Mono",monospace;font-size:10px}
+  .tier-head .l{display:flex;align-items:center;gap:6px;font-family:"JetBrains Mono",monospace;letter-spacing:.02em}
+  .tier-head .l .tier-badge{font-family:"JetBrains Mono",monospace;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:var(--ink);color:var(--bg);letter-spacing:.05em}
+  .tier-head.b .l .tier-badge{background:var(--ink-2)}
+  .tier-head.c .l .tier-badge{background:var(--ink-4)}
+  .tier-head .n{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--ink-3)}
+  .j-list{display:flex;flex-direction:column}
+  .j{padding:4px 14px 4px 30px;display:grid;grid-template-columns:50px 1fr 22px;gap:6px;align-items:center;font-size:11.5px;cursor:pointer;color:var(--ink-2)}
+  .j:hover{background:rgba(217,119,87,.08)}
+  .j .id{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--ink);font-weight:600}
+  .j .nm{color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px}
+  .j .c{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--ink-4);text-align:right}
+  .j.on{background:var(--accent);color:#fff}
+  .j.on .id,.j.on .nm,.j.on .c{color:#fff}
+  .j.on .nm{color:rgba(255,255,255,.78)}
+  .j.on .c{color:rgba(255,255,255,.7)}
+  .j.all{padding-left:14px;grid-template-columns:1fr 24px}
+  .j.all .all-label{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink);font-weight:600}
+  .collapsed .j-list{display:none}
+  .sidebar-scroll{flex:1;min-height:0;overflow-y:auto}
+  .filter-row{display:flex;flex-direction:column;gap:4px;padding:6px 12px 12px;border-top:1px solid var(--line);background:var(--bg-2)}
+  .filter-row label{font-family:"JetBrains Mono",monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3)}
+  .chipset{display:flex;gap:3px;flex-wrap:wrap}
+  .fchip{padding:3px 8px;font-size:10.5px;font-family:"JetBrains Mono",monospace;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);border-radius:4px}
+  .fchip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .view-toggle{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:1px;margin-top:4px}
+  .view-toggle button{flex:1;padding:4px 6px;font-size:10.5px;font-family:"JetBrains Mono",monospace;color:var(--ink-3);border-radius:3px}
+  .view-toggle button.on{background:var(--ink);color:var(--bg);font-weight:600}
+  .mid-head{height:34px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;padding:0 14px;background:var(--surface);flex-shrink:0}
+  .breadcrumb{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-3)}
+  .breadcrumb b{color:var(--ink);font-weight:600}
+  .breadcrumb .sep{color:var(--ink-4);margin:0 4px}
+  .search{margin-left:auto;display:flex;align-items:center;gap:8px;background:var(--bg-2);border:1px solid var(--line);border-radius:5px;padding:3px 8px;height:22px;min-width:240px}
+  .search input{flex:1;border:0;background:transparent;outline:0;font-size:11.5px;color:var(--ink);font-family:"JetBrains Mono",monospace}
+  .search input::placeholder{color:var(--ink-4)}
+  .search .hint{color:var(--ink-4);font-family:"JetBrains Mono",monospace;font-size:10px}
+  .result-bar{padding:6px 14px;background:var(--bg-2);border-bottom:1px solid var(--line-2);display:flex;align-items:center;gap:12px;font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--ink-3)}
+  .result-bar .dot{width:6px;height:6px;border-radius:50%;background:var(--ok)}
+  .result-bar .sel{color:var(--accent);font-weight:600}
+  .result-bar .spacer{flex:1}
+  .result-bar .ris-btn{font-family:"Inter",sans-serif;font-size:11.5px;font-weight:600;background:var(--accent);color:#fff;padding:4px 10px;border-radius:4px;display:flex;align-items:center;gap:4px}
+  .result-bar .ris-btn[disabled]{background:var(--bg-3);color:var(--ink-4);cursor:not-allowed}
+  .result-bar .del-btn{font-family:"Inter",sans-serif;font-size:11.5px;font-weight:500;color:var(--danger);padding:3px 8px;border:1px solid var(--line);border-radius:4px;background:var(--surface)}
+  .result-bar .del-btn[disabled]{color:var(--ink-4);cursor:not-allowed}
+  .th,.tr{display:grid;gap:12px;align-items:center;padding:5px 14px}
+  .pending .th,.pending .tr{grid-template-columns:22px 56px 64px 1fr 160px 70px 36px}
+  .idea .th,.idea .tr{grid-template-columns:22px 56px 72px 1fr 160px 70px}
+  .th{border-bottom:1px solid var(--line);font-family:"JetBrains Mono",monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);background:var(--surface);position:sticky;top:0;z-index:2;padding:6px 14px}
+  .th .sortable{cursor:pointer;display:flex;align-items:center;gap:4px}
+  .th .sortable.active{color:var(--ink)}
+  .th .sortable .s{color:var(--ink-4);font-size:9px}
+  .th .sortable.active .s{color:var(--accent)}
+  .th .check{cursor:pointer;width:14px;height:14px;border:1px solid var(--line);border-radius:3px;background:var(--surface);display:grid;place-items:center;color:var(--ink);font-size:10px;line-height:1}
+  .table-scroll{flex:1;min-height:0;overflow-y:auto}
+  .tr{padding:0 14px;height:var(--row-h);border-bottom:1px solid var(--line-2);cursor:pointer;font-size:12px}
+  .tr:hover{background:var(--bg-2)}
+  .tr.unread{background:rgba(217,119,87,.04)}
+  .tr.selected{background:rgba(217,119,87,.12) !important;box-shadow:inset 2px 0 0 var(--accent)}
+  .tr.cursor{box-shadow:inset 2px 0 0 var(--ink)}
+  .tr.cursor.selected{box-shadow:inset 2px 0 0 var(--accent),inset 0 0 0 1px var(--accent)}
+  .tr .chk{width:14px;height:14px;border:1px solid var(--line);border-radius:3px;background:var(--surface);display:grid;place-items:center;color:transparent;font-size:10px;line-height:1}
+  .tr .chk.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .tr .jid{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--ink);font-weight:600}
+  .tr .date{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--ink-3)}
+  .tr .title-cell{display:flex;align-items:center;gap:8px;min-width:0}
+  .tr .tier-chip{font-family:"JetBrains Mono",monospace;font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px;background:var(--ink);color:var(--bg);flex-shrink:0}
+  .tr .tier-chip.b{background:var(--ink-2)}
+  .tr .tier-chip.c{background:var(--ink-4)}
+  .tr .ttl{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px;min-width:0;flex:1}
+  .tr.unread .ttl{font-weight:600}
+  .tr .ttl mark{background:var(--highlight);color:var(--ink);padding:0 1px;border-radius:2px}
+  .tr .au{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tr .cite{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--ink-3);text-align:right}
+  .tr .flag{text-align:center;font-size:12px;color:var(--ink-4)}
+  .tr .flag.idea{color:var(--idea)}
+  .tr.read-already .ttl,.tr.read-already .au{color:var(--ink-3)}
+  .grp{display:flex;align-items:center;gap:8px;padding:6px 14px;background:var(--bg-2);border-bottom:1px solid var(--line-2);border-top:1px solid var(--line-2);cursor:pointer;font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--ink-2)}
+  .grp .caret{color:var(--ink-4);font-size:10px;width:10px}
+  .grp .label{font-weight:600;color:var(--ink)}
+  .grp .n{color:var(--ink-3)}
+  .grp:hover{background:var(--bg-3)}
+  .grp.j-grp{padding-left:30px;background:var(--surface);border-top:0}
+  .grp.j-grp .label{color:var(--ink-2);font-size:11px;font-family:"Inter",sans-serif}
+  .pv{display:flex;flex-direction:column;min-height:0;height:100%}
+  .pv-head{padding:14px 16px 10px;border-bottom:1px solid var(--line)}
+  .pv-chips{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px}
+  .pv-chip{font-family:"JetBrains Mono",monospace;font-size:9.5px;padding:2px 6px;border-radius:3px;background:var(--surface);border:1px solid var(--line);color:var(--ink-2);letter-spacing:.04em}
+  .pv-chip.tier{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:700}
+  .pv-chip.tier.b{background:var(--ink-2);border-color:var(--ink-2)}
+  .pv-chip.tier.c{background:var(--ink-4);border-color:var(--ink-4)}
+  .pv-chip.idea{background:var(--idea);border-color:var(--idea);color:#fff}
+  .pv h2{margin:0;font-size:15px;font-weight:600;line-height:1.4;color:var(--ink)}
+  .pv h2 mark,.pv .en mark,.pv-sect p mark{background:var(--highlight);color:var(--ink);padding:0 2px;border-radius:2px}
+  .pv .en{margin:6px 0 0;font-size:12px;font-style:italic;color:var(--ink-3);line-height:1.5}
+  .pv-authors{margin:10px 0 0;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-2);line-height:1.6}
+  .pv-scroll{flex:1;min-height:0;overflow-y:auto}
+  .pv-kv{padding:10px 16px;border-bottom:1px solid var(--line-2);display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;font-size:11px}
+  .pv-kv .row{display:flex;gap:8px;align-items:baseline}
+  .pv-kv .k{font-family:"JetBrains Mono",monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);width:54px}
+  .pv-kv .v{color:var(--ink-2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pv-kv .v.mono{font-family:"JetBrains Mono",monospace;font-size:10.5px}
+  .pv-kv .v a{color:var(--accent-2);text-decoration:none}
+  .pv-sect{padding:12px 16px;border-bottom:1px solid var(--line-2)}
+  .pv-sect h5{margin:0 0 8px;font-family:"JetBrains Mono",monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-3);font-weight:500;display:flex;align-items:center;justify-content:space-between}
+  .pv-sect h5 .lang{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:1px}
+  .pv-sect h5 .lang button{font-family:"JetBrains Mono",monospace;font-size:9.5px;padding:2px 6px;color:var(--ink-3);border-radius:3px}
+  .pv-sect h5 .lang button.on{background:var(--ink);color:var(--bg)}
+  .pv-sect p{margin:0;font-size:12px;color:var(--ink-2);line-height:1.65}
+  .pv-sect.serif p{font-family:"Noto Serif SC",serif;font-size:12.5px;line-height:1.75}
+  .pv-actions{padding:10px 12px;border-top:1px solid var(--line);background:var(--bg-2);display:grid;grid-template-columns:1fr 1fr;gap:6px;flex-shrink:0}
+  .pv-actions button{display:flex;align-items:center;justify-content:center;gap:6px;padding:7px 8px;border:1px solid var(--line);border-radius:5px;background:var(--surface);font-size:11.5px;font-weight:500;color:var(--ink)}
+  .pv-actions button:hover{background:var(--bg-2)}
+  .pv-actions button.primary{grid-column:1 / span 2;background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+  .pv-actions button.primary.idea-on{background:var(--idea);border-color:var(--idea)}
+  .pv-actions button.danger{color:var(--danger)}
+  .pv-actions button .kbd{margin-left:4px;opacity:.7}
+  .pv-actions button.primary .kbd{background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)}
+  .footer{height:22px;border-top:1px solid var(--line);background:var(--bg-2);padding:0 12px;display:flex;align-items:center;gap:14px;flex-shrink:0;font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--ink-3)}
+  .footer .sep{color:var(--ink-4)}
+  .footer .right{margin-left:auto;display:flex;gap:10px;align-items:center}
+  .footer .link{color:var(--ink-2);cursor:pointer}
+  .footer .link:hover{color:var(--ink);text-decoration:underline}
+  .footer .ok{color:var(--ok)}
+  .footer .warn{color:var(--warn)}
+  .modal-wrap{position:fixed;inset:0;background:rgba(14,20,32,.35);display:none;align-items:flex-start;justify-content:center;padding-top:100px;z-index:50;backdrop-filter:blur(2px)}
+  .modal-wrap.show{display:flex}
+  .modal{width:480px;max-width:92vw;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 20px 60px -20px rgba(14,20,32,.4);overflow:hidden}
+  .modal .m-head{padding:18px 22px 6px;display:flex;align-items:center;gap:8px}
+  .modal .m-head .ico{color:var(--accent);font-size:14px}
+  .modal .m-head h3{margin:0;font-size:15px;font-weight:700;color:var(--ink)}
+  .modal .m-sub{padding:2px 22px 16px;font-size:12px;color:var(--ink-3)}
+  .modal .m-body{padding:0 22px 18px}
+  .modal .m-foot{padding:12px 22px;background:var(--bg-2);border-top:1px solid var(--line-2);display:flex;justify-content:flex-end;gap:8px}
+  .modal .input{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:7px;background:var(--bg-2);font-size:12px;font-family:"JetBrains Mono",monospace;color:var(--ink);outline:0}
+  .modal .input:focus{border-color:var(--accent);background:var(--surface)}
+  .btn{padding:7px 14px;border-radius:6px;font-size:12px;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--ink-2)}
+  .btn:hover{background:var(--bg-2)}
+  .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+  .btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+  .btn.ghost{border-color:transparent;background:transparent;color:var(--ink-3)}
+  .btn.ghost:hover{color:var(--ink);background:var(--bg-2)}
+  .stats-table{width:100%;border-collapse:collapse;font-size:12px}
+  .stats-table th,.stats-table td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line-2)}
+  .stats-table th{font-family:"JetBrains Mono",monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);font-weight:500;background:var(--bg-2)}
+  .stats-table td.n{font-family:"JetBrains Mono",monospace;text-align:right;color:var(--ink-2)}
+  .stats-table td.src{font-family:"JetBrains Mono",monospace;font-weight:600;color:var(--ink)}
+  .stats-total{font-size:11.5px;color:var(--ink-3);padding:10px 0 0;border-top:1px solid var(--line-2);margin-top:8px}
+  .cmdk{width:560px;padding:0}
+  .cmdk input{width:100%;padding:14px 18px;border:0;outline:0;background:transparent;font-size:14px;font-family:"JetBrains Mono",monospace;color:var(--ink);border-bottom:1px solid var(--line-2)}
+  .cmdk-list{max-height:320px;overflow-y:auto}
+  .cmdk-item{padding:9px 18px;display:flex;align-items:center;gap:10px;cursor:pointer;border-bottom:1px solid var(--line-2)}
+  .cmdk-item:hover,.cmdk-item.on{background:var(--bg-2)}
+  .cmdk-item .jid{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--ink-3);width:72px}
+  .cmdk-item .ttl{flex:1;font-size:12.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cmdk-item .tier-chip{font-family:"JetBrains Mono",monospace;font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px;background:var(--ink);color:var(--bg)}
+  .cmdk-item .tier-chip.b{background:var(--ink-2)}
+  .cmdk-item .tier-chip.c{background:var(--ink-4)}
+  .cmdk-foot{padding:8px 14px;display:flex;gap:14px;background:var(--bg-2);border-top:1px solid var(--line-2);font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--ink-3)}
+  .empty{height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:var(--ink-3);padding:40px}
+  .empty h3{margin:0;font-size:14px;color:var(--ink-2);font-weight:600}
+  .empty p{margin:0;font-size:12px;text-align:center;max-width:280px;line-height:1.6}
+  .empty .icon{font-size:40px;color:var(--ink-4);line-height:1;margin-bottom:4px}
+  .toast{position:fixed;bottom:36px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:6px;font-size:12px;font-family:"JetBrains Mono",monospace;opacity:0;pointer-events:none;transition:.18s;z-index:60;box-shadow:0 8px 24px -8px rgba(14,20,32,.4);display:flex;align-items:center;gap:10px}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+  .toast .undo{color:#F3E3D8;cursor:pointer;text-decoration:underline;font-weight:600}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:5px;border:2px solid var(--bg-2)}
+  ::-webkit-scrollbar-thumb:hover{background:var(--ink-4)}
+
+  /* ── A: tier fold animation + unread dot + author ellipsis ───── */
+  .tier-grp .j-list{max-height:600px;overflow:hidden;transition:max-height .22s ease, opacity .18s ease;opacity:1}
+  .tier-grp.collapsed .j-list{max-height:0;opacity:0;display:flex !important}
+  .tier-head .caret{transition:transform .18s ease;display:inline-block}
+  .tier-grp.collapsed .tier-head .caret{transform:rotate(-90deg)}
+  .tr .unread-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-right:-2px}
+  .tr.read-already .unread-dot{background:transparent}
+  .tr .au{overflow:hidden;text-overflow:ellipsis}
+
+  /* ── C: responsive ───────────────────────────────────────────── */
+  .scrim{position:fixed;inset:0;background:rgba(14,20,32,.35);z-index:40;display:none;backdrop-filter:blur(1px)}
+  .scrim.show{display:block}
+  .drawer-handle{display:none}
+  .sheet-tab{display:none}
+
+  @media (max-width:1200px){
+    .main{grid-template-columns:220px 1fr 340px}
+    .search{min-width:180px}
+  }
+  @media (max-width:1080px){
+    .main{grid-template-columns:1fr 340px}
+    .col.left{
+      position:fixed;top:0;left:0;bottom:0;width:260px;z-index:45;
+      transform:translateX(-100%);transition:transform .22s ease;
+      box-shadow:2px 0 24px -8px rgba(14,20,32,.3);
+    }
+    .col.left.open{transform:translateX(0)}
+    .drawer-handle{display:grid;place-items:center;width:26px;height:26px;border:1px solid var(--line);border-radius:5px;background:var(--surface);color:var(--ink-2);font-size:13px}
+    .drawer-handle:hover{background:var(--bg-2)}
+    .topbar{gap:8px;padding:0 10px}
+    .brand .meta{display:none}
+  }
+  @media (max-width:820px){
+    .main{grid-template-columns:1fr}
+    .col.right{
+      position:fixed;left:0;right:0;bottom:0;
+      height:62vh;z-index:44;border-left:0;border-top:1px solid var(--line);
+      transform:translateY(100%);transition:transform .24s ease;
+      box-shadow:0 -12px 32px -12px rgba(14,20,32,.3);
+      border-radius:12px 12px 0 0;
+    }
+    .col.right.open{transform:translateY(0)}
+    .sheet-tab{
+      display:flex;position:fixed;bottom:22px;right:14px;z-index:43;
+      align-items:center;gap:6px;padding:8px 14px;border-radius:999px;
+      background:var(--ink);color:var(--bg);font-family:"JetBrains Mono",monospace;font-size:11px;
+      box-shadow:0 8px 24px -8px rgba(14,20,32,.4);cursor:pointer;
+    }
+    .sheet-tab.hide{display:none}
+    .col.right .pv-head{padding-top:10px}
+    .col.right .pv::before{content:"";position:absolute;top:5px;left:50%;transform:translateX(-50%);width:36px;height:3px;background:var(--line);border-radius:2px}
+    .col.right .pv{position:relative}
+  }
+  @media (max-width:680px){
+    .topbar{height:auto;min-height:44px;flex-wrap:wrap;padding:6px 10px}
+    .source-tabs button{padding:3px 6px;font-size:10.5px}
+    .status-tabs{gap:10px}
+    .status-tabs button{font-size:11px}
+    .topbar .right{gap:4px}
+    .icon-btn{width:24px;height:24px;font-size:10px}
+    .search{min-width:140px}
+    .footer{font-size:9.5px;gap:8px;overflow-x:auto;white-space:nowrap}
+    .footer .right{flex-shrink:0}
+  }
+
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="topbar">
+    <button class="drawer-handle" id="drawerBtn" title="Filters">☰</button>
+    <div class="brand">
+      <div class="mark">is</div>
+      <div class="name">idea-scout</div>
+      <div class="meta">workbench</div>
+    </div>
+    <div class="divider"></div>
+    <div class="source-tabs" id="sourceTabs">
+      <button data-src="ft50" class="on">FT50/UTD24 <span class="c" id="srcCount-ft50">0</span></button>
+      <button data-src="cepm">CE/PM <span class="c" id="srcCount-cepm">0</span></button>
+      <button data-src="cnki">CNKI <span class="c" id="srcCount-cnki">0</span></button>
+    </div>
+    <div class="divider"></div>
+    <div class="status-tabs" id="statusTabs">
+      <button data-status="pending" class="on"><span id="lbl-pending">Pending</span> <span class="c" id="statCount-pending">0</span></button>
+      <button data-status="idea"><span id="lbl-idea">Idea</span> <span class="c" id="statCount-idea">0</span></button>
+    </div>
+    <div class="right">
+      <button class="icon-btn" id="btnLang" title="Toggle language">中</button>
+      <button class="icon-btn" id="btnStats" title="Statistics">◨</button>
+      <button class="icon-btn" id="btnToken" title="GitHub token">⚙</button>
+      <button class="icon-btn" id="openCmdk" title="Search">⌘K</button>
+    </div>
+  </header>
+
+  <div class="banner" id="syncBanner">
+    <span>⚠</span>
+    <span id="bannerText">Set a GitHub token to save changes across reloads / devices</span>
+    <span class="arrow">→</span>
+  </div>
+
+  <div class="scanbar" id="scanBar">
+    <span class="ico">◉</span>
+    <span class="txt" id="scanText">Loading scan history…</span>
+  </div>
+
+  <main class="main">
+    <aside class="col left">
+      <div class="sidebar-scroll" id="sidebarScroll"></div>
+      <div class="filter-row">
+        <label id="dateLabel">DATE RANGE</label>
+        <div class="chipset" id="dateChips">
+          <button class="fchip" data-date="today">today</button>
+          <button class="fchip" data-date="week">7d</button>
+          <button class="fchip" data-date="month">30d</button>
+          <button class="fchip" data-date="3m">90d</button>
+          <button class="fchip on" data-date="all">all</button>
+        </div>
+        <label style="margin-top:6px">TIER</label>
+        <div class="chipset" id="tierChips">
+          <button class="fchip on" data-tier="all">all</button>
+          <button class="fchip" data-tier="1">A</button>
+          <button class="fchip" data-tier="2">B</button>
+          <button class="fchip" data-tier="3">C</button>
+        </div>
+        <label style="margin-top:6px">GROUP BY</label>
+        <div class="view-toggle" id="viewToggle">
+          <button data-view="scan" class="on">by date</button>
+          <button data-view="journal">by journal</button>
+        </div>
+      </div>
+    </aside>
+
+    <section class="col mid pending" id="midCol">
+      <div class="mid-head">
+        <div class="breadcrumb" id="breadcrumb"></div>
+        <div class="search">
+          <span class="hint">⌘F</span>
+          <input id="searchInput" placeholder="filter titles, abstracts, authors…">
+          <span class="hint" id="searchCount"></span>
+        </div>
+      </div>
+      <div class="result-bar" id="resultBar">
+        <span class="dot"></span>
+        <span id="resultText"></span>
+        <span class="sep" id="selSep" style="display:none">·</span>
+        <span id="selectedText" class="sel" style="display:none">0 selected</span>
+        <span class="spacer"></span>
+        <button id="batchDelBtn" class="del-btn" style="display:none" disabled>Delete</button>
+        <button id="risBtn" class="ris-btn" style="display:none" disabled>↓ Export RIS</button>
+      </div>
+      <div class="th" id="tableHead"></div>
+      <div class="table-scroll" id="tableScroll"></div>
+    </section>
+
+    <aside class="col right" id="previewCol"></aside>
+  </main>
+
+  <footer class="footer">
+    <span class="mono">idea-scout</span>
+    <span class="sep">·</span>
+    <span id="footStatus">ready</span>
+    <span class="sep">·</span>
+    <span><span class="kbd">J</span>/<span class="kbd">K</span> move</span>
+    <span><span class="kbd">Space</span> select</span>
+    <span><span class="kbd">I</span> idea</span>
+    <span><span class="kbd">D</span> delete</span>
+    <div class="right">
+      <span id="syncStatus" class="warn">not synced</span>
+    </div>
+  </footer>
+</div>
+
+<div class="modal-wrap" id="cmdkWrap">
+  <div class="modal cmdk">
+    <input id="cmdkInput" placeholder="search across all papers…">
+    <div class="cmdk-list" id="cmdkList"></div>
+    <div class="cmdk-foot">
+      <span><span class="kbd">↑↓</span> navigate</span>
+      <span><span class="kbd">↵</span> jump</span>
+      <span><span class="kbd">esc</span> close</span>
+    </div>
+  </div>
+</div>
+
+<div class="modal-wrap" id="tokenWrap">
+  <div class="modal">
+    <div class="m-head"><span class="ico">⚙</span><h3>GitHub Token</h3></div>
+    <div class="m-sub">Set a GitHub personal access token to enable cross-device sync.</div>
+    <div class="m-body"><input class="input" id="tokenInput" type="password" placeholder="ghp_..."></div>
+    <div class="m-foot">
+      <button class="btn ghost" id="tokenCancel">Cancel</button>
+      <button class="btn primary" id="tokenSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-wrap" id="statsWrap">
+  <div class="modal">
+    <div class="m-head"><span class="ico">◨</span><h3>Statistics</h3></div>
+    <div class="m-sub">Per-source counts across all sessions</div>
+    <div class="m-body">
+      <table class="stats-table" id="statsTable"></table>
+      <div class="stats-total" id="statsTotal"></div>
+    </div>
+    <div class="m-foot"><button class="btn primary" id="statsClose">Close</button></div>
+  </div>
+</div>
+
+<div class="modal-wrap" id="confirmWrap">
+  <div class="modal" style="width:420px">
+    <div class="m-head"><span class="ico">⚠</span><h3 id="confirmTitle">Confirm</h3></div>
+    <div class="m-sub" id="confirmBody"></div>
+    <div class="m-foot">
+      <button class="btn ghost" id="confirmCancel">Cancel</button>
+      <button class="btn primary" id="confirmOk">OK</button>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<button class="sheet-tab" id="sheetTab">◎ View paper</button>
+<div class="toast" id="toast"></div>
+
+<script>
+// ── idea-scout real-data loader ─────────────────────────────────────
+// Consumes the repo's JSON contract:
+//   data/latest.json         (FT50/UTD24 papers — current scan)
+//   data/cepm_latest.json    (CE/PM papers — current scan)
+//   data/cnki_latest.json    (CNKI papers — current scan, includes scan_date)
+//   data/user_state.json     (per-source: deleted_dois, idea_papers, read_dois, idea_ever_count)
+//
+// The fetched shape is normalized to the prototype's internal paper shape and
+// published as window.ISDATA. To deploy against a different repo (e.g. a
+// GitHub Pages raw URL or a CORS-enabled proxy), just change DATA_URLS below.
+(async function(){
+  const DATA_URLS = {
+    ft50: 'data/latest.json',
+    cepm: 'data/cepm_latest.json',
+    cnki: 'data/cnki_latest.json',
+    user: 'data/user_state.json',
+  };
+
+  // Keyword highlight lists (subset aligned with the repo's paper_card.dart)
+  const KW_EN = [
+    'game theory','game-theoretic','Nash','Stackelberg','equilibrium','contract','coordination',
+    'supply chain','blockchain','information asymmetry','moral hazard','adverse selection',
+    'BIM','digital twin','IoT','machine learning','deep learning','reinforcement learning',
+    'ESG','carbon','sustainability','green','low-carbon','circular economy',
+    'public-private partnership','PPP','mega-project','mega project','infrastructure',
+    'risk allocation','cost overrun','schedule delay','productivity','prefabrication',
+    'modular','off-site','cooperative','incentive','auction','bidding',
+  ];
+  const KW_CN = [
+    '博弈','纳什','均衡','合约','协调','供应链','区块链','信息不对称','道德风险','逆向选择',
+    'BIM','数字孪生','物联网','机器学习','深度学习','强化学习',
+    'ESG','碳','可持续','绿色','低碳','循环经济',
+    'PPP','政府和社会资本合作','大型工程','基础设施',
+    '风险分担','成本超支','进度延误','生产力','装配式','模块化','预制',
+    '合作博弈','激励','拍卖','投标',
+  ];
+
+  const cleanDoi = doi => (doi||'').replace(/^https?:\/\/(dx\.)?doi\.org\//,'').slice(0,220);
+  const fnv1a = s => { let h=2166136261>>>0; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=(h*16777619)>>>0;} return h.toString(36); };
+  const loJSON = async url => { const r = await fetch(url); if(!r.ok) throw new Error(url+' '+r.status); return r.json(); };
+
+  // Normalize one raw paper → internal shape consumed by the app.
+  function normalize(p, src, defaultScan){
+    const authors = Array.isArray(p.authors) ? p.authors.join('; ') : (p.authors||'');
+    const doi = p.doi || '';
+    const stable = p.stable_id || (doi + '|' + (p.title||''));
+    return {
+      id: src + '-' + fnv1a(stable),
+      src,
+      jid: p.journal_id,
+      jname: p.journal_name || p.journal_id,
+      tier: p.tier || 3,
+      titleEn: p.title || '',
+      titleCn: p.title_cn || p.title || '',
+      abstractEn: p.abstract || '',
+      abstractCn: p.abstract_cn || p.abstract || '',
+      authors,
+      date: p.date || '',
+      scanDate: p.scan_date || defaultScan,
+      doi: cleanDoi(doi),
+      doiUrl: doi,
+      cites: p.cited_by || 0,
+      topics: p.topics || [],
+      oa: !!p.oa,
+      pdfUrl: p.pdf_url || '',
+      read: false, idea: false,
+    };
+  }
+
+  // Fallback: if the fetch fails (opened via file://, offline, etc.)
+  // we fabricate a tiny one-paper-per-source stub so the UI still renders.
+  function stubPaper(src, jid, jname, tier){
+    return normalize({
+      journal_id:jid, journal_name:jname, tier, title:'[offline — open via a web server to load real data]',
+      title_cn:'[离线 — 通过 HTTP 打开以加载真实数据]', authors:[], doi:'offline-'+src+'-'+jid,
+      date:'2026-04-20', abstract:'Open this file through `python -m http.server` or GitHub Pages to fetch the real papers.json.',
+      abstract_cn:'通过本地 HTTP 服务或 GitHub Pages 打开本文件,以加载真实数据。',
+      tier, cited_by:0,
+    }, src, '2026-04-20');
+  }
+
+  async function loadAll(){
+    // Prefer inline bundle if present (demo mode / offline fallback).
+    // In production, just delete the <script id="workbench-data-inline"> tag
+    // and the loader will fetch the individual JSON files from data/.
+    const inline = document.getElementById('workbench-data-inline');
+    if (inline) {
+      try {
+        const bundle = JSON.parse(inline.textContent);
+        // bundle already has normalized papers + journals from the build step.
+        window.ISDATA = {
+          DB: bundle.papers,
+          JOURNALS: bundle.journals,
+          KW_EN, KW_CN,
+          DELETED_DOIS: new Set(),
+          SCAN_DATES: {
+            ft50: [...new Set(bundle.papers.ft50.map(p=>p.scanDate))].sort().reverse(),
+            cepm: [...new Set(bundle.papers.cepm.map(p=>p.scanDate))].sort().reverse(),
+            cnki: [...new Set(bundle.papers.cnki.map(p=>p.scanDate))].sort().reverse(),
+          },
+          IDEA_EVER: bundle.ideaEver || { ft50:0, cepm:0, cnki:0 },
+        };
+        window.dispatchEvent(new CustomEvent('isdata-ready'));
+        return;
+      } catch(e) { console.warn('[idea-scout] inline bundle parse failed:', e); }
+    }
+
+    try {
+      const [ft, cepm, cnki, us] = await Promise.all([
+        loJSON(DATA_URLS.ft50), loJSON(DATA_URLS.cepm),
+        loJSON(DATA_URLS.cnki), loJSON(DATA_URLS.user),
+      ]);
+      const maxDate = arr => arr.reduce((m,p)=>p.date>m?p.date:m,'2026-04-20');
+      const ftScan = maxDate(ft), cepmScan = maxDate(cepm), cnkiScan = cnki[0]?.scan_date || '2026-04-20';
+
+      const papers = {
+        ft50: ft.map(p => normalize(p,'ft50',ftScan)),
+        cepm: cepm.map(p => normalize(p,'cepm',cepmScan)),
+        cnki: cnki.map(p => normalize(p,'cnki',cnkiScan)),
+      };
+
+      // Merge user_state: mark read / idea / deleted; union idea_papers into papers (so Idea tab shows the full idea list even if a paper has aged out of the latest scan).
+      const REMOTE_DELETED = new Set();
+      for (const src of ['ft50','cepm','cnki']) {
+        const st = us[src] || {};
+        const readSet = new Set((st.read_dois||[]).map(cleanDoi));
+        const ideaDoiSet = new Set((st.idea_papers||[]).map(x=>cleanDoi(x.doi)));
+        const ideaTitleSet = new Set((st.idea_papers||[]).map(x=>(x.title||'').trim().toLowerCase()));
+        for (const d of (st.deleted_dois||[])) REMOTE_DELETED.add(cleanDoi(d.id||d));
+        for (const p of papers[src]) {
+          if (readSet.has(p.doi)) p.read = true;
+          if (ideaDoiSet.has(p.doi) || ideaTitleSet.has((p.titleEn||'').trim().toLowerCase())) { p.idea = true; p.read = true; }
+        }
+        // Append idea_papers that aren't in latest scan
+        const existingDois = new Set(papers[src].map(p=>p.doi));
+        const existingTitles = new Set(papers[src].map(p=>(p.titleEn||'').trim().toLowerCase()));
+        for (const ip of (st.idea_papers||[])) {
+          if (existingDois.has(cleanDoi(ip.doi)) || existingTitles.has((ip.title||'').trim().toLowerCase())) continue;
+          const np = normalize({
+            journal_id: ip.journal_id, journal_name: ip.journal_name || ip.journal_id,
+            title: ip.title, title_cn: ip.title_cn, authors: ip.authors,
+            doi: ip.doi, date: ip.date, abstract: ip.abstract || '', abstract_cn: ip.abstract_cn || '',
+            tier: ip.tier || 3, cited_by: ip.cited_by || 0, topics: [], scan_date: ip.added_date || '2026-04-20',
+          }, src, ip.added_date || '2026-04-20');
+          np.idea = true; np.read = true;
+          papers[src].push(np);
+        }
+      }
+
+      // Derive journals from the data itself (authoritative — no hardcoded list).
+      const jMap = arr => {
+        const m = new Map();
+        for (const p of arr) if (!m.has(p.jid)) m.set(p.jid, { id:p.jid, name:p.jname, tier:p.tier, field:'' });
+        return [...m.values()].sort((a,b)=>a.tier-b.tier || a.id.localeCompare(b.id));
+      };
+      const JOURNALS = { ft50: jMap(papers.ft50), cepm: jMap(papers.cepm), cnki: jMap(papers.cnki) };
+
+      const SCAN_DATES = {
+        ft50: [...new Set(papers.ft50.map(p=>p.scanDate))].sort().reverse(),
+        cepm: [...new Set(papers.cepm.map(p=>p.scanDate))].sort().reverse(),
+        cnki: [...new Set(papers.cnki.map(p=>p.scanDate))].sort().reverse(),
+      };
+
+      const IDEA_EVER = {
+        ft50: us.ft50?.idea_ever_count || 0,
+        cepm: us.cepm?.idea_ever_count || 0,
+        cnki: us.cnki?.idea_ever_count || 0,
+      };
+
+      window.ISDATA = { DB: papers, JOURNALS, KW_EN, KW_CN, DELETED_DOIS:new Set(), SCAN_DATES, IDEA_EVER, USER_STATE_RAW: us, REMOTE_DELETED };
+      window.dispatchEvent(new CustomEvent('isdata-ready'));
+    } catch(err) {
+      console.warn('[idea-scout] data fetch failed, using offline stub:', err);
+      const DB = {
+        ft50: [ stubPaper('ft50','MS','Management Science',1) ],
+        cepm: [ stubPaper('cepm','AIC','Automation in Construction',1) ],
+        cnki: [ stubPaper('cnki','GLSJ','管理世界',1) ],
+      };
+      const JOURNALS = {
+        ft50: [{ id:'MS', name:'Management Science', tier:1, field:'' }],
+        cepm: [{ id:'AIC', name:'Automation in Construction', tier:1, field:'' }],
+        cnki: [{ id:'GLSJ', name:'管理世界', tier:1, field:'' }],
+      };
+      window.ISDATA = { DB, JOURNALS, KW_EN, KW_CN, DELETED_DOIS:new Set(), SCAN_DATES:{ft50:[],cepm:[],cnki:[]}, IDEA_EVER:{ft50:0,cepm:0,cnki:0}, USER_STATE_RAW:{}, REMOTE_DELETED:new Set() };
+      window.dispatchEvent(new CustomEvent('isdata-ready'));
+    }
+  }
+
+  loadAll();
+})();
+</script>
+
+<script>
+// ── idea-scout github sync ──────────────────────────────────────
+// Writes user_state.json back to zylen97/idea-scout via the GitHub Contents API.
+// Design: debounced PUT (1.5s) · serial queue · 409/422 sha-refresh retry once.
+// Last-write-wins across devices — no 3-way merge.
+window.ISSync = (function(){
+  const REPO = 'zylen97/idea-scout';
+  const PATH = 'data/user_state.json';
+  const API  = `https://api.github.com/repos/${REPO}/contents/${PATH}`;
+  const DEBOUNCE_MS = 1500;
+
+  const S = {
+    status: 'notoken',  // notoken | clean | dirty | syncing | error
+    sha: null,
+    lastError: null,
+    lastSyncedAt: null,
+  };
+  let RAW = (window.ISDATA && window.ISDATA.USER_STATE_RAW) || {};
+  let debounceTimer = null;
+  let inflight = false;
+  let listener = () => {};
+
+  // UTF-8 safe base64
+  const b64enc = s => btoa(unescape(encodeURIComponent(s)));
+  const b64dec = s => decodeURIComponent(escape(atob(s.replace(/\s/g,''))));
+  const cleanDoi = d => (d||'').replace(/^https?:\/\/(dx\.)?doi\.org\//,'').slice(0,220);
+
+  const headers = (token, withContent=false) => {
+    const h = { 'Authorization':'Bearer '+token, 'Accept':'application/vnd.github.v3+json' };
+    if (withContent) h['Content-Type'] = 'application/json';
+    return h;
+  };
+
+  async function getRemote(token){
+    const r = await fetch(API, { headers: headers(token) });
+    if (r.status === 404) return { sha:null, raw:{} };
+    if (!r.ok) throw Object.assign(new Error('GET '+r.status), { status:r.status });
+    const j = await r.json();
+    return { sha:j.sha, raw: JSON.parse(b64dec(j.content)) };
+  }
+
+  async function putOnce(token, body){
+    const r = await fetch(API, { method:'PUT', headers: headers(token,true), body: JSON.stringify(body) });
+    if (!r.ok) {
+      const err = Object.assign(new Error('PUT '+r.status), { status:r.status });
+      throw err;
+    }
+    const j = await r.json();
+    return j.content && j.content.sha || null;
+  }
+
+  // Build the full user_state payload from current in-memory app state.
+  // Preserves idea_papers metadata (added_date) and deleted_dois timestamps for aged-out entries.
+  function buildRaw(DB, state, JOURNALS){
+    const out = {};
+    for (const src of ['ft50','cepm','cnki']) {
+      const existing = RAW[src] || {};
+      const exIdea = new Map((existing.idea_papers||[]).map(ip => [cleanDoi(ip.doi), ip]));
+      const exDel  = new Map((existing.deleted_dois||[]).map(d => [d.id, d.date]));
+      const today = new Date().toISOString().slice(0,10);
+      const dbDois = new Set();
+      const deleted = [], read = [], ideas = [];
+
+      for (const p of (DB[src]||[])) {
+        dbDois.add(p.doi);
+        if (state.deletedDois.has(p.doi)) {
+          deleted.push({ id:p.doi, date: exDel.get(p.doi) || today });
+        }
+        if (p.read) read.push(p.doi);
+        if (p.idea) {
+          const ex = exIdea.get(p.doi);
+          if (ex) ideas.push(ex);
+          else ideas.push({
+            doi: p.doi,
+            title: p.titleEn,
+            title_cn: p.titleCn,
+            authors: p.authors ? p.authors.split(';').map(a=>a.trim()).filter(Boolean) : [],
+            journal_id: p.jid,
+            journal_name: (JOURNALS[src].find(j=>j.id===p.jid)||{}).name || p.jid,
+            date: p.date,
+            abstract: p.abstractEn,
+            abstract_cn: p.abstractCn,
+            tier: p.tier,
+            cited_by: p.cites,
+            added_date: today,
+          });
+        }
+      }
+      // Preserve deletions for papers aged out of current scan window
+      for (const [doi, date] of exDel) {
+        if (!dbDois.has(doi) && state.deletedDois.has(doi)) deleted.push({ id:doi, date });
+      }
+      out[src] = {
+        deleted_dois: deleted,
+        read_dois: read,
+        idea_papers: ideas,
+        idea_ever_count: existing.idea_ever_count || 0,
+      };
+    }
+    return out;
+  }
+
+  function notify(){ try { listener(S); } catch(e) {} }
+
+  async function flush(token, buildFn){
+    if (inflight || !token) return;
+    inflight = true;
+    S.status = 'syncing'; notify();
+    try {
+      let payload = buildFn();
+      let body = {
+        message: 'sync user_state (web)',
+        content: b64enc(JSON.stringify(payload, null, 2)),
+      };
+      if (S.sha) body.sha = S.sha;
+      try {
+        const newSha = await putOnce(token, body);
+        if (newSha) S.sha = newSha;
+        RAW = payload;
+      } catch (e) {
+        if (e.status === 409 || e.status === 422) {
+          // sha stale — refresh and retry once (last-write-wins)
+          const fresh = await getRemote(token);
+          S.sha = fresh.sha; RAW = fresh.raw;
+          payload = buildFn();
+          body = {
+            message: 'sync user_state (web, retry)',
+            content: b64enc(JSON.stringify(payload, null, 2)),
+            sha: S.sha,
+          };
+          const newSha = await putOnce(token, body);
+          if (newSha) S.sha = newSha;
+          RAW = payload;
+        } else {
+          throw e;
+        }
+      }
+      S.status = 'clean'; S.lastError = null; S.lastSyncedAt = Date.now();
+    } catch (e) {
+      S.status = 'error'; S.lastError = e.message || String(e);
+      console.warn('[idea-scout] sync failed:', e);
+    } finally {
+      inflight = false; notify();
+    }
+  }
+
+  return {
+    state: S,
+    get raw(){ return RAW; },
+
+    onChange(fn){ listener = fn || (()=>{}); },
+
+    async hydrate(token){
+      if (!token) { S.status='notoken'; notify(); return null; }
+      try {
+        const { sha, raw } = await getRemote(token);
+        S.sha = sha; RAW = raw;
+        S.status = 'clean'; S.lastError = null; S.lastSyncedAt = Date.now();
+        notify();
+        return raw;
+      } catch (e) {
+        S.status = 'error'; S.lastError = e.message || String(e);
+        console.warn('[idea-scout] hydrate failed:', e);
+        notify();
+        return null;
+      }
+    },
+
+    markDirty(token, buildFn){
+      if (!token) { S.status='notoken'; notify(); return; }
+      if (S.status !== 'syncing') { S.status = 'dirty'; notify(); }
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => flush(token, buildFn), DEBOUNCE_MS);
+    },
+
+    async flushNow(token, buildFn){
+      clearTimeout(debounceTimer);
+      await flush(token, buildFn);
+    },
+
+    buildRaw,
+  };
+})();
+</script>
+
+<script>
+function __bootIdeaScoutApp(){
+(function(){
+// ── idea-scout workbench app ──────────────────────────────────────
+const { DB, JOURNALS, KW_EN, KW_CN, DELETED_DOIS, SCAN_DATES, IDEA_EVER, REMOTE_DELETED } = window.ISDATA;
+
+// Seed deletedDois from remote user_state + local unsynced edits.
+const seededDeleted = new Set(JSON.parse(localStorage.getItem('is_deleted_dois')||'[]'));
+if (REMOTE_DELETED) for (const d of REMOTE_DELETED) seededDeleted.add(d);
+
+const state = {
+  source: 'ft50',        // ft50 | cepm | cnki
+  status: 'pending',     // pending | idea
+  selectedJournal: 'all',
+  dateRange: 'all',
+  tier: 'all',
+  view: 'scan',          // scan | journal
+  sortBy: 'cite',        // date | cite | jid | title
+  sortDir: 'desc',
+  query: '',
+  lang: 'en',            // en | cn
+  collapsed: {1:false, 2:false, 3:true},
+  cursor: 0,
+  selected: new Set(),
+  collapsedGroups: new Set(),
+  token: localStorage.getItem('gh_token') || '',
+  deletedDois: seededDeleted,
+  lastDeleted: null,     // {papers:[], toastTimer}
+  cmdkQuery:'', cmdkIdx:0,
+  statsCache:null,
+};
+
+// Mark sync dirty — debounced PUT to GitHub via window.ISSync.
+function dirty(){
+  if (!state.token) return;
+  window.ISSync.markDirty(state.token, () => window.ISSync.buildRaw(DB, state, JOURNALS));
+}
+
+// Re-apply authoritative remote user_state to in-memory DB (after hydrate).
+function applyRemoteState(us){
+  const cleanDoi = d => (d||'').replace(/^https?:\/\/(dx\.)?doi\.org\//,'').slice(0,220);
+  state.deletedDois.clear();
+  for (const src of ['ft50','cepm','cnki']) {
+    const st = us[src] || {};
+    const readSet = new Set((st.read_dois||[]).map(cleanDoi));
+    const ideaDoiSet = new Set((st.idea_papers||[]).map(x=>cleanDoi(x.doi)));
+    const ideaTitleSet = new Set((st.idea_papers||[]).map(x=>(x.title||'').trim().toLowerCase()));
+    for (const p of (DB[src]||[])) {
+      p.read = readSet.has(p.doi);
+      const isIdea = ideaDoiSet.has(p.doi) || ideaTitleSet.has((p.titleEn||'').trim().toLowerCase());
+      p.idea = isIdea;
+      if (isIdea) p.read = true;
+    }
+    for (const d of (st.deleted_dois||[])) state.deletedDois.add(cleanDoi(d.id||d));
+  }
+  localStorage.setItem('is_deleted_dois', JSON.stringify([...state.deletedDois]));
+}
+
+// ── i18n ───────────────────────────────────────────────────────────
+const I18N = {
+  en: {
+    pending:'Pending', idea:'Idea',
+    dateRange:'DATE RANGE', tier:'TIER', view:'GROUP BY',
+    today:'today', week:'7d', month:'30d', '3m':'90d', all:'all',
+    byDate:'by date', byJournal:'by journal',
+    allPapers:'All papers', delete:'Delete', exportRis:'↓ Export RIS',
+    ready:'ready', notSynced:'not synced', synced:'synced',
+    emptyPendingTitle:'Inbox zero', emptyPendingBody:'No pending papers for the current filter.',
+    emptyIdeaTitle:'No ideas yet', emptyIdeaBody:'Press I on a pending paper to add it here.',
+    selectPaper:'Select a paper', selectPaperBody:'Click any row to see details on the right.',
+  },
+  cn: {
+    pending:'待处理', idea:'想法',
+    dateRange:'时间范围', tier:'分级', view:'分组方式',
+    today:'今日', week:'7天', month:'30天', '3m':'90天', all:'全部',
+    byDate:'按日期', byJournal:'按期刊',
+    allPapers:'全部论文', delete:'删除', exportRis:'↓ 导出 RIS',
+    ready:'就绪', notSynced:'未同步', synced:'已同步',
+    emptyPendingTitle:'收件箱已清空', emptyPendingBody:'当前筛选下无待处理论文。',
+    emptyIdeaTitle:'暂无 Idea', emptyIdeaBody:'在待处理论文上按 I 添加到此。',
+    selectPaper:'选择一篇论文', selectPaperBody:'点击任意行查看详情。',
+  },
+};
+const t = k => I18N[state.lang][k] || k;
+
+// ── helpers ────────────────────────────────────────────────────────
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+
+function paperTitle(p){ return state.lang==='cn' ? p.titleCn : p.titleEn; }
+function paperAbstract(p){ return state.lang==='cn' ? p.abstractCn : p.abstractEn; }
+function tierClass(t){ return t===1?'':t===2?'b':'c'; }
+function tierLetter(t){ return t===1?'A':t===2?'B':'C'; }
+
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function highlight(text){
+  if(!text) return '';
+  const keywords = state.lang==='cn' ? KW_CN : KW_EN;
+  let html = escapeHtml(text);
+  const q = state.query.trim();
+  const sorted = [...keywords].sort((a,b)=>b.length-a.length);
+  for (const kw of sorted) {
+    const re = new RegExp('('+kw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')', state.lang==='cn'?'g':'gi');
+    html = html.replace(re, '<mark>$1</mark>');
+  }
+  if (q.length >= 2) {
+    const re = new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')', 'gi');
+    html = html.replace(re, '<mark>$1</mark>');
+  }
+  return html;
+}
+
+function dateInRange(dateStr, range){
+  if (range==='all') return true;
+  // Reference "today" = 2026-04-20 (matches scan data)
+  const today = new Date('2026-04-20');
+  const d = new Date(dateStr);
+  const days = Math.floor((today-d)/(1000*60*60*24));
+  return range==='today'? days<=0 : range==='week'? days<=7 : range==='month'? days<=30 : range==='3m'? days<=90 : true;
+}
+
+// ── core selection ─────────────────────────────────────────────────
+function allPapers(src){ return (DB[src]||[]).filter(p => !state.deletedDois.has(p.doi)); }
+
+function visibleRows(){
+  let rows = allPapers(state.source);
+  // status filter
+  rows = rows.filter(p => state.status==='idea' ? p.idea : !p.idea);
+  // journal
+  if (state.selectedJournal !== 'all') rows = rows.filter(p => p.jid===state.selectedJournal);
+  // tier
+  if (state.tier !== 'all') rows = rows.filter(p => p.tier === +state.tier);
+  // date
+  rows = rows.filter(p => dateInRange(p.date, state.dateRange));
+  // search
+  const q = state.query.trim().toLowerCase();
+  if (q.length >= 2) {
+    rows = rows.filter(p =>
+      (p.titleEn||'').toLowerCase().includes(q) ||
+      (p.titleCn||'').toLowerCase().includes(q) ||
+      (p.authors||'').toLowerCase().includes(q) ||
+      (p.abstractEn||'').toLowerCase().includes(q) ||
+      (p.abstractCn||'').toLowerCase().includes(q)
+    );
+  }
+  return rows;
+}
+
+function sortRows(rows){
+  const { sortBy, sortDir } = state;
+  const dir = sortDir==='asc' ? 1 : -1;
+  const by = {
+    date: (a,b) => (a.date<b.date?-1:a.date>b.date?1:0)*dir,
+    cite: (a,b) => (a.cites-b.cites)*dir,
+    jid:  (a,b) => (a.jid<b.jid?-1:a.jid>b.jid?1:0)*dir,
+    title:(a,b) => (paperTitle(a)<paperTitle(b)?-1:1)*dir,
+  }[sortBy];
+  return [...rows].sort(by);
+}
+
+function groupedRows(rows){
+  // rows sorted → group by scanDate (view=scan) or jid (view=journal)
+  if (state.view==='scan') {
+    const map = new Map();
+    for (const p of rows) {
+      if (!map.has(p.scanDate)) map.set(p.scanDate, []);
+      map.get(p.scanDate).push(p);
+    }
+    // Sort group keys by date desc
+    return [...map.entries()].sort((a,b)=>b[0].localeCompare(a[0]));
+  } else {
+    const map = new Map();
+    for (const p of rows) {
+      if (!map.has(p.jid)) map.set(p.jid, []);
+      map.get(p.jid).push(p);
+    }
+    return [...map.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
+  }
+}
+
+// ── rendering ──────────────────────────────────────────────────────
+function updateCounts(){
+  for (const src of ['ft50','cepm','cnki']) {
+    const ps = allPapers(src).filter(p => !p.idea);
+    $(`#srcCount-${src}`).textContent = ps.length;
+  }
+  const pending = allPapers(state.source).filter(p=>!p.idea).length;
+  const idea = allPapers(state.source).filter(p=>p.idea).length;
+  $('#statCount-pending').textContent = pending;
+  $('#statCount-idea').textContent = idea;
+}
+
+function renderSidebar(){
+  // count by journal (within current status + filters except journal)
+  const counts = {};
+  for (const p of allPapers(state.source)) {
+    if (state.status==='idea' && !p.idea) continue;
+    if (state.status==='pending' && p.idea) continue;
+    if (state.tier!=='all' && p.tier !== +state.tier) continue;
+    if (!dateInRange(p.date, state.dateRange)) continue;
+    counts[p.jid] = (counts[p.jid]||0)+1;
+  }
+  const totalAll = Object.values(counts).reduce((a,b)=>a+b,0);
+
+  let html = `<div class="sect"><span>journals</span><span class="count mono">${Object.keys(counts).length}</span></div>`;
+  html += `<div class="j all ${state.selectedJournal==='all'?'on':''}" data-j="all">
+    <span class="all-label">all papers</span><span class="c mono">${totalAll}</span></div>`;
+
+  for (const tier of [1,2,3]) {
+    const jours = JOURNALS[state.source].filter(j=>j.tier===tier);
+    const total = jours.reduce((s,j)=>s+(counts[j.id]||0),0);
+    const cls = tierClass(tier);
+    const isCollapsed = state.collapsed[tier];
+    html += `<div class="tier-grp ${isCollapsed?'collapsed':''}">
+      <div class="tier-head ${cls}" data-toggle="${tier}">
+        <div class="l">
+          <span class="caret">${isCollapsed?'▸':'▾'}</span>
+          <span class="tier-badge">TIER ${tierLetter(tier)}</span>
+        </div>
+        <span class="n">${total}</span>
+      </div>
+      <div class="j-list">`;
+    for (const j of jours) {
+      const n = counts[j.id]||0;
+      const on = state.selectedJournal===j.id;
+      html += `<div class="j ${on?'on':''}" data-j="${j.id}">
+        <span class="id">${j.id}</span>
+        <span class="nm" title="${escapeHtml(j.name)}">${escapeHtml(j.name)}</span>
+        <span class="c">${n}</span>
+      </div>`;
+    }
+    html += `</div></div>`;
+  }
+  $('#sidebarScroll').innerHTML = html;
+
+  $$('#sidebarScroll .j').forEach(el => el.addEventListener('click', () => {
+    state.selectedJournal = el.dataset.j;
+    state.cursor = 0; state.selected.clear();
+    renderSidebar(); renderTable(); renderPreview();
+  }));
+  $$('#sidebarScroll .tier-head').forEach(el => el.addEventListener('click', () => {
+    const k = +el.dataset.toggle;
+    state.collapsed[k] = !state.collapsed[k];
+    renderSidebar();
+  }));
+}
+
+function renderHeaders(){
+  const mid = $('#midCol');
+  mid.classList.toggle('pending', state.status==='pending');
+  mid.classList.toggle('idea', state.status==='idea');
+
+  const srt = (key, lbl) => {
+    const active = state.sortBy===key;
+    const arrow = active ? (state.sortDir==='desc'?'↓':'↑') : '';
+    return `<div class="sortable ${active?'active':''}" data-sort="${key}">${lbl}<span class="s">${arrow}</span></div>`;
+  };
+
+  let th;
+  if (state.status==='pending') {
+    th = `<div class="check" id="thCheck" title="Select visible">✓</div>${srt('jid','JID')}${srt('date','DATE')}<div>TITLE</div><div>AUTHORS</div>${srt('cite','CITES')}<div style="text-align:center">★</div>`;
+  } else {
+    th = `<div class="check" id="thCheck" title="Select visible">✓</div>${srt('jid','JID')}${srt('date','DATE')}<div>TITLE</div><div>AUTHORS</div>${srt('cite','CITES')}`;
+  }
+  $('#tableHead').innerHTML = th;
+
+  $$('#tableHead .sortable').forEach(el => el.addEventListener('click', () => {
+    const k = el.dataset.sort;
+    if (state.sortBy===k) state.sortDir = state.sortDir==='desc'?'asc':'desc';
+    else { state.sortBy=k; state.sortDir='desc'; }
+    renderTable();
+  }));
+  $('#thCheck').addEventListener('click', () => {
+    const rows = sortRows(visibleRows());
+    const allSelected = rows.length>0 && rows.every(p=>state.selected.has(p.id));
+    if (allSelected) rows.forEach(p=>state.selected.delete(p.id));
+    else rows.forEach(p=>state.selected.add(p.id));
+    renderTable();
+  });
+}
+
+function renderBreadcrumb(){
+  const parts = [];
+  parts.push(`<b>${state.source==='ft50'?'FT50/UTD24':state.source==='cepm'?'CE/PM':'CNKI'}</b>`);
+  parts.push(`<span class="sep">›</span>`);
+  parts.push(state.status==='pending'?t('pending'):t('idea'));
+  if (state.selectedJournal!=='all') {
+    parts.push(`<span class="sep">›</span>`);
+    const j = JOURNALS[state.source].find(x=>x.id===state.selectedJournal);
+    parts.push(`${j.id} <span style="color:var(--ink-4);font-family:Inter">${escapeHtml(j.name)}</span>`);
+  }
+  $('#breadcrumb').innerHTML = parts.join(' ');
+}
+
+function renderResultBar(rows){
+  const total = rows.length;
+  const unread = rows.filter(p=>!p.read).length;
+  const sel = state.selected.size;
+  $('#resultText').innerHTML = state.status==='pending'
+    ? `${total} papers · <span style="color:var(--accent);font-weight:600">${unread} unread</span>`
+    : `${total} ideas saved`;
+  $('#selSep').style.display = sel>0 ? '' : 'none';
+  $('#selectedText').style.display = sel>0 ? '' : 'none';
+  $('#selectedText').textContent = `${sel} selected`;
+
+  const risBtn = $('#risBtn');
+  const delBtn = $('#batchDelBtn');
+  if (state.status==='idea') {
+    risBtn.style.display = '';
+    risBtn.disabled = sel===0;
+    risBtn.textContent = sel>0 ? `↓ Export RIS (${sel})` : '↓ Export RIS';
+    delBtn.style.display = sel>0 ? '' : 'none';
+  } else {
+    risBtn.style.display = 'none';
+    delBtn.style.display = sel>0 ? '' : 'none';
+  }
+  delBtn.disabled = sel===0;
+}
+
+function renderTable(){
+  const rows = sortRows(visibleRows());
+  if (state.cursor >= rows.length) state.cursor = Math.max(0, rows.length-1);
+
+  renderBreadcrumb();
+  renderResultBar(rows);
+  updateCounts();
+
+  const scroll = $('#tableScroll');
+
+  if (rows.length===0) {
+    scroll.innerHTML = `<div class="empty">
+      <div class="icon">${state.status==='idea'?'◔':'✓'}</div>
+      <h3>${state.status==='idea'?t('emptyIdeaTitle'):t('emptyPendingTitle')}</h3>
+      <p>${state.status==='idea'?t('emptyIdeaBody'):t('emptyPendingBody')}</p>
+    </div>`;
+    renderPreview();
+    return;
+  }
+
+  // flatten groups
+  let html = '';
+  const groups = groupedRows(rows);
+  let absIdx = 0;
+  for (const [key, items] of groups) {
+    const isCollapsed = state.collapsedGroups.has(key);
+    const label = state.view==='scan'
+      ? `Scan ${key}`
+      : (JOURNALS[state.source].find(j=>j.id===key)?.name || key);
+    const caret = isCollapsed ? '▸':'▾';
+    const extra = state.view==='scan' ? '' : '';
+    const gClass = state.view==='journal' ? 'j-grp' : '';
+    html += `<div class="grp ${gClass}" data-grp="${escapeHtml(key)}">
+      <span class="caret">${caret}</span>
+      ${state.view==='journal'?`<span class="mono" style="color:var(--ink);font-weight:600">${key}</span>`:''}
+      <span class="label">${escapeHtml(label)}</span>
+      <span class="n">· ${items.length}</span>
+    </div>`;
+    if (isCollapsed) { absIdx += items.length; continue; }
+    for (const p of items) {
+      const myIdx = absIdx++;
+      const isCursor = myIdx === state.cursor;
+      const isSel = state.selected.has(p.id);
+      const readCls = p.read ? 'read-already' : 'unread';
+      const cls = `tr ${readCls} ${isCursor?'cursor':''} ${isSel?'selected':''}`;
+      const jcls = tierClass(p.tier);
+      const title = highlight(paperTitle(p));
+      const auth = escapeHtml(p.authors);
+      const cite = p.cites;
+      const flag = state.status==='pending' ? `<div class="flag ${p.idea?'idea':''}">${p.idea?'★':'·'}</div>` : '';
+      html += `<div class="${cls}" data-id="${p.id}" data-idx="${myIdx}">
+        <div class="chk ${isSel?'on':''}" data-chk="1">✓</div>
+        <div class="jid" style="display:flex;align-items:center;gap:5px">${(!p.read && state.status==='pending')?'<span class="unread-dot"></span>':''}<span>${p.jid}</span></div>
+        <div class="date">${p.date.slice(5)}</div>
+        <div class="title-cell">
+          <span class="tier-chip ${jcls}">${tierLetter(p.tier)}</span>
+          <span class="ttl">${title}</span>
+        </div>
+        <div class="au" title="${escapeHtml(p.authors)}">${auth}</div>
+        <div class="cite">${cite}</div>
+        ${flag}
+      </div>`;
+    }
+  }
+  scroll.innerHTML = html;
+
+  // wire up
+  $$('#tableScroll .grp').forEach(el => el.addEventListener('click', () => {
+    const k = el.dataset.grp;
+    if (state.collapsedGroups.has(k)) state.collapsedGroups.delete(k); else state.collapsedGroups.add(k);
+    renderTable();
+  }));
+  $$('#tableScroll .tr').forEach(el => {
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('[data-chk]')) {
+        const id = el.dataset.id;
+        if (state.selected.has(id)) state.selected.delete(id); else state.selected.add(id);
+        renderTable();
+        return;
+      }
+      state.cursor = +el.dataset.idx;
+      const id = el.dataset.id;
+      const p = rows.find(x=>x.id===id);
+      if (p && !p.read) { p.read = true; dirty(); }
+      renderTable();
+      renderPreview();
+    });
+  });
+
+  renderPreview();
+  const cur = scroll.querySelector('.tr.cursor');
+  if (cur) {
+    const r = cur.getBoundingClientRect();
+    const sr = scroll.getBoundingClientRect();
+    if (r.top < sr.top + 30) scroll.scrollTop -= (sr.top + 30 - r.top);
+    else if (r.bottom > sr.bottom - 30) scroll.scrollTop += (r.bottom - sr.bottom + 30);
+  }
+}
+
+function renderPreview(){
+  const rows = sortRows(visibleRows());
+  const p = rows[state.cursor];
+  if (!p) {
+    $('#previewCol').innerHTML = `<div class="empty">
+      <div class="icon">◎</div>
+      <h3>${t('selectPaper')}</h3>
+      <p>${t('selectPaperBody')}</p>
+    </div>`;
+    return;
+  }
+  const abs = state.lang==='cn' ? p.abstractCn : p.abstractEn;
+  const otherTitle = state.lang==='cn' ? p.titleEn : p.titleCn;
+  const showOther = otherTitle && otherTitle !== paperTitle(p);
+  const jcls = tierClass(p.tier);
+  const jName = JOURNALS[p.src].find(j=>j.id===p.jid)?.name || p.jid;
+
+  const primaryBtn = state.status==='pending'
+    ? `<button class="primary ${p.idea?'idea-on':''}" id="pvIdea">${p.idea?'★ In Idea':'+ Add to Idea'}<span class="kbd">I</span></button>`
+    : `<button class="primary idea-on" id="pvIdea">★ Remove from Idea<span class="kbd">I</span></button>`;
+
+  const delBtn = state.status==='pending'
+    ? `<button class="danger" id="pvDel">Delete<span class="kbd">D</span></button>`
+    : `<button id="pvExport">↓ Export RIS<span class="kbd">E</span></button>`;
+
+  $('#previewCol').innerHTML = `
+    <div class="pv">
+      <div class="pv-head">
+        <div class="pv-chips">
+          <span class="pv-chip tier ${jcls}">TIER ${tierLetter(p.tier)}</span>
+          <span class="pv-chip">${p.jid}</span>
+          <span class="pv-chip">${p.date}</span>
+          ${p.idea?'<span class="pv-chip idea">★ IDEA</span>':''}
+          ${!p.read && state.status==='pending'?'<span class="pv-chip" style="background:var(--accent-soft);border-color:#E8CDB8;color:var(--accent-2)">NEW</span>':''}
+        </div>
+        <h2>${highlight(paperTitle(p))}</h2>
+        ${showOther?`<p class="en">${highlight(otherTitle)}</p>`:''}
+        <div class="pv-authors">${escapeHtml(p.authors)}</div>
+      </div>
+      <div class="pv-scroll">
+        <div class="pv-kv">
+          <div class="row"><span class="k">Journal</span><span class="v" title="${escapeHtml(jName)}">${escapeHtml(jName)}</span></div>
+          <div class="row"><span class="k">Cites</span><span class="v mono">${p.cites}</span></div>
+          <div class="row"><span class="k">DOI</span><span class="v mono"><a href="#" id="pvDoi" title="${escapeHtml(p.doiUrl||p.doi)}">${escapeHtml(p.doi.length>38 ? p.doi.slice(0,36)+'…' : p.doi)}</a></span></div>
+          <div class="row"><span class="k">Scan</span><span class="v mono">${p.scanDate}</span></div>
+        </div>
+        <div class="pv-sect ${state.lang==='cn'?'serif':''}">
+          <h5>
+            <span>Abstract</span>
+            <span class="lang">
+              <button data-al="en" class="${state.lang==='en'?'on':''}">EN</button>
+              <button data-al="cn" class="${state.lang==='cn'?'on':''}">中</button>
+            </span>
+          </h5>
+          <p>${highlight(abs)}</p>
+        </div>
+      </div>
+      <div class="pv-actions">
+        ${primaryBtn}
+        <button id="pvOpen">Open DOI<span class="kbd">O</span></button>
+        ${delBtn}
+      </div>
+    </div>`;
+
+  $('#pvIdea').addEventListener('click', toggleIdea);
+  $('#pvOpen').addEventListener('click', openDoi);
+  $('#pvDoi').addEventListener('click', e => { e.preventDefault(); openDoi(); });
+  const pvDel = $('#pvDel'); if (pvDel) pvDel.addEventListener('click', deleteCursor);
+  const pvExp = $('#pvExport'); if (pvExp) pvExp.addEventListener('click', () => exportRIS([p]));
+  $$('#previewCol .lang button').forEach(b => b.addEventListener('click', () => {
+    state.lang = b.dataset.al;
+    $('#btnLang').textContent = state.lang==='cn' ? '中' : 'EN';
+    renderAll();
+  }));
+}
+
+// ── actions ────────────────────────────────────────────────────────
+function cursorPaper(){
+  const rows = sortRows(visibleRows());
+  return rows[state.cursor];
+}
+
+function toggleIdea(){
+  const p = cursorPaper();
+  if (!p) return;
+  p.idea = !p.idea;
+  if (p.idea) p.read = true;
+  const msg = p.idea ? '★ Added to Idea' : 'Removed from Idea';
+  toast(msg);
+  dirty();
+  renderAll();
+}
+
+function openDoi(){
+  const p = cursorPaper(); if (!p) return;
+  const url = p.doiUrl || (p.doi.startsWith('http') ? p.doi : 'https://doi.org/'+p.doi);
+  try { window.open(url, '_blank', 'noopener'); } catch(e) {}
+  toast(`Opening ${url.length>60?url.slice(0,60)+'…':url}`);
+  const wasUnread = !p.read;
+  p.read = true;
+  if (wasUnread) dirty();
+  renderAll();
+}
+
+function deleteCursor(){
+  if (state.status !== 'pending') return;
+  const p = cursorPaper();
+  if (!p) return;
+  state.deletedDois.add(p.doi);
+  saveDeleted();
+  state.lastDeleted = { papers: [p] };
+  toast(`Deleted 1 paper`, true);
+  dirty();
+  renderAll();
+}
+
+function deleteSelected(){
+  const ids = [...state.selected];
+  if (!ids.length) return;
+  const all = [...DB.ft50, ...DB.cepm, ...DB.cnki];
+  const papers = ids.map(id => all.find(p=>p.id===id)).filter(Boolean);
+  // Confirm for >5 items
+  const doDelete = () => {
+    papers.forEach(p => state.deletedDois.add(p.doi));
+    saveDeleted();
+    state.lastDeleted = { papers };
+    state.selected.clear();
+    toast(`Deleted ${papers.length} papers`, true);
+    dirty();
+    renderAll();
+  };
+  if (papers.length >= 5) {
+    confirmModal('Delete papers?', `This will remove ${papers.length} papers from view. Can be undone.`, doDelete);
+  } else doDelete();
+}
+
+function undoDelete(){
+  if (!state.lastDeleted) return;
+  for (const p of state.lastDeleted.papers) state.deletedDois.delete(p.doi);
+  saveDeleted();
+  const n = state.lastDeleted.papers.length;
+  state.lastDeleted = null;
+  toast(`Restored ${n} paper${n>1?'s':''}`);
+  dirty();
+  renderAll();
+}
+
+function saveDeleted(){
+  localStorage.setItem('is_deleted_dois', JSON.stringify([...state.deletedDois]));
+}
+
+function exportRIS(papers){
+  if (!papers || !papers.length) return;
+  let ris = '';
+  for (const p of papers) {
+    ris += 'TY  - JOUR\n';
+    ris += `TI  - ${p.titleEn}\n`;
+    if (p.titleCn && p.titleCn !== p.titleEn) ris += `T2  - ${p.titleCn}\n`;
+    for (const a of (p.authors||'').split(';').map(s=>s.trim()).filter(Boolean)) ris += `AU  - ${a}\n`;
+    ris += `JO  - ${JOURNALS[p.src].find(j=>j.id===p.jid)?.name || p.jid}\n`;
+    ris += `PY  - ${p.date.slice(0,4)}\n`;
+    ris += `DA  - ${p.date}\n`;
+    ris += `DO  - ${p.doi}\n`;
+    ris += `AB  - ${p.abstractEn}\n`;
+    ris += 'ER  -\n\n';
+  }
+  const blob = new Blob([ris], {type:'application/x-research-info-systems'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `idea-scout-${Date.now()}.ris`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  // Prompt to remove from idea list
+  setTimeout(() => {
+    confirmModal('Remove exported papers?', `${papers.length} paper${papers.length>1?'s were':' was'} exported. Remove from Idea list?`, () => {
+      for (const p of papers) p.idea = false;
+      state.selected.clear();
+      state.lastIdeaRemoved = papers.slice();
+      toast(`Removed ${papers.length} from Idea`, false, () => {
+        for (const p of state.lastIdeaRemoved) p.idea = true;
+        state.lastIdeaRemoved = null;
+        toast(`Restored ${papers.length} to Idea`);
+        dirty();
+        renderAll();
+      });
+      dirty();
+      renderAll();
+    });
+  }, 350);
+}
+
+// ── toast / modals ─────────────────────────────────────────────────
+let toastTimer;
+function toast(msg, withUndo=false, customUndo=null){
+  clearTimeout(toastTimer);
+  const el = $('#toast');
+  const showUndo = withUndo || !!customUndo;
+  el.innerHTML = `<span>${escapeHtml(msg)}</span>` + (showUndo?' <span class="undo" id="toastUndo">undo</span>':'');
+  el.classList.add('show');
+  const undoBtn = $('#toastUndo');
+  if (undoBtn) undoBtn.addEventListener('click', () => { (customUndo||undoDelete)(); el.classList.remove('show'); });
+  toastTimer = setTimeout(() => el.classList.remove('show'), showUndo ? 6000 : 4500);
+}
+
+function confirmModal(title, body, onOk){
+  $('#confirmTitle').textContent = title;
+  $('#confirmBody').textContent = body;
+  $('#confirmWrap').classList.add('show');
+  const ok = $('#confirmOk'), cancel = $('#confirmCancel');
+  const close = () => $('#confirmWrap').classList.remove('show');
+  const okH = () => { close(); onOk && onOk(); cleanup(); };
+  const caH = () => { close(); cleanup(); };
+  function cleanup(){ ok.removeEventListener('click', okH); cancel.removeEventListener('click', caH); }
+  ok.addEventListener('click', okH); cancel.addEventListener('click', caH);
+}
+
+// ── wire up controls ──────────────────────────────────────────────
+function wireTopbar(){
+  $$('#sourceTabs button').forEach(b => b.addEventListener('click', () => {
+    state.source = b.dataset.src;
+    state.selectedJournal='all'; state.cursor=0; state.selected.clear(); state.collapsedGroups.clear();
+    $$('#sourceTabs button').forEach(x=>x.classList.toggle('on', x===b));
+    renderAll();
+  }));
+  $$('#statusTabs button').forEach(b => b.addEventListener('click', () => {
+    state.status = b.dataset.status;
+    state.cursor=0; state.selected.clear(); state.collapsedGroups.clear();
+    $$('#statusTabs button').forEach(x=>x.classList.toggle('on', x===b));
+    renderAll();
+  }));
+
+  $$('#dateChips button').forEach(b => b.addEventListener('click', () => {
+    state.dateRange = b.dataset.date; state.cursor=0;
+    $$('#dateChips button').forEach(x=>x.classList.toggle('on', x===b));
+    renderTable();
+  }));
+  $$('#tierChips button').forEach(b => b.addEventListener('click', () => {
+    state.tier = b.dataset.tier; state.cursor=0;
+    $$('#tierChips button').forEach(x=>x.classList.toggle('on', x===b));
+    renderTable();
+  }));
+  $$('#viewToggle button').forEach(b => b.addEventListener('click', () => {
+    state.view = b.dataset.view; state.collapsedGroups.clear();
+    $$('#viewToggle button').forEach(x=>x.classList.toggle('on', x===b));
+    renderTable();
+  }));
+
+  $('#btnLang').addEventListener('click', () => {
+    state.lang = state.lang==='en' ? 'cn' : 'en';
+    $('#btnLang').textContent = state.lang==='cn' ? '中' : 'EN';
+    renderAll();
+  });
+
+  // search
+  let sTimer;
+  $('#searchInput').addEventListener('input', e => {
+    clearTimeout(sTimer);
+    sTimer = setTimeout(() => {
+      state.query = e.target.value;
+      state.cursor = 0;
+      renderTable();
+    }, 150);
+  });
+
+  // batch actions
+  $('#batchDelBtn').addEventListener('click', deleteSelected);
+  $('#risBtn').addEventListener('click', () => {
+    const ids = [...state.selected];
+    const papers = ids.map(id => DB[state.source].find(p=>p.id===id)).filter(Boolean);
+    exportRIS(papers);
+  });
+
+  // icon btns
+  $('#btnStats').addEventListener('click', openStats);
+  $('#btnToken').addEventListener('click', () => {
+    $('#tokenInput').value = state.token;
+    $('#tokenWrap').classList.add('show');
+    setTimeout(() => $('#tokenInput').focus(), 40);
+  });
+  $('#tokenCancel').addEventListener('click', () => $('#tokenWrap').classList.remove('show'));
+  $('#tokenSave').addEventListener('click', async () => {
+    state.token = $('#tokenInput').value.trim();
+    localStorage.setItem('gh_token', state.token);
+    $('#tokenWrap').classList.remove('show');
+    if (!state.token) {
+      window.ISSync.state.status = 'notoken';
+      updateSyncUI();
+      toast('Token cleared');
+      return;
+    }
+    toast('✓ Token saved · fetching…');
+    const us = await window.ISSync.hydrate(state.token);
+    if (us) {
+      applyRemoteState(us);
+      renderAll();
+      toast('✓ Synced from GitHub');
+    } else {
+      toast('⚠ Sync failed — check token scope (needs contents:write)');
+    }
+    updateSyncUI();
+  });
+  $('#syncBanner').addEventListener('click', () => $('#btnToken').click());
+
+  $('#openCmdk').addEventListener('click', openCmdk);
+  $('#statsClose').addEventListener('click', () => $('#statsWrap').classList.remove('show'));
+
+  // modal backdrop close
+  $$('.modal-wrap').forEach(w => w.addEventListener('click', e => {
+    if (e.target === w) w.classList.remove('show');
+  }));
+}
+
+function updateSyncUI(){
+  const hasToken = !!state.token;
+  const st = window.ISSync.state.status;
+  $('#syncBanner').style.display = hasToken ? 'none' : '';
+  $('#btnToken').classList.toggle('synced', hasToken && st === 'clean');
+  const ss = $('#syncStatus');
+  let label, isOk = false;
+  if (!hasToken) label = 'not synced';
+  else if (st === 'syncing') label = 'syncing…';
+  else if (st === 'dirty')   label = 'unsaved';
+  else if (st === 'error')   label = 'sync error';
+  else { label = 'synced'; isOk = true; }
+  ss.textContent = label;
+  ss.classList.toggle('ok', isOk);
+  ss.classList.toggle('warn', !isOk);
+  ss.title = window.ISSync.state.lastError || '';
+}
+
+// ── cmdk ─────────────────────────────────────────────────────────
+function openCmdk(){
+  $('#cmdkWrap').classList.add('show');
+  $('#cmdkInput').value = ''; state.cmdkQuery=''; state.cmdkIdx=0;
+  renderCmdk();
+  setTimeout(() => $('#cmdkInput').focus(), 40);
+}
+function renderCmdk(){
+  const q = state.cmdkQuery.trim().toLowerCase();
+  let pool = [];
+  for (const src of ['ft50','cepm','cnki']) for (const p of allPapers(src)) pool.push(p);
+  let rows = pool;
+  if (q.length >= 1) {
+    rows = pool.filter(p =>
+      (p.titleEn||'').toLowerCase().includes(q) ||
+      (p.titleCn||'').toLowerCase().includes(q) ||
+      (p.authors||'').toLowerCase().includes(q) ||
+      p.jid.toLowerCase().includes(q)
+    );
+  }
+  rows = rows.slice(0, 40);
+  if (state.cmdkIdx >= rows.length) state.cmdkIdx = 0;
+  const html = rows.map((p,i) => `<div class="cmdk-item ${i===state.cmdkIdx?'on':''}" data-i="${i}" data-src="${p.src}" data-id="${p.id}" data-jid="${p.jid}">
+    <span class="jid">${p.src.toUpperCase()}·${p.jid}</span>
+    <span class="tier-chip ${tierClass(p.tier)}">${tierLetter(p.tier)}</span>
+    <span class="ttl">${escapeHtml(paperTitle(p))}</span>
+  </div>`).join('');
+  $('#cmdkList').innerHTML = html || `<div class="cmdk-item"><span class="ttl" style="color:var(--ink-3)">No results</span></div>`;
+  $$('.cmdk-item').forEach(el => el.addEventListener('click', () => cmdkJump(el)));
+}
+function cmdkJump(el){
+  const src = el.dataset.src, id = el.dataset.id, jid = el.dataset.jid;
+  if (!src || !id) return;
+  state.source = src; state.selectedJournal = 'all'; state.status='pending';
+  const p = DB[src].find(x=>x.id===id);
+  if (p && p.idea) state.status='idea';
+  $$('#sourceTabs button').forEach(x=>x.classList.toggle('on', x.dataset.src===src));
+  $$('#statusTabs button').forEach(x=>x.classList.toggle('on', x.dataset.status===state.status));
+  $('#cmdkWrap').classList.remove('show');
+  renderAll();
+  // find row and set cursor
+  const rows = sortRows(visibleRows());
+  const idx = rows.findIndex(r=>r.id===id);
+  if (idx>=0) { state.cursor = idx; renderTable(); renderPreview(); }
+}
+
+$('#cmdkInput')?.addEventListener('input', e => { state.cmdkQuery=e.target.value; state.cmdkIdx=0; renderCmdk(); });
+
+// ── stats modal ─────────────────────────────────────────────────
+function openStats(){
+  const srcLabel = { ft50:'FT50/UTD24', cepm:'CE/PM', cnki:'CNKI' };
+  let tot = { read:0, idea:0, total:0 };
+  let html = `<thead><tr><th>Source</th><th style="text-align:right">Total</th><th style="text-align:right">Read</th><th style="text-align:right">Idea</th><th style="text-align:right">Progress</th></tr></thead><tbody>`;
+  for (const src of ['ft50','cepm','cnki']) {
+    const ps = allPapers(src);
+    const read = ps.filter(p=>p.read).length;
+    const idea = ps.filter(p=>p.idea).length;
+    const pct = ps.length ? Math.round(read/ps.length*100) : 0;
+    html += `<tr>
+      <td class="src">${srcLabel[src]}</td>
+      <td class="n">${ps.length}</td>
+      <td class="n">${read}</td>
+      <td class="n" style="color:var(--accent);font-weight:600">${idea}</td>
+      <td class="n">${pct}%</td>
+    </tr>`;
+    tot.read+=read; tot.idea+=idea; tot.total+=ps.length;
+  }
+  html += '</tbody>';
+  $('#statsTable').innerHTML = html;
+  const pct = tot.total ? Math.round(tot.read/tot.total*100) : 0;
+  $('#statsTotal').innerHTML = `<span class="mono">Overall · ${tot.total} papers · ${tot.read} read (${pct}%) · <span style="color:var(--accent);font-weight:600">${tot.idea} ideas</span></span>`;
+  $('#statsWrap').classList.add('show');
+}
+
+// ── keyboard ────────────────────────────────────────────────────
+function onKey(e){
+  // Ignore if inside input
+  const tag = document.activeElement?.tagName;
+  const inInput = tag==='INPUT' || tag==='TEXTAREA';
+
+  // ESC closes modals & blurs inputs
+  if (e.key==='Escape') {
+    $$('.modal-wrap.show').forEach(w => w.classList.remove('show'));
+    if (inInput) document.activeElement.blur();
+    return;
+  }
+
+  // cmdk open
+  if ((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==='k') { e.preventDefault(); openCmdk(); return; }
+  if ((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==='f') { e.preventDefault(); $('#searchInput').focus(); $('#searchInput').select(); return; }
+
+  if (inInput) {
+    // cmdk list navigation
+    if ($('#cmdkWrap').classList.contains('show')) {
+      if (e.key==='ArrowDown') { state.cmdkIdx++; renderCmdk(); e.preventDefault(); }
+      else if (e.key==='ArrowUp') { state.cmdkIdx=Math.max(0,state.cmdkIdx-1); renderCmdk(); e.preventDefault(); }
+      else if (e.key==='Enter') { const el = $('.cmdk-item.on'); if (el) cmdkJump(el); }
+    }
+    return;
+  }
+
+  if (e.key==='Tab') {
+    e.preventDefault();
+    const newStatus = state.status==='pending'?'idea':'pending';
+    state.status = newStatus; state.cursor=0; state.selected.clear(); state.collapsedGroups.clear();
+    $$('#statusTabs button').forEach(x=>x.classList.toggle('on', x.dataset.status===newStatus));
+    renderAll();
+    return;
+  }
+
+  if (e.key==='j' || e.key==='ArrowDown') { e.preventDefault(); moveCursor(1); }
+  else if (e.key==='k' || e.key==='ArrowUp') { e.preventDefault(); moveCursor(-1); }
+  else if (e.key===' ') { e.preventDefault(); toggleSelectCursor(); }
+  else if (e.key==='i' || e.key==='I') { e.preventDefault(); toggleIdea(); }
+  else if (e.key==='d' || e.key==='D') { e.preventDefault(); if (state.status==='pending') deleteCursor(); }
+  else if (e.key==='o' || e.key==='O') { e.preventDefault(); openDoi(); }
+  else if (e.key==='e' || e.key==='E') {
+    e.preventDefault();
+    if (state.status==='idea') {
+      const p = cursorPaper(); if (p) exportRIS([p]);
+    }
+  }
+  else if (e.key==='1') { setSource('ft50'); }
+  else if (e.key==='2') { setSource('cepm'); }
+  else if (e.key==='3') { setSource('cnki'); }
+}
+
+function setSource(s){
+  state.source=s; state.selectedJournal='all'; state.cursor=0; state.selected.clear(); state.collapsedGroups.clear();
+  $$('#sourceTabs button').forEach(x=>x.classList.toggle('on', x.dataset.src===s));
+  renderAll();
+}
+
+function moveCursor(d){
+  const rows = sortRows(visibleRows());
+  if (!rows.length) return;
+  state.cursor = Math.max(0, Math.min(rows.length-1, state.cursor + d));
+  const p = rows[state.cursor];
+  if (p && !p.read && state.status==='pending') { p.read = true; dirty(); }
+  renderTable();
+  renderPreview();
+}
+
+function toggleSelectCursor(){
+  const p = cursorPaper(); if (!p) return;
+  if (state.selected.has(p.id)) state.selected.delete(p.id); else state.selected.add(p.id);
+  renderTable();
+}
+
+// ── bootstrap ──────────────────────────────────────────────────
+function renderAll(){
+  renderScanBar();
+  renderSidebar();
+  renderHeaders();
+  renderTable();
+}
+
+function renderScanBar(){
+  const list = SCAN_DATES[state.source] || [];
+  const ever = IDEA_EVER[state.source] || 0;
+  const n = (DB[state.source]||[]).length;
+  const latestScan = list[0] || '—';
+  const parts = [];
+  parts.push(`latest scan · ${latestScan}`);
+  parts.push(`${n} papers in view`);
+  if (list.length > 1) parts.push(`${list.length} scans total`);
+  if (ever) parts.push(`${ever} ideas ever`);
+  $('#scanText').textContent = parts.join(' · ');
+}
+
+
+function wireResponsive(){
+  const drawer = document.querySelector('.col.left');
+  const right = document.querySelector('.col.right');
+  const scrim = document.getElementById('scrim');
+  const sheetTab = document.getElementById('sheetTab');
+  const drawerBtn = document.getElementById('drawerBtn');
+  function openDrawer(){ drawer.classList.add('open'); scrim.classList.add('show'); }
+  function closeDrawer(){ drawer.classList.remove('open'); scrim.classList.remove('show'); }
+  function openSheet(){ right.classList.add('open'); sheetTab.classList.add('hide'); }
+  function closeSheet(){ right.classList.remove('open'); sheetTab.classList.remove('hide'); }
+  drawerBtn && drawerBtn.addEventListener('click', () => {
+    if (drawer.classList.contains('open')) closeDrawer(); else openDrawer();
+  });
+  scrim && scrim.addEventListener('click', closeDrawer);
+  sheetTab && sheetTab.addEventListener('click', openSheet);
+  document.addEventListener('click', e => {
+    if (window.innerWidth > 1080) return;
+    if (e.target.closest('.col.left .j')) closeDrawer();
+  });
+  let sy=0, ty=0;
+  right.addEventListener('touchstart', e => { sy = e.touches[0].clientY; ty = 0; });
+  right.addEventListener('touchmove', e => { ty = e.touches[0].clientY - sy; });
+  right.addEventListener('touchend', () => { if (ty > 60) closeSheet(); });
+  window.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeDrawer(); closeSheet(); }
+  });
+}
+
+function init(){
+  window.ISSync.onChange(updateSyncUI);
+  updateSyncUI();
+  wireTopbar();
+  window.addEventListener('keydown', onKey);
+  wireResponsive();
+  renderAll();
+
+  // Kick off authenticated hydrate if a token is already saved.
+  if (state.token) {
+    window.ISSync.hydrate(state.token).then(us => {
+      if (us) { applyRemoteState(us); renderAll(); }
+    });
+  }
+
+  // Best-effort flush on tab close — fire-and-forget (no await).
+  window.addEventListener('beforeunload', () => {
+    if (state.token && window.ISSync.state.status === 'dirty') {
+      window.ISSync.flushNow(state.token, () => window.ISSync.buildRaw(DB, state, JOURNALS));
+    }
+  });
+}
+init();
+})();
+}
+if (window.ISDATA) __bootIdeaScoutApp();
+else window.addEventListener('isdata-ready', __bootIdeaScoutApp, { once:true });
+</script>
+
+</body>
+</html>
