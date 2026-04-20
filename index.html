@@ -757,7 +757,10 @@ window.ISSync = (function(){
         deleted_dois: deleted,
         read_dois: read,
         idea_papers: ideas,
-        idea_ever_count: existing.idea_ever_count || 0,
+        idea_ever_count: Math.max(
+          (state && state.ideaEver && state.ideaEver[src]) || 0,
+          existing.idea_ever_count || 0
+        ),
       };
     }
     return out;
@@ -873,6 +876,7 @@ const state = {
   collapsedGroups: new Set(),
   token: localStorage.getItem('gh_token') || '',
   deletedDois: seededDeleted,
+  ideaEver: { ...IDEA_EVER },  // monotonic per-source cumulative — bumped on toggleIdea add
   lastDeleted: null,     // {papers:[], toastTimer}
   cmdkQuery:'', cmdkIdx:0,
   statsCache:null,
@@ -900,6 +904,8 @@ function applyRemoteState(us){
       if (isIdea) p.read = true;
     }
     for (const d of (st.deleted_dois||[])) state.deletedDois.add(cleanDoi(d.id||d));
+    // Trust remote's ever_count; take max so local pending bumps aren't lost during 409 refresh.
+    state.ideaEver[src] = Math.max(state.ideaEver[src]||0, st.idea_ever_count||0);
   }
   localStorage.setItem('is_deleted_dois', JSON.stringify([...state.deletedDois]));
 }
@@ -1401,8 +1407,12 @@ function cursorPaper(){
 function toggleIdea(){
   const p = cursorPaper();
   if (!p) return;
+  const wasIdea = p.idea;
   p.idea = !p.idea;
-  if (p.idea) p.read = true;
+  if (p.idea) {
+    p.read = true;
+    if (!wasIdea) state.ideaEver[p.src] = (state.ideaEver[p.src]||0) + 1;
+  }
   const msg = p.idea ? '★ Added to Idea' : 'Removed from Idea';
   toast(msg);
   dirty();
@@ -1547,7 +1557,7 @@ function renderGroupChips(){
   $('#tierChips').innerHTML = chips.join('');
   $$('#tierChips button').forEach(b => b.addEventListener('click', () => {
     state.group = b.dataset.group; state.cursor = 0;
-    renderGroupChips(); renderTable();
+    renderGroupChips(); renderSidebar(); renderTable();
   }));
 }
 
@@ -1570,7 +1580,7 @@ function wireTopbar(){
   $$('#dateChips button').forEach(b => b.addEventListener('click', () => {
     state.dateRange = b.dataset.date; state.cursor=0;
     $$('#dateChips button').forEach(x=>x.classList.toggle('on', x===b));
-    renderTable();
+    renderSidebar(); renderTable();
   }));
   $$('#viewToggle button').forEach(b => b.addEventListener('click', () => {
     state.view = b.dataset.view; state.collapsedGroups.clear();
@@ -1728,8 +1738,11 @@ function openStats(){
     const ps = DB[src] || [];
     const curIdea = ps.filter(p => p.idea).length;
     const st = raw[src] || {};
-    const deleted = (st.deleted_dois || []).length;
-    const ever = st.idea_ever_count || 0;
+    // Deleted count: live state.deletedDois ∩ current-source papers + aged-out historical.
+    const liveDeleted = ps.filter(p => state.deletedDois.has(p.doi)).length;
+    const historicalDeleted = (st.deleted_dois || []).filter(d => !ps.some(p => p.doi === d.id)).length;
+    const deleted = liveDeleted + historicalDeleted;
+    const ever = state.ideaEver[src] || 0;
     reviewed[src] = deleted + curIdea;
     idea[src] = Math.max(ever, curIdea);
   }
@@ -1903,7 +1916,7 @@ function renderAll(){
 
 function renderScanBar(){
   const list = SCAN_DATES[state.source] || [];
-  const ever = IDEA_EVER[state.source] || 0;
+  const ever = state.ideaEver[state.source] || 0;
   const n = (DB[state.source]||[]).length;
   const latestScan = list[0] || '—';
   const parts = [];
