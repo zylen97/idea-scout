@@ -407,6 +407,10 @@
   "cnki": {
     "deleted_dois": [
       {
+        "id": "https://kns.cnki.net/kcms2/article/abstract?v=A2Z-m-A1gckB1zFINxQbf7QEwvu1RaOuNzzFI4msSgd5WlIbHM0eB_DPWfyYw7N2qr01sngKvgmr3idWRJgfpwrTvghtHbiuKKegoiWv_PbiBR9cIDJlugMHWQvAygvhKz0c6JM0OJrHv3lE2hCQVQhX8hOO4M57vrsc1EQlfYzT3v",
+        "date": "2026-04-20"
+      },
+      {
         "id": "023cf58845debe69d3575b02591ef7e9",
         "date": "2026-04-09"
       },
@@ -1346,6 +1350,7 @@
     "read_dois": [
       "https://kns.cnki.net/kcms2/article/abstract?v=A2Z-m-A1gckB1zFINxQbf7QEwvu1RaOuNzzFI4msSgd5WlIbHM0eB_DPWfyYw7N2qr01sngKvgmr3idWRJgfpwrTvghtHbiuKKegoiWv_PbiBR9cIDJlugMHWQvAygvhKz0c6JM0OJrHv3lE2hCQVQhX8hOO4M57vrsc1EQlfYzT3v",
       "https://kns.cnki.net/kcms2/article/abstract?v=A2Z-m-A1gclzNT4msN4pA1ypw4DVI3WKStnPRqeDOrK0aa3jo9EnIL958CDWEAAVImEkDcJlNk-blD7GZdS-OFvCckC_g1zYZmv4ZPl0lPqk8EuJc85QkLApIywgBK-_1CtWjLk8OOIl76xxmRJaqKS4qzCqgErOEICFKkE-O3AFHz",
+      "https://kns.cnki.net/kcms2/article/abstract?v=A2Z-m-A1gcl8Ttbzb3XKFt0hc873EgiFreGNh7d2F9c3Atl9lyTD7CqbNKnS1i6mfsIAfqGng90BuPIs6hHmrAhqQ-6u8MYcFWl6SDtY05Gf45YrV_AK1rBzpn90jI1_TJc5P2dhpMaLUAefD9tXYkzY6adL9KnDWV8RM7-i9CbLCR",
       "https://kns.cnki.net/kcms2/article/abstract?v=A2Z-m-A1gcmdz5b5uU53B_9wIr8o-VrB73ZzzfjywlQ4AfPBGUA4ii0i-h_grWdbOkRzniUGK3U7cdZ7u0sAxVKKsgMLw_hn124SFRRa-LXfXiBd0xJa5EOckIiNobq82bHlG2OR9ewtt0R1PaTAMSz4PhwSRr_ibrh7MnjZaY5LyE",
       "https://kns.cnki.net/kcms2/article/abstract?v=A2Z-m-A1gcnXcY_kLlgQuBPnjcZFeRwdGkgzLQT_nOKx4mSwqOQ4fHop_9PUuC055oQhA1CqxihAK-JOvAV_eIpxQzudoJtbzGYN5K0xO4DDeVuE4AJVeJTdbg8rhmpqzcfe5XH_xmcjtr75oq9rooAP2olDTzgat2CYGbrVTwFjUx",
       "https://kns.cnki.net/kcms2/article/abstract?v=A2Z-m-A1gclCO-eQoTQhR8HO8lKvEwvtmW1m4JSkV8yzIu-EWF_rFmn0273JSk_fXHxSAFYo04XEuPn2TUpVuZRFM62iVIEUWUTNM8oXkaXARTpLlgrX8X5h8rLIMmKrX_ZYenxpkl8ROFRJl6e6_fPFDGRWsqMsAknJ3TiKc8sdTQ",
