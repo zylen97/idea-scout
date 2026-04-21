@@ -1355,6 +1355,26 @@
         "added_date": "2026-04-21"
       },
       {
+        "doi": "https://kns.cnki.net/kcms2/article/abstract?v=AlbbYkNP6Xsl-4UDJKpQA6dALgyKOhONvlorx_O7IdFz0C9p8RbQfRBDpzI25BqwLT4r3O3uC3EmTX97zCjVaG1JK6bAngyjaq3QcLt76v9w7yuYuWw_0ZFFkn1gh53rMsQvj46-AT-x3COBmadkC7TiiS5vTaQ6SfZUaX6eKUgxVP",
+        "title": "领先企业突破绿色关键技术的最优区分机制",
+        "title_cn": "领先企业突破绿色关键技术的最优区分机制",
+        "authors": [
+          "李树文",
+          "赵晓笛",
+          "崔淼",
+          "郑耀洲",
+          "叶苏扬"
+        ],
+        "journal_id": "KYGL",
+        "journal_name": "科研管理",
+        "date": "2026-04-19",
+        "abstract": "随着科技创新助力“双碳”的持续推进，领先企业面临着既要满足绿色合法性要求又要维护关键技术差异化优势的战略平衡困境。为破解这一困境，本文基于最优区分理论，以远大为案例分析对象，构建出领先企业突破绿色关键技术的最优区分过程模型。研究发现：第一，在突破绿色关键技术过程中，领先企业的合法性经历了从创建、增补到扩展的演变，并呈现出“由无到强”的进阶逻辑，而差异化经历了从技术定义、类别创建到制度设计的演变，并...",
+        "abstract_cn": "随着科技创新助力“双碳”的持续推进，领先企业面临着既要满足绿色合法性要求又要维护关键技术差异化优势的战略平衡困境。为破解这一困境，本文基于最优区分理论，以远大为案例分析对象，构建出领先企业突破绿色关键技术的最优区分过程模型。研究发现：第一，在突破绿色关键技术过程中，领先企业的合法性经历了从创建、增补到扩展的演变，并呈现出“由无到强”的进阶逻辑，而差异化经历了从技术定义、类别创建到制度设计的演变，并...",
+        "tier": 2,
+        "cited_by": 0,
+        "added_date": "2026-04-21"
+      },
+      {
         "doi": "https://kns.cnki.net/kcms2/article/abstract?v=AlbbYkNP6XszYl9QZylsOytVImpocwVmZcLW1LsNStraeNLX7bWWES7xWl_Gs5SETTsf2tJA59YacnFBewKWQE4jnhSiVq0XNgcxFlqdI7yhBMqmXbW3DHREk2T7XTwpsxBeOBmDVaLhh6-ynmnqLsUQu4xzcFLjoIaAooZ5is040o",
         "title": "跨国技术并购高价值创造的组态路径研究",
         "title_cn": "跨国技术并购高价值创造的组态路径研究",
@@ -1448,6 +1468,6 @@
         "added_date": "2026-04-20"
       }
     ],
-    "idea_ever_count": 70
+    "idea_ever_count": 71
   }
 }
