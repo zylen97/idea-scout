@@ -26,87 +26,181 @@ def load_new_papers(latest_path, seen_path):
     return new_papers, seen_titles
 
 
-def build_email_html(papers, scan_date):
-    by_journal = {}
-    for p in papers:
-        jname = p.get('journal_name', 'Unknown')
-        by_journal.setdefault(jname, []).append(p)
+def _load_cnki_categories():
+    """Load jid → category map from cnki-journals.json.
+    Tries (1) alongside the script (production deploy layout), then
+    (2) repo's config/ directory (development / repo-checkout layout)."""
+    here = os.path.dirname(__file__)
+    candidates = [
+        os.path.join(here, 'cnki-journals.json'),
+        os.path.join(here, '..', '..', 'config', 'cnki-journals.json'),
+    ]
+    for path in candidates:
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                cfg = json.load(f)
+            lst = cfg.get('journals', cfg if isinstance(cfg, list) else [])
+            return {j['id']: j.get('category', '其他') for j in lst}
+        except FileNotFoundError:
+            continue
+        except Exception:
+            return {}
+    return {}
 
-    sorted_journals = sorted(by_journal.items(), key=lambda x: x[0])
+
+def build_email_html(papers, scan_date):
+    """CNKI digest email — visual language aligned with the static-HTML
+    workbench. Adds category grouping (管理A / 管理B1 / 管理B2 / 工程 / 其他)
+    that mirrors the workbench sidebar.
+    """
+    # ── Workbench palette (mirrors index.html :root) ──────────────────
+    BG       = '#F5F4EE'
+    SURFACE  = '#FAF9F5'
+    BG2      = '#EEEBE2'
+    INK      = '#1F1E1D'
+    INK2     = '#3D3D3A'
+    INK3     = '#6F6E69'
+    INK4     = '#A09F99'
+    LINE     = '#D9D5C9'
+    LINE2    = '#E7E3D8'
+    ACCENT   = '#D97757'
+    THEME    = '#C25B3F'   # CNKI brick-red, matches stats-chart bar color
+
+    FONT = ("-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', "
+            "'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', sans-serif")
+    MONO = "'SF Mono', Menlo, Consolas, 'Courier New', monospace"
+
+    WORKBENCH_URL = 'https://zylen97.github.io/idea-scout/'
+
+    CAT_ORDER = ['管理A', '管理B1', '管理B2', '工程', '其他']
+    CAT_BG    = {'管理A': INK, '管理B1': INK2, '管理B2': INK3, '工程': INK4, '其他': INK4}
+    JID_TO_CAT = _load_cnki_categories()
+
+    def cat_of(p):
+        return JID_TO_CAT.get(p.get('journal_id', ''), '其他')
+
+    # ── Group: category → journal → papers ───────────────────────────
+    by_cat = {}
+    for p in papers:
+        cat = cat_of(p)
+        jid = p.get('journal_id', 'Unknown')
+        jname = p.get('journal_name', jid)
+        by_cat.setdefault(cat, {}).setdefault((jid, jname), []).append(p)
+
     total = len(papers)
-    journal_count = len(by_journal)
-    header_color = '#4A6B8A'
+    journal_count = sum(len(j) for j in by_cat.values())
     today = date.today().strftime('%Y-%m-%d')
 
+    def chip(text, bg, fg='#FFFFFF', font=MONO, size='10px'):
+        return (f'<span style="display:inline-block;background:{bg};color:{fg};'
+                f'padding:2px 6px;border-radius:3px;font-family:{font};'
+                f'font-size:{size};font-weight:600;letter-spacing:.04em;'
+                f'line-height:1.2;">{text}</span>')
+
+    def cat_chip(cat):
+        return chip(cat, CAT_BG.get(cat, INK4), '#FFFFFF', FONT, '10.5px')
+
+    # ── Summary table: per-category counts ───────────────────────────
     summary_rows = ''
-    for jname, plist in sorted_journals:
+    for cat in CAT_ORDER:
+        if cat not in by_cat: continue
+        n_papers = sum(len(plist) for plist in by_cat[cat].values())
+        n_journals = len(by_cat[cat])
         summary_rows += f"""
       <tr>
-        <td style="padding: 4px 8px; font-size: 13px;">{jname}</td>
-        <td style="padding: 4px 8px; font-size: 13px; font-weight: 600; text-align: center;">{len(plist)}</td>
+        <td style="padding:7px 10px;border-bottom:1px solid {LINE2};">{cat_chip(cat)}</td>
+        <td style="padding:7px 10px;font-size:13px;color:{INK2};border-bottom:1px solid {LINE2};">{n_journals} 本期刊</td>
+        <td style="padding:7px 10px;font-family:{MONO};font-size:13px;color:{INK};font-weight:700;text-align:right;border-bottom:1px solid {LINE2};">{n_papers}</td>
       </tr>"""
 
     html = f"""<!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"></head>
-<body style="font-family: -apple-system, 'Segoe UI', sans-serif; background: #F5F3ED; padding: 20px; color: #2D2A26;">
-<div style="max-width: 700px; margin: 0 auto;">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:{BG};font-family:{FONT};color:{INK};-webkit-font-smoothing:antialiased;">
+<div style="max-width:720px;margin:0 auto;padding:20px 16px;">
 
-<div style="background: {header_color}; color: white; padding: 20px 24px; border-radius: 12px 12px 0 0;">
-  <h1 style="margin: 0; font-size: 22px;">CNKI Scout</h1>
-  <p style="margin: 6px 0 0; opacity: 0.9; font-size: 14px;">{scan_date} ~ {today} - {total} 篇 - {journal_count} 本期刊</p>
+<!-- Header banner -->
+<div style="background:{THEME};color:#FFFFFF;padding:22px 24px;border-radius:10px 10px 0 0;">
+  <div style="font-family:{MONO};font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.78;margin-bottom:6px;">CNKI</div>
+  <h1 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-.01em;">CNKI Scout</h1>
+  <p style="margin:6px 0 0;font-size:13px;opacity:.85;font-family:{MONO};letter-spacing:.02em;">{scan_date} → {today} · {total} papers · {journal_count} journals</p>
 </div>
 
-<div style="background: white; padding: 24px; border-radius: 0 0 12px 12px; border: 1px solid #D8D4CA; border-top: none;">
+<!-- CTA strip -->
+<div style="background:{SURFACE};border-left:1px solid {LINE};border-right:1px solid {LINE};padding:12px 24px;display:block;">
+  <a href="{WORKBENCH_URL}" style="display:inline-block;background:{ACCENT};color:#FFFFFF;text-decoration:none;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;letter-spacing:.01em;">📑 在工作台浏览 / 标记 →</a>
+  <span style="color:{INK4};font-size:11px;margin-left:10px;font-family:{MONO};">{WORKBENCH_URL}</span>
+</div>
 
-<h2 style="font-size: 16px; margin: 0 0 12px; color: #2D2A26;">今日概览</h2>
-<table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; border: 1px solid #E8E6DC; border-radius: 8px;">
+<!-- Card body -->
+<div style="background:{SURFACE};padding:22px 24px 24px;border-radius:0 0 10px 10px;border:1px solid {LINE};border-top:none;">
+
+<!-- Summary -->
+<div style="font-family:{MONO};font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:{INK3};margin:0 0 8px;">今日概览 · summary</div>
+<table style="width:100%;border-collapse:collapse;margin-bottom:24px;border:1px solid {LINE};border-radius:6px;overflow:hidden;">
   <thead>
-    <tr style="background: #F5F3ED;">
-      <th style="padding: 6px 8px; text-align: left; font-size: 12px; color: #6B6560;">期刊</th>
-      <th style="padding: 6px 8px; text-align: center; font-size: 12px; color: #6B6560;">篇数</th>
+    <tr style="background:{BG2};">
+      <th style="padding:7px 10px;text-align:left;font-family:{MONO};font-size:9.5px;letter-spacing:.08em;color:{INK3};font-weight:500;text-transform:uppercase;border-bottom:1px solid {LINE};">Category</th>
+      <th style="padding:7px 10px;text-align:left;font-family:{MONO};font-size:9.5px;letter-spacing:.08em;color:{INK3};font-weight:500;text-transform:uppercase;border-bottom:1px solid {LINE};">Journals</th>
+      <th style="padding:7px 10px;text-align:right;font-family:{MONO};font-size:9.5px;letter-spacing:.08em;color:{INK3};font-weight:500;text-transform:uppercase;border-bottom:1px solid {LINE};">N</th>
     </tr>
   </thead>
   <tbody>{summary_rows}
-    <tr style="background: #F5F3ED; font-weight: 600;">
-      <td style="padding: 6px 8px; font-size: 13px;">合计</td>
-      <td style="padding: 6px 8px; font-size: 13px; text-align: center;">{total}</td>
+    <tr style="background:{BG2};">
+      <td colspan="2" style="padding:7px 10px;font-family:{MONO};font-size:11px;color:{INK};font-weight:600;letter-spacing:.04em;">TOTAL</td>
+      <td style="padding:7px 10px;font-family:{MONO};font-size:13px;color:{INK};font-weight:700;text-align:right;">{total}</td>
     </tr>
   </tbody>
 </table>
 
-<hr style="border: none; border-top: 1px solid #E8E6DC; margin: 20px 0;">
-
-<h2 style="font-size: 16px; margin: 0 0 16px; color: #2D2A26;">论文列表</h2>
+<!-- Per-category sections -->
+<div style="font-family:{MONO};font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:{INK3};margin:0 0 12px;">论文列表 · papers</div>
 """
 
-    for jname, plist in sorted_journals:
+    for cat in CAT_ORDER:
+        if cat not in by_cat: continue
+        cat_papers = sum(len(plist) for plist in by_cat[cat].values())
+        # Category section header
         html += f"""
-<div style="margin-bottom: 24px;">
-  <div style="display: flex; align-items: center; margin-bottom: 12px; border-bottom: 2px solid {header_color}; padding-bottom: 6px;">
-    <span style="font-weight: 600; font-size: 15px;">{jname}</span>
-    <span style="color: #9B9488; margin-left: 8px; font-size: 13px;">({len(plist)}篇)</span>
-  </div>
+<div style="margin-bottom:8px;padding:6px 0;border-bottom:1.5px dashed {LINE};">
+  {cat_chip(cat)}
+  <span style="color:{INK3};margin-left:8px;font-size:11.5px;font-family:{MONO};">{cat_papers} papers</span>
+</div>
 """
-        for p in plist:
-            title = p.get('title', '')
-            authors = p.get('authors', [])
-            authors_str = ', '.join(authors) if authors else ''
-            abstract = p.get('abstract', '')
-            link = p.get('link', '')
-
-            authors_line = f'<div style="font-size: 12px; color: #9B9488; margin-bottom: 3px;">{authors_str}</div>' if authors_str else ''
-            link_html = f'<a href="{link}" style="color: {header_color}; text-decoration: none; font-size: 12px;">知网链接</a>' if link else ''
-
+        sorted_journals = sorted(by_cat[cat].items(), key=lambda x: x[0][0])
+        for (jid, jname), plist in sorted_journals:
+            jid_chip = chip(jid, BG2, INK, MONO, '10px')
             html += f"""
-  <div style="margin-bottom: 16px; padding-left: 12px; border-left: 3px solid #E8E6DC;">
-    <div style="font-weight: 600; font-size: 14px; line-height: 1.4; margin-bottom: 2px;">{title}</div>
-    {authors_line}
-    <div style="font-size: 13px; color: #6B6560; line-height: 1.5; margin-bottom: 4px;">{abstract}</div>
-    <div style="font-size: 12px; color: #9B9488;">{link_html}</div>
+<div style="margin-bottom:20px;">
+  <div style="padding:8px 0 6px;border-bottom:2px solid {THEME};margin-bottom:10px;">
+    {jid_chip}
+    <span style="font-weight:600;font-size:14.5px;color:{INK};margin-left:8px;">{jname}</span>
+    <span style="color:{INK4};margin-left:6px;font-size:12px;font-family:{MONO};">· {len(plist)} 篇</span>
   </div>
 """
-        html += "</div>"
+            for p in plist:
+                title = p.get('title', '')
+                authors = p.get('authors', [])
+                authors_str = ', '.join(authors) if authors else ''
+                abstract = p.get('abstract', '')
+                link = p.get('link', '')
+
+                authors_line = (f'<div style="font-family:{MONO};font-size:11px;color:{INK4};margin-bottom:4px;">{authors_str}</div>'
+                                if authors_str else '')
+                link_html = (f'<a href="{link}" style="color:{THEME};text-decoration:none;font-family:{MONO};font-size:11px;">知网链接 ↗</a>'
+                             if link else '')
+                abstract_block = (f'<div style="font-size:12.5px;color:{INK2};line-height:1.6;margin-bottom:4px;">{abstract}</div>'
+                                  if abstract else '')
+
+                html += f"""
+  <div style="margin-bottom:16px;padding-left:12px;border-left:3px solid {THEME};">
+    <div style="font-weight:600;font-size:14px;line-height:1.45;color:{INK};margin-bottom:3px;">{title}</div>
+    {authors_line}
+    {abstract_block}
+    <div style="margin-top:4px;">{link_html}</div>
+  </div>
+"""
+            html += "</div>"
 
     quotes = [
         "路虽远，行则将至；事虽难，做则必成。",
@@ -114,13 +208,18 @@ def build_email_html(papers, scan_date):
         "今天的积累，是明天的底气。",
         "慢慢来，比较快。",
         "做难而正确的事。",
+        "把每一次审稿意见，都当作免费的学术指导。",
+        "保持好奇心，它是学术创新的源泉。",
     ]
     quote = random.choice(quotes)
 
     html += f"""
-<p style="text-align: center; font-size: 13px; color: {header_color}; margin-top: 20px; padding-top: 16px; border-top: 1px solid #E8E6DC; font-style: italic;">{quote}</p>
+<p style="text-align:center;font-size:13px;color:{THEME};margin:24px 0 8px;padding-top:18px;border-top:1px solid {LINE2};font-style:italic;letter-spacing:.02em;">「{quote}」</p>
 
-<p style="text-align: center; font-size: 11px; color: #9B9488; margin-top: 8px;">By ZYLEN - 每日 9:20 扫描中文核心期刊 (CNKI RSS)</p>
+<p style="text-align:center;font-size:10.5px;color:{INK4};margin:8px 0 0;font-family:{MONO};letter-spacing:.04em;">
+  By ZYLEN · 每日 9:20 扫描中文核心期刊 (CNKI RSS) ·
+  <a href="{WORKBENCH_URL}" style="color:{INK3};text-decoration:underline;">Open Workbench</a>
+</p>
 
 </div></div></body></html>"""
 

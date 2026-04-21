@@ -29,10 +29,51 @@ def load_new_papers(latest_path, seen_path):
     return new_papers, seen_dois
 
 def build_email_html(papers, scan_from, source='ft50'):
+    """Render the daily digest email — visual language aligned with the
+    static-HTML workbench at https://zylen97.github.io/idea-scout/.
+
+    Email-safe HTML: inline styles, no <style> blocks, no flexbox tricks,
+    table-based layout for Outlook compatibility, system font stack only.
+    """
     from datetime import date
+    import random
+
     today = date.today().strftime('%Y-%m-%d')
-    date_range = f'{scan_from} ~ {today}'
-    # 按期刊分组
+    date_range = f'{scan_from} → {today}'
+
+    # ── Workbench palette (mirrors index.html :root) ──────────────────
+    BG       = '#F5F4EE'   # page background
+    SURFACE  = '#FAF9F5'   # card
+    BG2      = '#EEEBE2'   # table-head row
+    INK      = '#1F1E1D'
+    INK2     = '#3D3D3A'
+    INK3     = '#6F6E69'
+    INK4     = '#A09F99'
+    LINE     = '#D9D5C9'
+    LINE2    = '#E7E3D8'
+    ACCENT   = '#D97757'   # Claude orange — CTA only
+    OK       = '#6B7F58'   # OA badge
+
+    # Per-source theming (matches stats-chart bar colors in workbench)
+    SRC_THEME = {
+        'ft50': ('#B08A5E', 'Idea Scout',  'FT50/UTD24', '每日 9:00 扫描 UTD24/FT50 顶刊'),
+        'cepm': ('#2E7D6F', 'CE/PM Scout', 'CE/PM',      '每日 9:10 扫描建工/PM 期刊'),
+    }
+    theme_color, header_title, source_label, footer_text = SRC_THEME.get(source, SRC_THEME['ft50'])
+    show_tier = (source != 'cepm')   # CE/PM is flat — no tier ranking
+
+    # Tier chips (workbench-style monochrome dark→light)
+    TIER_BG    = {1: INK,  2: INK2, 3: INK4}
+    TIER_LABEL = {1: 'A',  2: 'B',  3: 'C'}
+
+    # Font stack with Chinese fallback
+    FONT = ("-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', "
+            "'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', sans-serif")
+    MONO = "'SF Mono', Menlo, Consolas, 'Courier New', monospace"
+
+    WORKBENCH_URL = 'https://zylen97.github.io/idea-scout/'
+
+    # ── Group papers by (tier, jid, jname) ───────────────────────────
     by_journal = {}
     for p in papers:
         jid = p.get('journal_id', 'Unknown')
@@ -40,95 +81,93 @@ def build_email_html(papers, scan_from, source='ft50'):
         tier = p.get('tier', 3)
         key = (tier, jid, jname)
         by_journal.setdefault(key, []).append(p)
-
     sorted_journals = sorted(by_journal.items(), key=lambda x: (x[0][0], x[0][1]))
 
     total = len(papers)
     journal_count = len(by_journal)
-    tier_colors = {1: '#C25B3F', 2: '#B8963E', 3: '#5A8A6A'}
-    tier_labels = {1: 'A', 2: 'B', 3: 'C'}
 
-    # Source-specific branding (same warm brown theme)
-    if source == 'cepm':
-        header_color = '#6B5B4E'
-        header_title = 'CE/PM Scout'
-        footer_text = 'By ZYLEN - 每日 9:10 扫描建工/PM 期刊'
-        show_tier = False
-    else:
-        header_color = '#8B7355'
-        header_title = 'Idea Scout'
-        footer_text = 'By ZYLEN - 每日 9:00 扫描 UTD24/FT50 顶刊'
-        show_tier = True
+    def chip(text, bg, fg='#FFFFFF', font=MONO, size='10px'):
+        return (f'<span style="display:inline-block;background:{bg};color:{fg};'
+                f'padding:2px 6px;border-radius:3px;font-family:{font};'
+                f'font-size:{size};font-weight:600;letter-spacing:.04em;'
+                f'line-height:1.2;">{text}</span>')
 
-    # ── 统计总表 ──
+    def tier_chip(tier):
+        return chip(TIER_LABEL.get(tier, 'C'), TIER_BG.get(tier, INK4))
+
+    # ── Summary rows ──────────────────────────────────────────────────
     summary_rows = ''
     for (tier, jid, jname), plist in sorted_journals:
-        color = tier_colors.get(tier, '#5A8A6A')
-        cat = tier_labels.get(tier, 'C')
         oa_count = sum(1 for p in plist if p.get('is_oa', False) or p.get('oa', False))
-        oa_text = f' ({oa_count} OA)' if oa_count > 0 else ''
-        cat_cell = f'<td style="padding: 4px 8px;"><span style="background: {color}; color: white; padding: 1px 6px; border-radius: 3px; font-size: 11px; font-weight: bold;">{cat}</span></td>' if show_tier else ''
+        oa_text = f'+{oa_count} OA' if oa_count > 0 else ''
+        cat_cell = (f'<td style="padding:6px 10px;border-bottom:1px solid {LINE2};">'
+                    f'{tier_chip(tier)}</td>') if show_tier else ''
         summary_rows += f"""
       <tr>
         {cat_cell}
-        <td style="padding: 4px 8px; font-size: 13px;">{jid}</td>
-        <td style="padding: 4px 8px; font-size: 13px; color: #6B6560;">{jname}</td>
-        <td style="padding: 4px 8px; font-size: 13px; font-weight: 600; text-align: center;">{len(plist)}</td>
-        <td style="padding: 4px 8px; font-size: 12px; color: #5A8A6A;">{oa_text}</td>
+        <td style="padding:6px 10px;font-family:{MONO};font-size:11px;color:{INK};font-weight:600;border-bottom:1px solid {LINE2};">{jid}</td>
+        <td style="padding:6px 10px;font-size:13px;color:{INK2};border-bottom:1px solid {LINE2};">{jname}</td>
+        <td style="padding:6px 10px;font-family:{MONO};font-size:12px;color:{INK};font-weight:700;text-align:right;border-bottom:1px solid {LINE2};">{len(plist)}</td>
+        <td style="padding:6px 10px;font-family:{MONO};font-size:11px;color:{OK};border-bottom:1px solid {LINE2};">{oa_text}</td>
       </tr>"""
 
+    # ── HTML scaffold ────────────────────────────────────────────────
     html = f"""<!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"></head>
-<body style="font-family: -apple-system, 'Segoe UI', sans-serif; background: #F5F3ED; padding: 20px; color: #2D2A26;">
-<div style="max-width: 700px; margin: 0 auto;">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:{BG};font-family:{FONT};color:{INK};-webkit-font-smoothing:antialiased;">
+<div style="max-width:720px;margin:0 auto;padding:20px 16px;">
 
-<div style="background: {header_color}; color: white; padding: 20px 24px; border-radius: 12px 12px 0 0;">
-  <h1 style="margin: 0; font-size: 22px;">{header_title}</h1>
-  <p style="margin: 6px 0 0; opacity: 0.9; font-size: 14px;">{date_range} · 共 {total} 篇 · {journal_count} 本期刊</p>
+<!-- Header banner -->
+<div style="background:{theme_color};color:#FFFFFF;padding:22px 24px;border-radius:10px 10px 0 0;">
+  <div style="font-family:{MONO};font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.78;margin-bottom:6px;">{source_label}</div>
+  <h1 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-.01em;">{header_title}</h1>
+  <p style="margin:6px 0 0;font-size:13px;opacity:.85;font-family:{MONO};letter-spacing:.02em;">{date_range} · {total} papers · {journal_count} journals</p>
 </div>
 
-<div style="background: white; padding: 24px; border-radius: 0 0 12px 12px; border: 1px solid #D8D4CA; border-top: none;">
+<!-- CTA strip -->
+<div style="background:{SURFACE};border-left:1px solid {LINE};border-right:1px solid {LINE};padding:12px 24px;display:block;">
+  <a href="{WORKBENCH_URL}" style="display:inline-block;background:{ACCENT};color:#FFFFFF;text-decoration:none;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;letter-spacing:.01em;">📑 在工作台浏览 / 标记 →</a>
+  <span style="color:{INK4};font-size:11px;margin-left:10px;font-family:{MONO};">{WORKBENCH_URL}</span>
+</div>
 
+<!-- Card body -->
+<div style="background:{SURFACE};padding:22px 24px 24px;border-radius:0 0 10px 10px;border:1px solid {LINE};border-top:none;">
 
-<!-- 统计总表 -->
-<h2 style="font-size: 16px; margin: 0 0 12px; color: #2D2A26;">今日概览</h2>
-<table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; border: 1px solid #E8E6DC; border-radius: 8px;">
+<!-- Summary table -->
+<div style="font-family:{MONO};font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:{INK3};margin:0 0 8px;">今日概览 · summary</div>
+<table style="width:100%;border-collapse:collapse;margin-bottom:24px;border:1px solid {LINE};border-radius:6px;overflow:hidden;">
   <thead>
-    <tr style="background: #F5F3ED;">
-      {'<th style="padding: 6px 8px; text-align: left; font-size: 12px; color: #6B6560;">Cat</th>' if show_tier else ''}
-      <th style="padding: 6px 8px; text-align: left; font-size: 12px; color: #6B6560;">期刊</th>
-      <th style="padding: 6px 8px; text-align: left; font-size: 12px; color: #6B6560;">全称</th>
-      <th style="padding: 6px 8px; text-align: center; font-size: 12px; color: #6B6560;">篇数</th>
-      <th style="padding: 6px 8px; text-align: left; font-size: 12px; color: #6B6560;">OA</th>
+    <tr style="background:{BG2};">
+      {f'<th style="padding:7px 10px;text-align:left;font-family:{MONO};font-size:9.5px;letter-spacing:.08em;color:{INK3};font-weight:500;text-transform:uppercase;border-bottom:1px solid {LINE};">Tier</th>' if show_tier else ''}
+      <th style="padding:7px 10px;text-align:left;font-family:{MONO};font-size:9.5px;letter-spacing:.08em;color:{INK3};font-weight:500;text-transform:uppercase;border-bottom:1px solid {LINE};">JID</th>
+      <th style="padding:7px 10px;text-align:left;font-family:{MONO};font-size:9.5px;letter-spacing:.08em;color:{INK3};font-weight:500;text-transform:uppercase;border-bottom:1px solid {LINE};">Journal</th>
+      <th style="padding:7px 10px;text-align:right;font-family:{MONO};font-size:9.5px;letter-spacing:.08em;color:{INK3};font-weight:500;text-transform:uppercase;border-bottom:1px solid {LINE};">N</th>
+      <th style="padding:7px 10px;text-align:left;font-family:{MONO};font-size:9.5px;letter-spacing:.08em;color:{INK3};font-weight:500;text-transform:uppercase;border-bottom:1px solid {LINE};">OA</th>
     </tr>
   </thead>
   <tbody>{summary_rows}
-    <tr style="background: #F5F3ED; font-weight: 600;">
-      <td colspan="{'3' if show_tier else '2'}" style="padding: 6px 8px; font-size: 13px;">合计</td>
-      <td style="padding: 6px 8px; font-size: 13px; text-align: center;">{total}</td>
+    <tr style="background:{BG2};">
+      <td colspan="{'3' if show_tier else '2'}" style="padding:7px 10px;font-family:{MONO};font-size:11px;color:{INK};font-weight:600;letter-spacing:.04em;">TOTAL</td>
+      <td style="padding:7px 10px;font-family:{MONO};font-size:13px;color:{INK};font-weight:700;text-align:right;">{total}</td>
       <td></td>
     </tr>
   </tbody>
 </table>
 
-<hr style="border: none; border-top: 1px solid #E8E6DC; margin: 20px 0;">
-
-<!-- 论文详情 -->
-<h2 style="font-size: 16px; margin: 0 0 16px; color: #2D2A26;">论文列表</h2>
+<!-- Per-paper sections -->
+<div style="font-family:{MONO};font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:{INK3};margin:0 0 12px;">论文列表 · papers</div>
 """
 
     for (tier, jid, jname), plist in sorted_journals:
-        color = tier_colors.get(tier, '#5A8A6A')
-        cat = tier_labels.get(tier, 'C')
-        cat_badge = f'<span style="background: {color}; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; margin-right: 8px;">{cat}</span>' if show_tier else ''
-        section_color = color if show_tier else header_color
+        section_chip = (tier_chip(tier) + '&nbsp;') if show_tier else ''
+        jid_chip_html = chip(jid, BG2, INK, MONO, '10px')
         html += f"""
-<div style="margin-bottom: 24px;">
-  <div style="display: flex; align-items: center; margin-bottom: 12px; border-bottom: 2px solid {section_color}; padding-bottom: 6px;">
-    {cat_badge}
-    <span style="font-weight: 600; font-size: 15px;">{jname}</span>
-    <span style="color: #9B9488; margin-left: 8px; font-size: 13px;">({len(plist)}篇)</span>
+<div style="margin-bottom:22px;">
+  <div style="padding:8px 0 6px;border-bottom:2px solid {theme_color};margin-bottom:10px;">
+    {section_chip}{jid_chip_html}
+    <span style="font-weight:600;font-size:14.5px;color:{INK};margin-left:8px;">{jname}</span>
+    <span style="color:{INK4};margin-left:6px;font-size:12px;font-family:{MONO};">· {len(plist)} 篇</span>
   </div>
 """
         for p in plist:
@@ -141,25 +180,30 @@ def build_email_html(papers, scan_from, source='ft50'):
             doi = p.get('doi', '')
             is_oa = p.get('is_oa', False) or p.get('oa', False)
 
-            oa_badge = '<span style="background: #5A8A6A; color: white; padding: 1px 5px; border-radius: 3px; font-size: 10px; margin-left: 6px;">OA</span>' if is_oa else ''
-            doi_link = f'<a href="{doi}" style="color: #8B7355; text-decoration: none; font-size: 12px;">DOI ↗</a>' if doi else ''
-            authors_line = f'<div style="font-size: 12px; color: #9B9488; margin-bottom: 3px;">{authors_str}</div>' if authors_str else ''
-            abstract_cn_block = f'<div style="font-size: 13px; color: #6B6560; line-height: 1.5; margin-bottom: 4px;"><span style="color: #8B7355; font-weight: 600; font-size: 11px; letter-spacing: 0.5px;">中文 · </span>{abstract_cn}</div>' if abstract_cn else ''
-            abstract_en_block = f'<div style="font-size: 12px; color: #8B857D; line-height: 1.5; margin-bottom: 4px; padding-top: 2px;"><span style="color: #8B7355; font-weight: 600; font-size: 11px; letter-spacing: 0.5px;">EN · </span>{abstract_en}</div>' if abstract_en else ''
+            oa_badge = (f'&nbsp;{chip("OA", OK, "#FFFFFF", MONO, "9px")}' if is_oa else '')
+            doi_link = (f'<a href="{doi}" style="color:{theme_color};text-decoration:none;font-family:{MONO};font-size:11px;">DOI ↗</a>'
+                        if doi else '')
+            authors_line = (f'<div style="font-family:{MONO};font-size:11px;color:{INK4};margin-bottom:4px;">{authors_str}</div>'
+                            if authors_str else '')
+            abstract_cn_block = (f'<div style="font-size:12.5px;color:{INK2};line-height:1.6;margin-bottom:4px;">'
+                                 f'<span style="color:{INK4};font-family:{MONO};font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;">中文 ·</span> {abstract_cn}</div>'
+                                 if abstract_cn else '')
+            abstract_en_block = (f'<div style="font-size:11.5px;color:{INK3};line-height:1.6;margin-bottom:4px;">'
+                                 f'<span style="color:{INK4};font-family:{MONO};font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;">EN ·</span> {abstract_en}</div>'
+                                 if abstract_en else '')
 
             html += f"""
-  <div style="margin-bottom: 16px; padding-left: 12px; border-left: 3px solid #E8E6DC;">
-    <div style="font-weight: 600; font-size: 14px; line-height: 1.4; margin-bottom: 2px;">{title_cn}{oa_badge}</div>
-    <div style="font-size: 13px; color: #6B6560; line-height: 1.3; margin-bottom: 2px; font-style: italic;">{title_en}</div>
+  <div style="margin-bottom:16px;padding-left:12px;border-left:3px solid {theme_color};">
+    <div style="font-weight:600;font-size:14px;line-height:1.45;color:{INK};margin-bottom:3px;">{title_cn}{oa_badge}</div>
+    <div style="font-size:12.5px;color:{INK3};line-height:1.4;margin-bottom:3px;font-style:italic;">{title_en}</div>
     {authors_line}
     {abstract_cn_block}
     {abstract_en_block}
-    <div style="font-size: 12px; color: #9B9488;">{doi_link}</div>
+    <div style="margin-top:4px;">{doi_link}</div>
   </div>
 """
         html += "</div>"
 
-    import random
     quotes = [
         "路虽远，行则将至；事虽难，做则必成。",
         "不积跬步，无以至千里。",
@@ -185,9 +229,12 @@ def build_email_html(papers, scan_from, source='ft50'):
     quote = random.choice(quotes)
 
     html += f"""
-<p style="text-align: center; font-size: 13px; color: #8B7355; margin-top: 20px; padding-top: 16px; border-top: 1px solid #E8E6DC; font-style: italic;">「{quote}」</p>
+<p style="text-align:center;font-size:13px;color:{theme_color};margin:24px 0 8px;padding-top:18px;border-top:1px solid {LINE2};font-style:italic;letter-spacing:.02em;">「{quote}」</p>
 
-<p style="text-align: center; font-size: 11px; color: #9B9488; margin-top: 8px;">{footer_text}</p>
+<p style="text-align:center;font-size:10.5px;color:{INK4};margin:8px 0 0;font-family:{MONO};letter-spacing:.04em;">
+  By ZYLEN · {footer_text} ·
+  <a href="{WORKBENCH_URL}" style="color:{INK3};text-decoration:underline;">Open Workbench</a>
+</p>
 
 </div></div></body></html>"""
 
