@@ -408,9 +408,9 @@
     <span class="sep">·</span>
     <span id="footStatus">ready</span>
     <span class="sep">·</span>
-    <span><span class="kbd">J</span>/<span class="kbd">K</span> move</span>
+    <span><span class="kbd">↑↓</span> move</span>
     <span><span class="kbd">Space</span> select</span>
-    <span><span class="kbd">I</span> idea</span>
+    <span><span class="kbd">F</span> idea</span>
     <span><span class="kbd">D</span> delete</span>
     <div class="right">
       <a href="https://zylen97.github.io/idea-scout/privacy.html" style="color:var(--ink-3);text-decoration:none" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--ink-3)'">Privacy Policy</a>
@@ -1355,8 +1355,8 @@ function renderPreview(){
     : '';
 
   const primaryBtn = state.status==='pending'
-    ? `<button class="primary ${p.idea?'idea-on':''}" id="pvIdea">${p.idea?'★ In Idea':'+ Add to Idea'}<span class="kbd">I</span></button>`
-    : `<button class="primary idea-on" id="pvIdea">★ Remove from Idea<span class="kbd">I</span></button>`;
+    ? `<button class="primary ${p.idea?'idea-on':''}" id="pvIdea">${p.idea?'★ In Idea':'+ Add to Idea'}<span class="kbd">F</span></button>`
+    : `<button class="primary idea-on" id="pvIdea">★ Remove from Idea<span class="kbd">F</span></button>`;
 
   const delBtn = state.status==='pending'
     ? `<button class="danger" id="pvDel">Delete<span class="kbd">D</span></button>`
@@ -1894,10 +1894,10 @@ function onKey(e){
     return;
   }
 
-  if (e.key==='j' || e.key==='ArrowDown') { e.preventDefault(); moveCursor(1); }
-  else if (e.key==='k' || e.key==='ArrowUp') { e.preventDefault(); moveCursor(-1); }
+  if (e.key==='ArrowDown') { e.preventDefault(); moveCursor(1); }
+  else if (e.key==='ArrowUp') { e.preventDefault(); moveCursor(-1); }
   else if (e.key===' ') { e.preventDefault(); toggleSelectCursor(); }
-  else if (e.key==='i' || e.key==='I') { e.preventDefault(); toggleIdea(); }
+  else if (e.key==='f' || e.key==='F') { e.preventDefault(); toggleIdea(); }
   else if (e.key==='d' || e.key==='D') { e.preventDefault(); if (state.status==='pending') deleteCursor(); }
   else if (e.key==='o' || e.key==='O') { e.preventDefault(); openDoi(); }
   else if (e.key==='e' || e.key==='E') {
