@@ -70,8 +70,6 @@ def build_email_html(papers, scan_date):
             "'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', sans-serif")
     MONO = "'SF Mono', Menlo, Consolas, 'Courier New', monospace"
 
-    WORKBENCH_URL = 'https://zylen97.github.io/idea-scout/'
-
     CAT_ORDER = ['管理A', '管理B1', '管理B2', '工程', '其他']
     CAT_BG    = {'管理A': INK, '管理B1': INK2, '管理B2': INK3, '工程': INK4, '其他': INK4}
     JID_TO_CAT = _load_cnki_categories()
@@ -124,12 +122,6 @@ def build_email_html(papers, scan_date):
   <div style="font-family:{MONO};font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.78;margin-bottom:6px;">CNKI</div>
   <h1 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-.01em;">CNKI Scout</h1>
   <p style="margin:6px 0 0;font-size:13px;opacity:.85;font-family:{MONO};letter-spacing:.02em;">{scan_date} → {today} · {total} papers · {journal_count} journals</p>
-</div>
-
-<!-- CTA strip -->
-<div style="background:{SURFACE};border-left:1px solid {LINE};border-right:1px solid {LINE};padding:12px 24px;display:block;">
-  <a href="{WORKBENCH_URL}" style="display:inline-block;background:{ACCENT};color:#FFFFFF;text-decoration:none;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;letter-spacing:.01em;">📑 在工作台浏览 / 标记 →</a>
-  <span style="color:{INK4};font-size:11px;margin-left:10px;font-family:{MONO};">{WORKBENCH_URL}</span>
 </div>
 
 <!-- Card body -->
@@ -216,10 +208,7 @@ def build_email_html(papers, scan_date):
     html += f"""
 <p style="text-align:center;font-size:13px;color:{THEME};margin:24px 0 8px;padding-top:18px;border-top:1px solid {LINE2};font-style:italic;letter-spacing:.02em;">「{quote}」</p>
 
-<p style="text-align:center;font-size:10.5px;color:{INK4};margin:8px 0 0;font-family:{MONO};letter-spacing:.04em;">
-  By ZYLEN · 每日 9:20 扫描中文核心期刊 (CNKI RSS) ·
-  <a href="{WORKBENCH_URL}" style="color:{INK3};text-decoration:underline;">Open Workbench</a>
-</p>
+<p style="text-align:center;font-size:10.5px;color:{INK4};margin:8px 0 0;font-family:{MONO};letter-spacing:.04em;">By ZYLEN · 每日 9:20 扫描中文核心期刊 (CNKI RSS)</p>
 
 </div></div></body></html>"""
 
