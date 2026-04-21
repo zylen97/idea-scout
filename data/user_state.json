@@ -1338,6 +1338,23 @@
         "added_date": "2026-04-21"
       },
       {
+        "doi": "https://kns.cnki.net/kcms2/article/abstract?v=AlbbYkNP6XtogJJwZoYcV5Sj-7ogj7bU78HLiNgRAjcGty_HUs_V-Bl9LJI_B8LOxHJU0lrG198wUlvQ_jScu432kZYMi_alS_QEtJR1QgDPrIAy-pxqHfXiKdvUqeRM60_k1qk3rWOtBhhFWFpDb0s6H9pj_bvZraP-f4BFV23Qc7",
+        "title": "人工智能赋能平台生态系统重构：价值破坏与价值共创研究",
+        "title_cn": "人工智能赋能平台生态系统重构：价值破坏与价值共创研究",
+        "authors": [
+          "刘景东",
+          "张钰莹"
+        ],
+        "journal_id": "KYGL",
+        "journal_name": "科研管理",
+        "date": "2026-04-19",
+        "abstract": "新一代信息技术发展下，人工智能正重塑平台生态系统，推动价值创造与分配模式变革。本研究基于长三角地区340家深度参与数字平台的高新技术企业调研数据，探究人工智能赋能下平台生态系统重构的双重效应：价值共创与价值破坏。研究发现，传统平台生态系统受人力与规则引擎限制，模式僵化、效率低下。人工智能引入后，以替代性人机协作（如任务自动化）和增强性人机协作（如能力拓展）颠覆原有机制；以生成性AI（如内容生成）和...",
+        "abstract_cn": "新一代信息技术发展下，人工智能正重塑平台生态系统，推动价值创造与分配模式变革。本研究基于长三角地区340家深度参与数字平台的高新技术企业调研数据，探究人工智能赋能下平台生态系统重构的双重效应：价值共创与价值破坏。研究发现，传统平台生态系统受人力与规则引擎限制，模式僵化、效率低下。人工智能引入后，以替代性人机协作（如任务自动化）和增强性人机协作（如能力拓展）颠覆原有机制；以生成性AI（如内容生成）和...",
+        "tier": 2,
+        "cited_by": 0,
+        "added_date": "2026-04-21"
+      },
+      {
         "doi": "https://kns.cnki.net/kcms2/article/abstract?v=AlbbYkNP6XszYl9QZylsOytVImpocwVmZcLW1LsNStraeNLX7bWWES7xWl_Gs5SETTsf2tJA59YacnFBewKWQE4jnhSiVq0XNgcxFlqdI7yhBMqmXbW3DHREk2T7XTwpsxBeOBmDVaLhh6-ynmnqLsUQu4xzcFLjoIaAooZ5is040o",
         "title": "跨国技术并购高价值创造的组态路径研究",
         "title_cn": "跨国技术并购高价值创造的组态路径研究",
@@ -1431,6 +1448,6 @@
         "added_date": "2026-04-20"
       }
     ],
-    "idea_ever_count": 69
+    "idea_ever_count": 70
   }
 }
