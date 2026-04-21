@@ -204,7 +204,7 @@ if [ $PUSH_OK -eq 0 ]; then
     osascript -e 'display notification "git push main 超时/失败，数据未同步" with title "Idea Scout" subtitle "Push Failed" sound name "Basso"'
 fi
 
-# 部署到 gh-pages（只更新数据，不重建 Flutter）
+# 部署到 gh-pages（只更新 data/*.json — 不动前端 HTML）
 mkdir -p /tmp/idea_scout_all_data
 cp data/*.json /tmp/idea_scout_all_data/
 if ! git checkout gh-pages >> "$LOG_FILE" 2>&1; then
