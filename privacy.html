@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Privacy Policy · Idea Scout</title>
+<style>
+  body{max-width:720px;margin:40px auto;padding:0 20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Helvetica Neue',sans-serif;color:#1F1E1D;line-height:1.65;background:#FAFAF3}
+  h1{font-size:26px;border-bottom:1px solid #D9D5C9;padding-bottom:10px;margin-bottom:24px}
+  h2{font-size:16px;color:#3D3D3A;margin-top:28px;margin-bottom:8px}
+  p,li{font-size:14px;color:#3D3D3A}
+  code{background:#EEEBE2;padding:1px 5px;border-radius:3px;font-family:'SF Mono',Menlo,monospace;font-size:12.5px}
+  .meta{color:#6F6E69;font-size:12px;margin-bottom:32px}
+  a{color:#C96442}
+</style>
+</head>
+<body>
+<h1>Privacy Policy — Idea Scout</h1>
+<p class="meta">Last updated: 2026-04-21 · Operator: Zylen Wang · Contact: <a href="mailto:zylenw97@gmail.com">zylenw97@gmail.com</a></p>
+
+<h2>What this app is</h2>
+<p>Idea Scout is a personal academic paper radar. It scans a fixed list of management and engineering journals daily, translates titles and abstracts, and emails a curated digest to a small group of pre-configured recipients (the operator and their academic collaborators). The web workbench at <a href="https://zylen97.github.io/idea-scout/">zylen97.github.io/idea-scout</a> is for the operator's personal curation only.</p>
+
+<h2>What data the app accesses</h2>
+<ul>
+  <li><strong>OAuth scope used</strong>: <code>https://www.googleapis.com/auth/gmail.send</code> — used <em>solely</em> to send the daily digest email from the operator's own Gmail account.</li>
+  <li>The app does <strong>not</strong> read, modify, delete, or list any messages in the Gmail account.</li>
+  <li>The app does not collect, store, or transmit any personal information about email recipients beyond the recipient address provided by the operator.</li>
+</ul>
+
+<h2>Data storage</h2>
+<ul>
+  <li>All paper data and user state (read flags, selected papers) are stored in the public GitHub repository <a href="https://github.com/zylen97/idea-scout">zylen97/idea-scout</a>, under <code>data/*.json</code>.</li>
+  <li>OAuth tokens are stored only on the operator's local machine (and a personal Dropbox-synced backup); they are never transmitted to any third party.</li>
+  <li>No analytics, tracking, advertising, or telemetry of any kind.</li>
+</ul>
+
+<h2>Data sharing</h2>
+<p>Data is not sold, rented, or otherwise shared with any third party. The only outbound channel is the daily digest email, sent to addresses configured by the operator.</p>
+
+<h2>Third-party services</h2>
+<ul>
+  <li><strong>Google Gmail API</strong> — for sending email. Subject to <a href="https://policies.google.com/privacy">Google's Privacy Policy</a>.</li>
+  <li><strong>OpenAlex</strong>, <strong>CNKI</strong> — for fetching publicly available paper metadata.</li>
+  <li><strong>ChatAnywhere</strong> (LLM API proxy) — for translating titles and abstracts.</li>
+</ul>
+
+<h2>Data retention</h2>
+<p>Paper scan results in <code>data/*.json</code> are retained indefinitely as part of the public repository's history. User state is mutable and updated by the operator.</p>
+
+<h2>Children</h2>
+<p>This app is not directed at children under 13.</p>
+
+<h2>Changes to this policy</h2>
+<p>Any updates will be posted to this page with a revised "Last updated" date.</p>
+
+<h2>Contact</h2>
+<p>For questions about this policy: <a href="mailto:zylenw97@gmail.com">zylenw97@gmail.com</a>.</p>
+
+</body>
+</html>
