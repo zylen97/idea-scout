@@ -1298,20 +1298,23 @@
       }
     ],
     "read_dois": [
+      "https://kns.cnki.net/kcms2/article/abstract?v=AlbbYkNP6XuBSxLK4vcdJfL8ibBB6LV90_LTfFCYelkIQJHVBqkWF1JkNiBadJx8dBXRuiL_ev7YrlV9-V9bfvLeDE3meVUwa3GqEkf9wsWyDxk2w1YgCeTbSSFgPZMLQHTlmlVoXvMbth1gND0alx7fWgpSlA8b8BFIebMqdRkC8q",
+      "https://kns.cnki.net/kcms2/article/abstract?v=AlbbYkNP6XtogJJwZoYcV5Sj-7ogj7bU78HLiNgRAjcGty_HUs_V-Bl9LJI_B8LOxHJU0lrG198wUlvQ_jScu432kZYMi_alS_QEtJR1QgDPrIAy-pxqHfXiKdvUqeRM60_k1qk3rWOtBhhFWFpDb0s6H9pj_bvZraP-f4BFV23Qc7",
+      "https://kns.cnki.net/kcms2/article/abstract?v=AlbbYkNP6XszYl9QZylsOytVImpocwVmZcLW1LsNStraeNLX7bWWES7xWl_Gs5SETTsf2tJA59YacnFBewKWQE4jnhSiVq0XNgcxFlqdI7yhBMqmXbW3DHREk2T7XTwpsxBeOBmDVaLhh6-ynmnqLsUQu4xzcFLjoIaAooZ5is040o",
+      "https://kns.cnki.net/kcms2/article/abstract?v=AlbbYkNP6XsT4UntSQ9eOwENY6HBifMAcuuctKA82r88KVtIFvdrAbptqpMbLR4o32dtVzNgrAETX7Vs_APyKnnymIrZOl-V1pJmy7dxkiMCQqHethoX8ElGaJsf1jLHwJwZvJO0y4lsTRaEYsQZ00d1B4TPJ8MGUvDOpHoPY5y7kY",
+      "https://kns.cnki.net/kcms2/article/abstract?v=A2Z-m-A1gckzuOZQTWdX1QKTI4Q6J_SSRxO7J9Re3u6MEhiShf3opp46aKjVAwquCix7hxOUWmd-1RRSgeKYj_gN1tlLnPo5MpwXq2xDN1xHCIPGvPTAOe60GRD9-L_91WIGcLtjili2P2B1q8bB-yYDmeuN1JrjUZBckfjFGCY253",
+      "https://kns.cnki.net/kcms2/article/abstract?v=A2Z-m-A1gckzUDxDB-S8I9CbciL2tvvszdzeBSuFN9cFSrnTUMUuUkLgC1s3Fvt2s1u-tmdpgU9788WnBvvSkqrlIK2IGv0K3DzOitrXF5aONSWI-E-nDbtztsw32oTZs6fmFpSQvNdDk8CsuIDswT0UjtP8GGOl0NGQB5cH4TUHzC",
+      "https://kns.cnki.net/kcms2/article/abstract?v=A2Z-m-A1gcnucOhe0QN_LP6CwK5GwE-KKbU2mS0LZxNXUTTZ1AoiIeJApm76EvgrHHvbRNftxBxLLfv6HtuCI9xtsQ_6JNUeUOeSq2Z9t8lt9XX-2QEeZg9lKLvgsgRYgvy11PcjCvMpGD0nXlRyuTMiR-vfpVHRO_DPA0rDCT1-F9",
       "https://kns.cnki.net/kcms2/article/abstract?v=A2Z-m-A1gckB1zFINxQbf7QEwvu1RaOuNzzFI4msSgd5WlIbHM0eB_DPWfyYw7N2qr01sngKvgmr3idWRJgfpwrTvghtHbiuKKegoiWv_PbiBR9cIDJlugMHWQvAygvhKz0c6JM0OJrHv3lE2hCQVQhX8hOO4M57vrsc1EQlfYzT3v",
       "https://kns.cnki.net/kcms2/article/abstract?v=A2Z-m-A1gclzNT4msN4pA1ypw4DVI3WKStnPRqeDOrK0aa3jo9EnIL958CDWEAAVImEkDcJlNk-blD7GZdS-OFvCckC_g1zYZmv4ZPl0lPqk8EuJc85QkLApIywgBK-_1CtWjLk8OOIl76xxmRJaqKS4qzCqgErOEICFKkE-O3AFHz",
       "https://kns.cnki.net/kcms2/article/abstract?v=A2Z-m-A1gcl8Ttbzb3XKFt0hc873EgiFreGNh7d2F9c3Atl9lyTD7CqbNKnS1i6mfsIAfqGng90BuPIs6hHmrAhqQ-6u8MYcFWl6SDtY05Gf45YrV_AK1rBzpn90jI1_TJc5P2dhpMaLUAefD9tXYkzY6adL9KnDWV8RM7-i9CbLCR",
       "https://kns.cnki.net/kcms2/article/abstract?v=A2Z-m-A1gcmdz5b5uU53B_9wIr8o-VrB73ZzzfjywlQ4AfPBGUA4ii0i-h_grWdbOkRzniUGK3U7cdZ7u0sAxVKKsgMLw_hn124SFRRa-LXfXiBd0xJa5EOckIiNobq82bHlG2OR9ewtt0R1PaTAMSz4PhwSRr_ibrh7MnjZaY5LyE",
       "https://kns.cnki.net/kcms2/article/abstract?v=A2Z-m-A1gcnXcY_kLlgQuBPnjcZFeRwdGkgzLQT_nOKx4mSwqOQ4fHop_9PUuC055oQhA1CqxihAK-JOvAV_eIpxQzudoJtbzGYN5K0xO4DDeVuE4AJVeJTdbg8rhmpqzcfe5XH_xmcjtr75oq9rooAP2olDTzgat2CYGbrVTwFjUx",
-      "https://kns.cnki.net/kcms2/article/abstract?v=A2Z-m-A1gclCO-eQoTQhR8HO8lKvEwvtmW1m4JSkV8yzIu-EWF_rFmn0273JSk_fXHxSAFYo04XEuPn2TUpVuZRFM62iVIEUWUTNM8oXkaXARTpLlgrX8X5h8rLIMmKrX_ZYenxpkl8ROFRJl6e6_fPFDGRWsqMsAknJ3TiKc8sdTQ",
-      "https://kns.cnki.net/kcms2/article/abstract?v=A2Z-m-A1gckzuOZQTWdX1QKTI4Q6J_SSRxO7J9Re3u6MEhiShf3opp46aKjVAwquCix7hxOUWmd-1RRSgeKYj_gN1tlLnPo5MpwXq2xDN1xHCIPGvPTAOe60GRD9-L_91WIGcLtjili2P2B1q8bB-yYDmeuN1JrjUZBckfjFGCY253",
-      "https://kns.cnki.net/kcms2/article/abstract?v=A2Z-m-A1gckzUDxDB-S8I9CbciL2tvvszdzeBSuFN9cFSrnTUMUuUkLgC1s3Fvt2s1u-tmdpgU9788WnBvvSkqrlIK2IGv0K3DzOitrXF5aONSWI-E-nDbtztsw32oTZs6fmFpSQvNdDk8CsuIDswT0UjtP8GGOl0NGQB5cH4TUHzC",
-      "https://kns.cnki.net/kcms2/article/abstract?v=A2Z-m-A1gcnucOhe0QN_LP6CwK5GwE-KKbU2mS0LZxNXUTTZ1AoiIeJApm76EvgrHHvbRNftxBxLLfv6HtuCI9xtsQ_6JNUeUOeSq2Z9t8lt9XX-2QEeZg9lKLvgsgRYgvy11PcjCvMpGD0nXlRyuTMiR-vfpVHRO_DPA0rDCT1-F9"
+      "https://kns.cnki.net/kcms2/article/abstract?v=A2Z-m-A1gclCO-eQoTQhR8HO8lKvEwvtmW1m4JSkV8yzIu-EWF_rFmn0273JSk_fXHxSAFYo04XEuPn2TUpVuZRFM62iVIEUWUTNM8oXkaXARTpLlgrX8X5h8rLIMmKrX_ZYenxpkl8ROFRJl6e6_fPFDGRWsqMsAknJ3TiKc8sdTQ"
     ],
     "idea_papers": [
       {
-        "doi": "https://kns.cnki.net/kcms2/article/abstract?v=A2Z-m-A1gcmdz5b5uU53B_9wIr8o-VrB73ZzzfjywlQ4AfPBGUA4ii0i-h_grWdbOkRzniUGK3U7cdZ7u0sAxVKKsgMLw_hn124SFRRa-LXfXiBd0xJa5EOckIiNobq82bHlG2OR9ewtt0R1PaTAMSz4PhwSRr_ibrh7MnjZaY5LyErZZoMv5g==&uniplatform=NZKPT&language=CHS",
-        "tracking_id": "d71e3e663ba5a5e01a35b25aff8daa1d",
+        "doi": "https://kns.cnki.net/kcms2/article/abstract?v=AlbbYkNP6XuBSxLK4vcdJfL8ibBB6LV90_LTfFCYelkIQJHVBqkWF1JkNiBadJx8dBXRuiL_ev7YrlV9-V9bfvLeDE3meVUwa3GqEkf9wsWyDxk2w1YgCeTbSSFgPZMLQHTlmlVoXvMbth1gND0alx7fWgpSlA8b8BFIebMqdRkC8q",
         "title": "面向极端天气扰动的电力应急物资提升配电网韧性三阶段调配优化模型",
         "title_cn": "面向极端天气扰动的电力应急物资提升配电网韧性三阶段调配优化模型",
         "authors": [
@@ -1329,11 +1332,11 @@
         "abstract": "面向极端天气对交通网-配电网造成的双重扰动,为提升配电网韧性,本文将交通网延误系数纳入配电网韧性评估模型,建立事前-事中-事后动态评估模型;进而,考虑配电网、交通网扰动效应不确定性特征,提出电力应急物资三阶段调配优化模型:事前在成本可控范围内选取最恶劣场景开展储备节点及储备置信优化;事中考虑交通拥堵影响动态调整路径开展紧急配送优化;事后考虑偏差电量开展传统应急资源与分布式电源协同响应优化.算例验证...",
         "abstract_cn": "面向极端天气对交通网-配电网造成的双重扰动,为提升配电网韧性,本文将交通网延误系数纳入配电网韧性评估模型,建立事前-事中-事后动态评估模型;进而,考虑配电网、交通网扰动效应不确定性特征,提出电力应急物资三阶段调配优化模型:事前在成本可控范围内选取最恶劣场景开展储备节点及储备置信优化;事中考虑交通拥堵影响动态调整路径开展紧急配送优化;事后考虑偏差电量开展传统应急资源与分布式电源协同响应优化.算例验证...",
         "tier": 2,
-        "added_date": "2026-04-20"
+        "cited_by": 0,
+        "added_date": "2026-04-21"
       },
       {
-        "doi": "https://kns.cnki.net/kcms2/article/abstract?v=A2Z-m-A1gcnXcY_kLlgQuBPnjcZFeRwdGkgzLQT_nOKx4mSwqOQ4fHop_9PUuC055oQhA1CqxihAK-JOvAV_eIpxQzudoJtbzGYN5K0xO4DDeVuE4AJVeJTdbg8rhmpqzcfe5XH_xmcjtr75oq9rooAP2olDTzgat2CYGbrVTwFjUxRH2Z9Ksw==&uniplatform=NZKPT&language=CHS",
-        "tracking_id": "e396d879d09aa60ee80870fd57aaf915",
+        "doi": "https://kns.cnki.net/kcms2/article/abstract?v=AlbbYkNP6XszYl9QZylsOytVImpocwVmZcLW1LsNStraeNLX7bWWES7xWl_Gs5SETTsf2tJA59YacnFBewKWQE4jnhSiVq0XNgcxFlqdI7yhBMqmXbW3DHREk2T7XTwpsxBeOBmDVaLhh6-ynmnqLsUQu4xzcFLjoIaAooZ5is040o",
         "title": "跨国技术并购高价值创造的组态路径研究",
         "title_cn": "跨国技术并购高价值创造的组态路径研究",
         "authors": [
@@ -1348,11 +1351,11 @@
         "abstract": "中国企业的跨国并购策略已经从资源寻求型转变为技术寻求型，但跨国技术并购实践面临着重大挑战。考虑到现有单因素净效应研究无法揭示跨国技术并购高价值创造的复杂因果机制，本文基于理论视角法和文献归纳法，以22家中国上市企业跨国技术并购为例，采用fsQCA研究方法对跨国技术并购高价值创造对应的组态路径及典型案例进行分析。研究发现：（1）制度距离、企业特征、吸收能力和交易特征都不是跨国技术并购高价值创造的必要...",
         "abstract_cn": "中国企业的跨国并购策略已经从资源寻求型转变为技术寻求型，但跨国技术并购实践面临着重大挑战。考虑到现有单因素净效应研究无法揭示跨国技术并购高价值创造的复杂因果机制，本文基于理论视角法和文献归纳法，以22家中国上市企业跨国技术并购为例，采用fsQCA研究方法对跨国技术并购高价值创造对应的组态路径及典型案例进行分析。研究发现：（1）制度距离、企业特征、吸收能力和交易特征都不是跨国技术并购高价值创造的必要...",
         "tier": 2,
-        "added_date": "2026-04-20"
+        "cited_by": 0,
+        "added_date": "2026-04-21"
       },
       {
-        "doi": "https://kns.cnki.net/kcms2/article/abstract?v=A2Z-m-A1gclCO-eQoTQhR8HO8lKvEwvtmW1m4JSkV8yzIu-EWF_rFmn0273JSk_fXHxSAFYo04XEuPn2TUpVuZRFM62iVIEUWUTNM8oXkaXARTpLlgrX8X5h8rLIMmKrX_ZYenxpkl8ROFRJl6e6_fPFDGRWsqMsAknJ3TiKc8sdTQsIBV0cyA==&uniplatform=NZKPT&language=CHS",
-        "tracking_id": "56a4083dd68d1d69ae0ccc15d6c71529",
+        "doi": "https://kns.cnki.net/kcms2/article/abstract?v=AlbbYkNP6XsT4UntSQ9eOwENY6HBifMAcuuctKA82r88KVtIFvdrAbptqpMbLR4o32dtVzNgrAETX7Vs_APyKnnymIrZOl-V1pJmy7dxkiMCQqHethoX8ElGaJsf1jLHwJwZvJO0y4lsTRaEYsQZ00d1B4TPJ8MGUvDOpHoPY5y7kY",
         "title": "算力部署对企业关键核心技术创新的影响研究——基于知识理论的视角",
         "title_cn": "算力部署对企业关键核心技术创新的影响研究——基于知识理论的视角",
         "authors": [
@@ -1367,7 +1370,8 @@
         "abstract": "在全球数字竞争与技术博弈日趋激烈的背景下，算力作为核心生产力已成为影响企业创新格局的关键变量。本文基于2007—2023年A股上市企业数据，运用固定效应模型实证检验算力部署对企业关键核心技术创新的影响。研究发现：（1）算力部署显著推动了企业关键核心技术创新。（2）算力部署通过推动知识多元化、知识跨界交互与知识重组创造促进企业关键核心技术创新。（3）供应链纵向联动和产学研知识共创发挥正向调节作用。（...",
         "abstract_cn": "在全球数字竞争与技术博弈日趋激烈的背景下，算力作为核心生产力已成为影响企业创新格局的关键变量。本文基于2007—2023年A股上市企业数据，运用固定效应模型实证检验算力部署对企业关键核心技术创新的影响。研究发现：（1）算力部署显著推动了企业关键核心技术创新。（2）算力部署通过推动知识多元化、知识跨界交互与知识重组创造促进企业关键核心技术创新。（3）供应链纵向联动和产学研知识共创发挥正向调节作用。（...",
         "tier": 2,
-        "added_date": "2026-04-20"
+        "cited_by": 0,
+        "added_date": "2026-04-21"
       },
       {
         "doi": "https://kns.cnki.net/kcms2/article/abstract?v=A2Z-m-A1gckzuOZQTWdX1QKTI4Q6J_SSRxO7J9Re3u6MEhiShf3opp46aKjVAwquCix7hxOUWmd-1RRSgeKYj_gN1tlLnPo5MpwXq2xDN1xHCIPGvPTAOe60GRD9-L_91WIGcLtjili2P2B1q8bB-yYDmeuN1JrjUZBckfjFGCY253-H9BtonQ==&uniplatform=NZKPT&language=CHS",
