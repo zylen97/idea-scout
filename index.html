@@ -872,7 +872,7 @@ const seededDeleted = new Set(JSON.parse(localStorage.getItem('is_deleted_dois')
 if (REMOTE_DELETED) for (const d of REMOTE_DELETED) seededDeleted.add(d);
 
 const state = {
-  source: 'ft50',        // ft50 | cepm | cnki
+  source: 'cnki',        // ft50 | cepm | cnki
   status: 'pending',     // pending | idea
   selectedJournal: 'all',
   dateRange: 'all',
