@@ -153,9 +153,9 @@
   .pv h2 mark,.pv .en mark,.pv-sect p mark{background:var(--highlight);color:var(--ink);padding:0 2px;border-radius:2px}
   .pv .en{margin:6px 0 0;font-size:12px;font-style:italic;color:var(--ink-3);line-height:1.5}
   .pv-authors{margin:10px 0 0;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink-2);line-height:1.6}
-  .pv-scroll{flex:1;min-height:0;overflow-y:auto}
-  .pv-kv{padding:10px 16px;border-bottom:1px solid var(--line-2);display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;font-size:11px}
-  .pv-kv .row{display:flex;gap:8px;align-items:baseline}
+  .pv-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden}
+  .pv-kv{padding:10px 16px;border-bottom:1px solid var(--line-2);display:grid;grid-template-columns:1fr;gap:6px 14px;font-size:11px}
+  .pv-kv .row{display:flex;gap:8px;align-items:baseline;min-width:0}
   .pv-kv .k{font-family:"JetBrains Mono",monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);width:54px}
   .pv-kv .v{color:var(--ink-2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .pv-kv .v.mono{font-family:"JetBrains Mono",monospace;font-size:10.5px}
