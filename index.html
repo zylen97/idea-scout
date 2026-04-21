@@ -760,6 +760,11 @@ window.ISSync = (function(){
       for (const [doi, date] of exDel) {
         if (!dbDois.has(doi) && state.deletedDois.has(doi)) deleted.push({ id:doi, date });
       }
+      // Preserve historical read_dois for papers aged out of current scan window
+      const readSet = new Set(read);
+      for (const d of (existing.read_dois || [])) {
+        if (!dbDois.has(d) && !readSet.has(d)) read.push(d);
+      }
       out[src] = {
         deleted_dois: deleted,
         read_dois: read,
@@ -1374,9 +1379,7 @@ function renderPreview(){
       <div class="pv-scroll">
         <div class="pv-kv">
           <div class="row"><span class="k">Journal</span><span class="v" title="${escapeHtml(p.jid+' · '+jName)}">${escapeHtml(jName)}</span></div>
-          <div class="row"><span class="k">JID</span><span class="v mono">${escapeHtml(p.jid)}</span></div>
           <div class="row"><span class="k">DOI</span><span class="v mono"><a href="#" id="pvDoi" title="${escapeHtml(p.doiUrl||p.doi)}">${escapeHtml(p.doi.length>38 ? p.doi.slice(0,36)+'…' : p.doi)}</a></span></div>
-          <div class="row"><span class="k">Scan</span><span class="v mono">${p.scanDate}</span></div>
         </div>
         <div class="pv-sect ${state.lang==='cn'?'serif':''}">
           <h5>
@@ -1749,18 +1752,25 @@ function openStats(){
   const sources = ['ft50','cepm','cnki'];
   const raw = window.ISSync.raw || {};
 
-  // ── Summary: Reviewed = deleted + current_idea; Idea = max(idea_ever_count, current)
+  // ── Summary: Reviewed = lifetime |read ∪ deleted ∪ idea| (union of every paper user touched)
+  //            Idea = max(idea_ever_count, current)
+  const cleanDoi = d => (d||'').replace(/^https?:\/\/(dx\.)?doi\.org\//,'').slice(0,220);
   const reviewed = {}, idea = {};
   for (const src of sources) {
     const ps = DB[src] || [];
     const curIdea = ps.filter(p => p.idea).length;
     const st = raw[src] || {};
-    // Deleted count: live state.deletedDois ∩ current-source papers + aged-out historical.
-    const liveDeleted = ps.filter(p => state.deletedDois.has(p.doi)).length;
-    const historicalDeleted = (st.deleted_dois || []).filter(d => !ps.some(p => p.doi === d.id)).length;
-    const deleted = liveDeleted + historicalDeleted;
+    const union = new Set();
+    for (const d of (st.read_dois || []))    union.add(cleanDoi(d));
+    for (const d of (st.deleted_dois || [])) union.add(cleanDoi(d.id || d));
+    for (const x of (st.idea_papers || []))  union.add(cleanDoi(x.doi));
+    // Include any in-memory state not yet flushed (live edits since last sync).
+    for (const p of ps) {
+      if (p.read || p.idea) union.add(p.doi);
+    }
+    for (const doi of state.deletedDois) union.add(cleanDoi(doi));
     const ever = state.ideaEver[src] || 0;
-    reviewed[src] = deleted + curIdea;
+    reviewed[src] = union.size;
     idea[src] = Math.max(ever, curIdea);
   }
   const tReviewed = sources.reduce((s,k)=>s+reviewed[k],0);
@@ -1786,7 +1796,7 @@ function openStats(){
       </tr>
     </tbody>`;
   $('#statsTable').innerHTML = html;
-  $('#statsTotal').innerHTML = `<span class="mono">Reviewed = deleted + current idea · Idea = lifetime cumulative (from idea_ever_count)</span>`;
+  $('#statsTotal').innerHTML = `<span class="mono">Reviewed = lifetime |read ∪ deleted ∪ idea| · Idea = lifetime cumulative (from idea_ever_count)</span>`;
 
   // ── Monthly bar chart: deletions + idea adds, grouped by YYYY-MM per source
   const monthly = new Map();   // month → { ft50, cepm, cnki }
