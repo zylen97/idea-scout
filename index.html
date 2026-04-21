@@ -411,13 +411,40 @@
     <span><span class="kbd">↑↓</span> move</span>
     <span><span class="kbd">Space</span> select</span>
     <span><span class="kbd">F</span> idea</span>
-    <span><span class="kbd">D</span> delete</span>
+    <span id="kbdDelete"><span class="kbd">D</span> delete</span>
+    <span><span class="kbd">?</span> help</span>
     <div class="right">
       <a href="https://zylen97.github.io/idea-scout/privacy.html" style="color:var(--ink-3);text-decoration:none" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--ink-3)'">Privacy Policy</a>
       <span class="sep">·</span>
       <span id="syncStatus" class="warn">not synced</span>
     </div>
   </footer>
+</div>
+
+<div class="modal-wrap" id="helpWrap">
+  <div class="modal" style="width:440px">
+    <div class="m-head"><h3>Keyboard Shortcuts</h3><button class="x" id="helpClose">×</button></div>
+    <div class="m-body" style="padding:4px 18px 18px">
+      <table style="width:100%;font-size:12.5px;border-collapse:collapse">
+        <tbody>
+          <tr><td style="padding:6px 0;color:var(--ink-3)">Navigate</td><td style="text-align:right"><span class="kbd">↑</span> <span class="kbd">↓</span></td></tr>
+          <tr><td style="padding:6px 0;color:var(--ink-3)">Select (multi)</td><td style="text-align:right"><span class="kbd">Space</span></td></tr>
+          <tr><td style="padding:6px 0;color:var(--ink-3)">Open DOI</td><td style="text-align:right"><span class="kbd">Enter</span> / <span class="kbd">O</span></td></tr>
+          <tr><td style="padding:6px 0;color:var(--ink-3)">Add to / remove from Idea</td><td style="text-align:right"><span class="kbd">F</span></td></tr>
+          <tr><td style="padding:6px 0;color:var(--ink-3)">Delete (pending only)</td><td style="text-align:right"><span class="kbd">D</span></td></tr>
+          <tr><td style="padding:6px 0;color:var(--ink-3)">Export RIS (idea only)</td><td style="text-align:right"><span class="kbd">E</span></td></tr>
+          <tr><td style="padding:6px 0;color:var(--ink-3)">Switch pending / idea</td><td style="text-align:right"><span class="kbd">Tab</span></td></tr>
+          <tr><td style="padding:6px 0;color:var(--ink-3)">Switch source</td><td style="text-align:right"><span class="kbd">1</span> CNKI · <span class="kbd">2</span> CE/PM · <span class="kbd">3</span> FT50</td></tr>
+          <tr><td style="padding:6px 0;color:var(--ink-3)">Command palette</td><td style="text-align:right"><span class="kbd">⌘K</span></td></tr>
+          <tr><td style="padding:6px 0;color:var(--ink-3)">Search</td><td style="text-align:right"><span class="kbd">⌘F</span></td></tr>
+          <tr><td style="padding:6px 0;color:var(--ink-3)">Close modal / blur</td><td style="text-align:right"><span class="kbd">Esc</span></td></tr>
+          <tr><td style="padding:6px 0;color:var(--ink-3)">This help</td><td style="text-align:right"><span class="kbd">?</span></td></tr>
+        </tbody>
+      </table>
+      <p style="margin:14px 0 0;font-size:11px;color:var(--ink-4);line-height:1.55"><b>Tip:</b> with Space-selected papers, <span class="kbd">F</span> bulk-adds to Idea and <span class="kbd">D</span> bulk-deletes.</p>
+    </div>
+    <div class="m-foot"><button class="btn primary" id="helpClose2">Close</button></div>
+  </div>
 </div>
 
 <div class="modal-wrap" id="cmdkWrap">
@@ -1686,6 +1713,8 @@ function wireTopbar(){
 
   $('#openCmdk').addEventListener('click', openCmdk);
   $('#statsClose').addEventListener('click', () => $('#statsWrap').classList.remove('show'));
+  $('#helpClose').addEventListener('click', () => $('#helpWrap').classList.remove('show'));
+  $('#helpClose2').addEventListener('click', () => $('#helpWrap').classList.remove('show'));
 
   // modal backdrop close
   $$('.modal-wrap').forEach(w => w.addEventListener('click', e => {
@@ -1919,7 +1948,8 @@ function onKey(e){
   else if (e.key===' ') { e.preventDefault(); toggleSelectCursor(); }
   else if (e.key==='f' || e.key==='F') { e.preventDefault(); state.selected.size>0 ? ideaSelected() : toggleIdea(); }
   else if (e.key==='d' || e.key==='D') { e.preventDefault(); if (state.status==='pending') state.selected.size>0 ? deleteSelected() : deleteCursor(); }
-  else if (e.key==='o' || e.key==='O') { e.preventDefault(); openDoi(); }
+  else if (e.key==='o' || e.key==='O' || e.key==='Enter') { e.preventDefault(); openDoi(); }
+  else if (e.key==='?' || (e.shiftKey && e.key==='/')) { e.preventDefault(); $('#helpWrap').classList.toggle('show'); }
   else if (e.key==='e' || e.key==='E') {
     e.preventDefault();
     if (state.status==='idea') {
@@ -1961,6 +1991,7 @@ function renderAll(){
   renderSidebar();
   renderHeaders();
   renderTable();
+  const kd = $('#kbdDelete'); if (kd) kd.style.display = state.status==='pending' ? '' : 'none';
 }
 
 function renderScanBar(){
