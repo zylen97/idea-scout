@@ -210,15 +210,16 @@
   .stats-chart .sub{font-size:11px;color:var(--ink-4);margin-bottom:14px}
   .stats-chart .legend{display:flex;gap:12px;margin-bottom:12px;font-size:11px;color:var(--ink-2)}
   .stats-chart .legend .sw{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:4px;vertical-align:middle}
-  .stats-chart .bars{display:flex;gap:10px;align-items:flex-end;height:160px;padding:0 4px;border-bottom:1px solid var(--line);margin-bottom:6px}
-  .stats-chart .bar-col{flex:1;min-width:22px;display:flex;flex-direction:column;justify-content:flex-end;gap:1px;position:relative}
+  .stats-chart .scroll{overflow-x:auto;overflow-y:visible;padding-top:18px;margin-top:-18px}
+  .stats-chart .bars{display:flex;gap:10px;align-items:flex-end;height:160px;padding:0 4px;border-bottom:1px solid var(--line);margin-bottom:6px;min-width:max-content}
+  .stats-chart .bar-col{flex:1;min-width:32px;display:flex;flex-direction:column;justify-content:flex-end;gap:1px;position:relative}
   .stats-chart .bar-col .seg{width:100%;background:var(--ink);transition:opacity .15s}
   .stats-chart .bar-col .seg.ft50{background:#B08A5E}
   .stats-chart .bar-col .seg.cepm{background:#2E7D6F}
   .stats-chart .bar-col .seg.cnki{background:#C25B3F}
   .stats-chart .bar-col:hover .seg{opacity:.85}
   .stats-chart .bar-col .total{position:absolute;top:-16px;left:0;right:0;text-align:center;font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--ink-2);font-weight:600}
-  .stats-chart .x-labels{display:flex;gap:10px;padding:0 4px}
+  .stats-chart .x-labels{display:flex;gap:10px;padding:0 4px;min-width:max-content}
   .stats-chart .x-labels .lab{flex:1;text-align:center;font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--ink-3);min-width:22px}
   .stats-chart .empty{text-align:center;color:var(--ink-4);padding:24px 0;font-size:12px}
   #statsWrap .modal{width:640px}
@@ -1818,8 +1819,10 @@ function openStats(){
         <span><span class="sw" style="background:#2E7D6F"></span>CE/PM</span>
         <span><span class="sw" style="background:#C25B3F"></span>CNKI</span>
       </div>
-      <div class="bars">${bars}</div>
-      <div class="x-labels">${labels}</div>`;
+      <div class="scroll">
+        <div class="bars">${bars}</div>
+        <div class="x-labels">${labels}</div>
+      </div>`;
   }
   $('#statsChart').innerHTML = `
     <div class="title">Monthly activity</div>
