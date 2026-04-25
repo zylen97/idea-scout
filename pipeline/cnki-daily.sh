@@ -1,14 +1,14 @@
 #!/bin/bash
 # Journal Scout — CNKI Daily Pipeline
-# 由 launchd 触发，通过 CNKI RSS 抓取
+# 由 Codex Automation 触发，通过 CNKI RSS 抓取
 
 REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 PIPELINE_DIR="$REPO_DIR/pipeline"
 LOCAL_CONFIG="$REPO_DIR/config/local.sh"
 [ -f "$LOCAL_CONFIG" ] && source "$LOCAL_CONFIG"
 
-# ── 文件锁（防止睡眠唤醒后多脚本同时操作 git） ──
-LOCKDIR="/tmp/idea_scout_git.lock"
+# ── 文件锁（防止睡眠唤醒后多脚本同时写 data/） ──
+LOCKDIR="/tmp/idea_scout_pipeline.lock"
 LOCK_WAIT=0
 while ! mkdir "$LOCKDIR" 2>/dev/null; do
     # 防腐：锁超过 10 分钟视为残留，强制清除
@@ -30,12 +30,24 @@ LOG_DIR="${LOG_DIR:-$REPO_DIR/logs}"
 mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/cnki-$(date +%Y%m%d-%H%M%S).log"
 TODAY=$(date +%Y-%m-%d)
+DASHBOARD_URL="${DASHBOARD_URL:-http://127.0.0.1:5174}"
 
 # 设置 PATH
 export PATH="$HOME/anaconda3/bin:$HOME/.local/bin:$HOME/develop/flutter/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 
-# 加载配置（CNKI 不需要翻译 API，只用 SMTP 发邮件）
-source "${EMAIL_CONFIG_PATH:?EMAIL_CONFIG_PATH not set}"
+# 加载本地配置（可选：用于 EMAIL_TO）
+if [ -n "${EMAIL_CONFIG_PATH:-}" ]; then
+    if [ ! -f "$EMAIL_CONFIG_PATH" ]; then
+        echo "ERROR: EMAIL_CONFIG_PATH does not exist: $EMAIL_CONFIG_PATH" >> "$LOG_FILE"
+        exit 1
+    fi
+    source "$EMAIL_CONFIG_PATH"
+fi
+if [ -n "${IDEA_SCOUT_EMAIL_TO:-}" ]; then
+    EMAIL_TO="$IDEA_SCOUT_EMAIL_TO"
+    CNKI_EMAIL_TO="$IDEA_SCOUT_EMAIL_TO"
+fi
+export EMAIL_TO CNKI_EMAIL_TO
 
 echo "=== CNKI Daily Scan ===" >> "$LOG_FILE"
 echo "Started: $(date)" >> "$LOG_FILE"
@@ -43,14 +55,9 @@ echo "Started: $(date)" >> "$LOG_FILE"
 # cd 到 repo 根目录（pipeline 和 data/ 在同一 repo）
 cd "$REPO_DIR" || exit 1
 
-# ── 同步 App 端最新 user_state（App 通过 GitHub API 写入 main） ──
-# 必须在扫描前 pull，否则扫描产生的未提交文件会导致 rebase 失败
-perl -e 'alarm 60; exec @ARGV' git pull --rebase origin main --quiet >> "$LOG_FILE" 2>&1 || {
-    echo "WARN: git pull --rebase failed, falling back to merge" >> "$LOG_FILE"
-    git rebase --abort 2>/dev/null
-    perl -e 'alarm 60; exec @ARGV' git pull origin main --quiet >> "$LOG_FILE" 2>&1 || true
-}
-cp data/user_state.json /tmp/idea_scout_user_state.json 2>/dev/null
+# ── 本地正本：Dashboard 直接写 data/user_state.json ──
+rm -f /tmp/idea_scout_user_state.json
+cp data/user_state.json /tmp/idea_scout_user_state.json 2>/dev/null || true
 
 # ── 扫描（CNKI RSS，失败过半则重试一次） ──
 run_cnki_scan() {
@@ -76,25 +83,10 @@ if [ "$JOURNAL_COUNT" -lt 20 ]; then
     EXIT_CODE=${PIPESTATUS[0]:-$?}
     echo "Retry scan finished: $(date), exit code: $EXIT_CODE" >> "$LOG_FILE"
 
-    # 重试后仍不足，发邮件提醒手动重跑
     RETRY_COUNT=$(echo "$SCAN_OUTPUT" | sed -n 's/.*from \([0-9]*\) journals.*/\1/p' | tail -1)
     RETRY_COUNT=${RETRY_COUNT:-0}
     if [ "$RETRY_COUNT" -lt 20 ]; then
-        echo "NOTIFY: retry still only $RETRY_COUNT journals, sending alert email" >> "$LOG_FILE"
-        export SMTP_SERVER SMTP_PORT SMTP_USER SMTP_PASS
-        python3 -c "
-import smtplib
-from email.mime.text import MIMEText
-import os
-msg = MIMEText('CNKI scan failed after two attempts (journals succeeded: ${JOURNAL_COUNT} then ${RETRY_COUNT}/44). This may be caused by network issues.\n\nPlease re-run the pipeline manually.\n\nLog: ${LOG_FILE}', 'plain', 'utf-8')
-msg['Subject'] = 'CNKI Scout scan failed - manual re-run required'
-msg['From'] = os.environ['SMTP_USER']
-msg['To'] = os.environ['SMTP_USER']
-with smtplib.SMTP_SSL(os.environ['SMTP_SERVER'], int(os.environ['SMTP_PORT'])) as s:
-    s.login(os.environ['SMTP_USER'], os.environ['SMTP_PASS'])
-    s.send_message(msg)
-print('Alert email sent')
-" >> "$LOG_FILE" 2>&1 || echo "Alert email failed" >> "$LOG_FILE"
+        echo "WARN: retry still only $RETRY_COUNT journals; Codex Automation should send any Gmail alert" >> "$LOG_FILE"
     fi
 fi
 
@@ -183,65 +175,30 @@ print(len(new))
 " 2>/dev/null || echo "0")
 echo "New papers (after dedup): $NEW_COUNT" >> "$LOG_FILE"
 
-# ── 邮件推送 ──
-export SMTP_SERVER SMTP_PORT SMTP_USER SMTP_PASS
+# ── 日报导出（由 Codex Automation 调用 Gmail 插件发送） ──
+DIGEST_OUTPUT_DIR="${DIGEST_OUTPUT_DIR:-$LOG_DIR/digests}"
+mkdir -p "$DIGEST_OUTPUT_DIR"
 export EMAIL_TO="${CNKI_EMAIL_TO:-$EMAIL_TO}"
+export DIGEST_OUTPUT_DIR
 
-python3 "$PIPELINE_DIR/email/cnki_sender.py" \
+if ! python3 "$PIPELINE_DIR/email/cnki_sender.py" \
     "data/cnki_latest.json" \
     "$TODAY" \
     "data/cnki_seen_titles.json" \
-    >> "$LOG_FILE" 2>&1 || echo "Email sending failed" >> "$LOG_FILE"
+    --output-dir "$DIGEST_OUTPUT_DIR" \
+    >> "$LOG_FILE" 2>&1; then
+    echo "Digest export failed" >> "$LOG_FILE"
+    exit 1
+fi
 
 # ── 通知 + 打开 App（仅有新论文时） ──
 if [ "$NEW_COUNT" -gt 0 ] 2>/dev/null; then
     osascript -e "display notification \"CNKI: ${NEW_COUNT} 篇新论文\" with title \"CNKI Scout\" subtitle \"$TODAY\" sound name \"Glass\""
-    [ -n "${APP_URL:-}" ] && open "$APP_URL"
+    [ -n "${DASHBOARD_URL:-}" ] && open "$DASHBOARD_URL"
 fi
 
-# ── 推送到 GitHub + 部署 gh-pages（带超时保护） ──
-git add data/cnki_latest.json data/cnki_papers.json data/cnki_seen_titles.json
-git commit -m "cnki: $TODAY" 2>> "$LOG_FILE"
-
-PUSH_OK=0
-for _attempt in 1 2 3; do
-    perl -e 'alarm 60; exec @ARGV' git push origin main >> "$LOG_FILE" 2>&1 && { PUSH_OK=1; break; }
-    sleep 5
-done
-if [ $PUSH_OK -eq 0 ]; then
-    echo "ERROR: git push main failed after 3 attempts" >> "$LOG_FILE"
-    osascript -e 'display notification "git push main 超时/失败，数据未同步" with title "CNKI Scout" subtitle "Push Failed" sound name "Basso"'
-fi
-
-# 部署到 gh-pages
-mkdir -p /tmp/idea_scout_all_data
-cp data/*.json /tmp/idea_scout_all_data/
-if ! git checkout gh-pages >> "$LOG_FILE" 2>&1; then
-    echo "ERROR: git checkout gh-pages failed, skipping deploy" >> "$LOG_FILE"
-    rm -rf /tmp/idea_scout_all_data
-    echo "GitHub push done (gh-pages skipped)" >> "$LOG_FILE"
-    find "$LOG_DIR" -name "cnki-*.log" -mtime +30 -delete 2>/dev/null
-    echo "Done: $(date)" >> "$LOG_FILE"
-    exit 0
-fi
-cp /tmp/idea_scout_all_data/*.json data/
-git add data/
-git commit -m "data: cnki $TODAY" 2>> "$LOG_FILE"
-
-PUSH_OK=0
-for _attempt in 1 2 3; do
-    perl -e 'alarm 60; exec @ARGV' git push origin gh-pages >> "$LOG_FILE" 2>&1 && { PUSH_OK=1; break; }
-    sleep 5
-done
-if [ $PUSH_OK -eq 0 ]; then
-    echo "ERROR: git push gh-pages failed after 3 attempts" >> "$LOG_FILE"
-    osascript -e 'display notification "gh-pages push 超时/失败，App 未更新" with title "CNKI Scout" subtitle "Push Failed" sound name "Basso"'
-fi
-
-git checkout main 2>> "$LOG_FILE"
-rm -rf /tmp/idea_scout_all_data
-
-echo "GitHub push done" >> "$LOG_FILE"
+# ── 本地模式：不提交 main，不部署 gh-pages ──
+echo "Local-only mode: skipped git commit/push and gh-pages deploy" >> "$LOG_FILE"
 
 # 清理 30 天前的旧日志
 find "$LOG_DIR" -name "cnki-*.log" -mtime +30 -delete 2>/dev/null

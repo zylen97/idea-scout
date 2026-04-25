@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
-"""CNKI Scout digest email: load papers from cnki_latest.json, group by journal, send HTML email."""
+"""CNKI Scout digest exporter: load papers and write HTML/manifest for Codex Gmail delivery."""
 
-import json, sys, os, smtplib, random, base64, time
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import argparse
+import json
+import os
+import random
+import sys
 from datetime import date
 
-GMAIL_TOKEN_PATH = os.environ.get('GMAIL_TOKEN_PATH', os.path.join(os.path.dirname(__file__), 'gmail_token.json'))
-SENDER_NAME = os.environ.get('SENDER_NAME', 'Journal Scout')
+from export_utils import recipients_from_env, write_digest
 
 
 def load_new_papers(latest_path, seen_path):
     """加载论文，去掉已推送的（按标题去重，因为中文论文大多没有 DOI）"""
     with open(latest_path, 'r') as f:
         papers = json.load(f)
+    if isinstance(papers, dict) and 'papers' in papers:
+        papers = papers['papers']
 
     seen_titles = set()
     try:
@@ -215,104 +218,74 @@ def build_email_html(papers, scan_date):
     return html, total, journal_count
 
 
-def send_email_api(recipients, subject, html_body):
-    """Gmail API via HTTPS（主力）"""
-    import requests
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('latest_path')
+    parser.add_argument('scan_date')
+    parser.add_argument('seen_path', nargs='?', default='data/cnki_seen_titles.json')
+    parser.add_argument('--output-dir', default=os.environ.get('DIGEST_OUTPUT_DIR', 'logs/digests'))
+    args = parser.parse_args()
 
-    with open(GMAIL_TOKEN_PATH) as f:
-        token = json.load(f)
+    latest_path = os.path.abspath(args.latest_path)
+    seen_path = os.path.abspath(args.seen_path)
+    output_dir = os.path.abspath(args.output_dir)
+    mark_sent_script = os.path.abspath(os.path.join(os.path.dirname(__file__), 'mark_sent.py'))
+    recipients = recipients_from_env('EMAIL_TO')
 
-    resp = requests.post(token['token_uri'], data={
-        'client_id': token['client_id'],
-        'client_secret': token['client_secret'],
-        'refresh_token': token['refresh_token'],
-        'grant_type': 'refresh_token'
-    }, timeout=15)
-    resp.raise_for_status()
-    access_token = resp.json()['access_token']
+    papers, _seen_titles = load_new_papers(latest_path, seen_path)
 
-    msg = MIMEMultipart('alternative')
-    msg['Subject'] = subject
-    msg['From'] = f'{SENDER_NAME} <{os.environ.get("SMTP_USER", "noreply@example.com")}>'
-    msg['Bcc'] = ', '.join(recipients)
-    msg.attach(MIMEText(html_body, 'html', 'utf-8'))
+    if not papers:
+        exported = write_digest(output_dir, 'cnki', {
+            'send': False,
+            'reason': 'No new papers after seen-file deduplication.',
+            'source_label': 'CNKI Scout',
+            'subject': '',
+            'to': recipients,
+            'body_format': 'html',
+            'latest_path': latest_path,
+            'seen_path': seen_path,
+            'seen_ids': [],
+            'dedupe_key': 'title',
+            'papers_count': 0,
+            'journals_count': 0,
+            'scan_date': args.scan_date,
+            'mark_sent_script': mark_sent_script,
+        }, None)
+        print(f'No new papers; digest manifest exported: {exported["latest_manifest_path"]}')
+        return 0
 
-    raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
+    today = date.today().strftime('%Y-%m-%d')
+    html_body, total, jcount = build_email_html(papers, args.scan_date)
+    subject = f'CNKI Scout {today} - {total}篇中文新论文'
+    seen_ids = sorted({p['title'] for p in papers if p.get('title')})
+    can_send = bool(recipients)
+    reason = 'Ready for Codex Gmail plugin delivery.' if can_send else 'EMAIL_TO is empty; cannot send.'
 
-    resp = requests.post(
-        'https://gmail.googleapis.com/gmail/v1/users/me/messages/send',
-        headers={'Authorization': f'Bearer {access_token}'},
-        json={'raw': raw},
-        timeout=30
-    )
-    resp.raise_for_status()
+    exported = write_digest(output_dir, 'cnki', {
+        'send': can_send,
+        'reason': reason,
+        'source_label': 'CNKI Scout',
+        'subject': subject,
+        'to': recipients,
+        'body_format': 'html',
+        'latest_path': latest_path,
+        'seen_path': seen_path,
+        'seen_ids': seen_ids,
+        'dedupe_key': 'title',
+        'papers_count': total,
+        'journals_count': jcount,
+        'scan_date': args.scan_date,
+        'mark_sent_script': mark_sent_script,
+    }, html_body)
 
-
-def send_email_smtp(smtp_server, smtp_port, smtp_user, smtp_pass, recipients, subject, html_body):
-    """Gmail SMTP（fallback）"""
-    msg = MIMEMultipart('alternative')
-    msg['Subject'] = subject
-    msg['From'] = f'{SENDER_NAME} <{smtp_user}>'
-    msg['Bcc'] = ', '.join(recipients)
-    msg.attach(MIMEText(html_body, 'html', 'utf-8'))
-
-    for attempt in range(3):
-        try:
-            if smtp_port == 465:
-                with smtplib.SMTP_SSL(smtp_server, smtp_port, timeout=30) as server:
-                    server.login(smtp_user, smtp_pass)
-                    server.sendmail(smtp_user, recipients, msg.as_string())
-            else:
-                with smtplib.SMTP(smtp_server, smtp_port, timeout=30) as server:
-                    server.starttls()
-                    server.login(smtp_user, smtp_pass)
-                    server.sendmail(smtp_user, recipients, msg.as_string())
-            return
-        except (TimeoutError, OSError) as e:
-            if attempt < 2:
-                time.sleep(10)
-            else:
-                raise
+    print(f'Digest exported: {exported["latest_manifest_path"]}')
+    print(f'HTML body: {exported["latest_html_path"]}')
+    print(f'Mark sent after Gmail delivery: {exported["mark_sent_command"]}')
+    if not can_send:
+        print('EMAIL_TO is empty; Codex Gmail delivery cannot proceed.', file=sys.stderr)
+        return 1
+    return 0
 
 
 if __name__ == '__main__':
-    latest_path = sys.argv[1]
-    scan_date = sys.argv[2]
-    seen_path = sys.argv[3] if len(sys.argv) > 3 else 'data/cnki_seen_titles.json'
-
-    smtp_server = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
-    smtp_port = int(os.environ.get('SMTP_PORT', '465'))
-    smtp_user = os.environ['SMTP_USER']
-    smtp_pass = os.environ['SMTP_PASS']
-    recipients = os.environ['EMAIL_TO'].split(',')
-
-    papers, seen_titles = load_new_papers(latest_path, seen_path)
-
-    if not papers:
-        print('No new papers, skipping email')
-        sys.exit(0)
-
-    today = date.today().strftime('%Y-%m-%d')
-    html_body, total, jcount = build_email_html(papers, scan_date)
-    subject = f'CNKI Scout {today} - {total}篇中文新论文'
-
-    # 主力：Gmail API（HTTPS），fallback：SMTP
-    sent = False
-    if os.path.exists(GMAIL_TOKEN_PATH):
-        try:
-            send_email_api(recipients, subject, html_body)
-            print(f'[Gmail API] ', end='')
-            sent = True
-        except Exception as e:
-            print(f'Gmail API failed ({e}), falling back to SMTP...', file=sys.stderr)
-
-    if not sent:
-        send_email_smtp(smtp_server, smtp_port, smtp_user, smtp_pass, recipients, subject, html_body)
-        print(f'[SMTP] ', end='')
-
-    # 成功后更新 seen_titles
-    all_titles = seen_titles | {p['title'] for p in papers if p.get('title')}
-    with open(seen_path, 'w') as f:
-        json.dump(sorted(all_titles), f, ensure_ascii=False)
-
-    print(f'Email sent to {", ".join(recipients)}: {total} new papers (cnki)')
+    raise SystemExit(main())

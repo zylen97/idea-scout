@@ -1,29 +1,31 @@
 # Idea Scout
 
-Personal academic paper radar — automated daily scanning of 80 journals + a static-HTML web workbench for browsing and curating papers across devices.
+Personal academic paper radar — automated daily scanning of 80 journals, now used as a local data pipeline for Academic OS Dashboard.
 
-**Live App**: https://zylen97.github.io/idea-scout/
+**Local Dashboard**: http://127.0.0.1:5174
 
 ## Architecture
 
 ```
-Daily Pipelines (launchd)               Web Workbench (single index.html)
+Daily Pipelines (Codex Automation)      Academic OS Dashboard
 ━━━━━━━━━━━━━━━━━━━━━━━━━              ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
                                                   ┌─────────────┐
 09:00  FT50 (25 journals)  ─┐                     │ Browser     │
   OpenAlex + LLM translation │                    │  · fetch    │
-                             ├→ data/*.json   ←──→│    data/*   │
-09:10  CE/PM (12 journals) ─┤    git push         │  · PUT      │
-  OpenAlex + LLM translation │    gh-pages        │   user_state│
-                             │                    │   via PAT   │
+                             ├→ data/*.json   ←──→│    local API│
+09:10  CE/PM (12 journals) ─┤                     │  · writes   │
+  OpenAlex + LLM translation │                    │   user_state│
+                             │                    │   locally   │
 09:20  CNKI (43 journals)  ─┘                     └─────────────┘
+09:30+ Catch-up check      ─────→ missed source? run + send
 
-Each pipeline → HTML email digest (Gmail API / SMTP)
+Each pipeline → HTML + JSON digest manifest → Codex Gmail plugin
 ```
 
-- **Pipelines** (in `pipeline/`) = data fetching + LLM translation + email delivery
-- **Frontend** (`index.html` at repo root) = single static HTML file, no build step
-- **Sync** = the page reads `data/*.json` and writes user state back via the GitHub Contents API (last-write-wins across devices)
+- **Pipelines** (in `pipeline/`) = data fetching + LLM translation + digest export
+- **Email delivery** = Codex Automation reads `logs/digests/*-latest.json`, sends via Codex Gmail plugin, then marks seen IDs
+- **Frontend** = Academic OS Dashboard reads local `data/*.json`
+- **Sync** = Dashboard writes local `data/user_state.json`; GitHub token / GitHub Pages sync is retired
 
 ## Pipelines
 
@@ -50,7 +52,7 @@ Chinese core journals. Source: CNKI RSS. Categorized as **管理A / 管理B1 / �
 - **Bilingual** — pre-translated EN/中 titles + abstracts, toggle in preview
 - **Filter & sort** — by journal, tier/category, date range, keyword
 - **Curate** — `I` to mark idea, `D` to delete, `Space` to multi-select, `E` to export RIS
-- **Cross-device sync** — paste a GitHub PAT once (⚙ icon), every action debounce-syncs to `data/user_state.json` (1.5s)
+- **Local sync** — Dashboard writes every curation action to local `data/user_state.json`
 - **Lifetime stats** — monthly stacked bar chart of review activity
 - **Mobile** — sidebar collapses into drawer, preview into bottom sheet
 
@@ -58,24 +60,58 @@ Chinese core journals. Source: CNKI RSS. Categorized as **管理A / 管理B1 / �
 
 Each pipeline follows the same pattern:
 
-1. **Acquire lock** — File lock prevents concurrent git operations
-2. **Sync state** — `git pull` to get user's curated selections from other devices
+1. **Acquire lock** — File lock prevents concurrent writes to `data/`
+2. **Snapshot state** — copy local `data/user_state.json` so deleted / Idea papers stay filtered
 3. **Scan journals** — Fetch new papers via OpenAlex API or CNKI RSS
 4. **Translate** — Batch translate titles and abstracts (50 concurrent threads)
 5. **Merge & deduplicate** — Filter user-deleted papers, apply time cutoff
-6. **Email digest** — Send HTML email via Gmail API (primary) or SMTP (fallback)
-7. **Push to GitHub** — Commit data to main + deploy `data/*.json` to `gh-pages` (HTML stays put)
-8. **Desktop notification** — macOS notification with paper count
+6. **Digest export** — Write HTML body + JSON manifest to `logs/digests/`
+7. **Desktop notification** — macOS notification with paper count and optional local Dashboard open
+
+The pipeline does not commit, push `main`, or deploy `gh-pages`.
+
+## Codex Gmail Delivery
+
+The shell pipeline does **not** send email directly. It exports a manifest:
+
+```bash
+logs/digests/ft50-latest.json
+logs/digests/cepm-latest.json
+logs/digests/cnki-latest.json
+```
+
+Codex Automation should:
+
+1. Run the corresponding daily pipeline.
+2. Read the latest manifest.
+3. If `send` is `true`, read `html_path` and send it with the Codex Gmail plugin using `subject` and `to`.
+4. After Gmail returns success, run `mark_sent_command` from the manifest.
+
+This keeps `seen_dois.json` / `cnki_seen_titles.json` unchanged unless Gmail delivery actually succeeds.
+
+### Missed-Run Catch-Up
+
+If the Mac is asleep at the exact daily time, the catch-up automation runs a lightweight hourly check after 09:30:
+
+```bash
+python3 pipeline/catchup_status.py --grace-minutes 30
+```
+
+It reports each source as:
+
+- `not_due` — the grace window has not opened yet
+- `complete` — today's digest is already generated and sent, or no new papers were found
+- `needs_run` — today's pipeline did not run yet
+- `needs_send` — today's digest exists but Gmail delivery was not marked complete
+- `blocked` — configuration is incomplete, for example no recipients
+
+The catch-up automation only runs missing work. It sends via the Codex Gmail plugin and runs `mark_sent_command` only after Gmail returns success.
 
 ## Quick Start
 
 ### Use the app
 
-Open https://zylen97.github.io/idea-scout/ on any device. To enable cross-device sync of your curated lists:
-
-1. On GitHub, create a fine-grained PAT scoped to this repo with **Contents: Read and write**
-2. Click ⚙ in the top-right of the page → paste the PAT → Save
-3. Done. The footer should turn green (`synced`)
+Start Academic OS Dashboard and open http://127.0.0.1:5174. Idea Scout state is local-first; no GitHub PAT is needed.
 
 ### Run the pipeline locally
 
@@ -87,18 +123,12 @@ Open https://zylen97.github.io/idea-scout/ on any device. To enable cross-device
 
 2. **Create email-config.sh** at the path you specified:
    ```bash
-   SMTP_SERVER=smtp.gmail.com
-   SMTP_PORT=465
-   SMTP_USER=your-email@gmail.com
-   SMTP_PASS=your-gmail-app-password
    EMAIL_TO=recipient@example.com
    CHATANYWHERE_API_KEY=your-chatanywhere-api-key
    ```
 
-3. **Set up daily scheduling** (macOS launchd):
-   ```bash
-   bash scripts/setup.sh
-   ```
+3. **Daily scheduling**:
+   The active daily jobs live in Codex Automations, not launchd. A catch-up automation checks for missed runs after 09:30.
 
 4. **Test manually**:
    ```bash
@@ -138,7 +168,8 @@ idea-scout/
 ├── data/                       # Paper data + user_state (auto-updated daily)
 ├── pipeline/                   # Scanning pipelines
 │   ├── scanners/               #   OpenAlex + CNKI scanners (Python)
-│   ├── email/                  #   HTML email generators
+│   ├── email/                  #   HTML digest exporters + seen marker
+│   ├── catchup_status.py       #   Missed-run detector for Codex Automation
 │   ├── ft50-daily.sh           #   FT50 orchestrator (09:00)
 │   ├── cepm-daily.sh           #   CE/PM orchestrator (09:10)
 │   └── cnki-daily.sh           #   CNKI orchestrator (09:20)
@@ -150,7 +181,7 @@ idea-scout/
 └── scripts/setup.sh            # Installation helper
 ```
 
-The `gh-pages` branch holds only what GitHub Pages needs to serve: `index.html`, `data/*.json`, `favicon.png`, and a kill-switch `flutter_service_worker.js` left over from the legacy Flutter PWA (intentionally retained — uninstalls itself in returning users' browsers).
+The legacy `gh-pages` branch and root `index.html` are kept only as historical/static assets. Daily work should go through the local Dashboard.
 
 ## License
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CNKI RSS Scanner — 从知网 RSS 抓取中文期刊最新论文，生成 App 数据和邮件推送。"""
+"""CNKI RSS Scanner — 从知网 RSS 抓取中文期刊最新论文，生成本地日报数据。"""
 
 import argparse
 import hashlib
