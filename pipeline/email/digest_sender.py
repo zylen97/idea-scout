@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Journal Scout digest exporter: load papers and write HTML/manifest for Codex Gmail delivery."""
+"""Journal Scout digest exporter: load papers and write HTML/manifest for local Gmail delivery."""
 
 import argparse
 import json
@@ -8,7 +8,50 @@ import sys
 
 from export_utils import recipients_from_env, write_digest
 
-def load_new_papers(latest_path, seen_path):
+
+def clean_doi(value):
+    return str(value or '').strip().lower().replace('https://doi.org/', '').replace('http://doi.org/', '').replace('doi:', '')
+
+
+def title_journal_key(paper):
+    title = str(paper.get('title') or paper.get('title_cn') or '').strip().lower()
+    journal = str(paper.get('journal_id') or '').strip().lower()
+    return f'{journal}::{title}' if title and journal else ''
+
+
+def paper_keys(paper):
+    return {
+        clean_doi(paper.get('doi')),
+        clean_doi(paper.get('tracking_id')),
+        clean_doi(paper.get('stable_id')),
+        title_journal_key(paper),
+    } - {''}
+
+
+def hidden_keys_from_user_state(user_state_path, source):
+    hidden = set()
+    if not user_state_path:
+        return hidden
+    try:
+        with open(user_state_path, 'r') as f:
+            state = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return hidden
+
+    bucket = state.get(source, {}) if isinstance(state, dict) else {}
+    for item in bucket.get('deleted_dois', []):
+        if isinstance(item, dict):
+            hidden.add(clean_doi(item.get('id')))
+        else:
+            hidden.add(clean_doi(item))
+    for item in bucket.get('idea_papers', []):
+        if isinstance(item, dict):
+            hidden.update(paper_keys(item))
+    hidden.discard('')
+    return hidden
+
+
+def load_new_papers(latest_path, seen_path, user_state_path='', source='ft50'):
     """加载本次扫描结果，去掉上次已见过的论文（按 DOI 差集）"""
     with open(latest_path, 'r') as f:
         papers = json.load(f)
@@ -23,9 +66,24 @@ def load_new_papers(latest_path, seen_path):
     except (FileNotFoundError, json.JSONDecodeError):
         pass
 
-    # 筛选新论文：有 DOI 的按 DOI 去重，无 DOI 的一律当新论文推送（宁可多推不漏推）
-    new_papers = [p for p in papers if not p.get('doi') or p['doi'] not in seen_dois]
+    seen_keys = {clean_doi(item) for item in seen_dois if clean_doi(item)}
+    hidden_keys = hidden_keys_from_user_state(user_state_path, source)
 
+    new_papers = []
+    emitted = set()
+    for paper in papers:
+        keys = paper_keys(paper)
+        doi_key = clean_doi(paper.get('doi'))
+        if doi_key and doi_key in seen_keys:
+            continue
+        if keys & hidden_keys:
+            continue
+        dedupe_key = doi_key or title_journal_key(paper)
+        if dedupe_key and dedupe_key in emitted:
+            continue
+        if dedupe_key:
+            emitted.add(dedupe_key)
+        new_papers.append(paper)
     return new_papers, seen_dois
 
 def build_email_html(papers, scan_from, source='ft50'):
@@ -246,15 +304,17 @@ def main():
     parser.add_argument('seen_path', nargs='?', default='data/seen_dois.json')
     parser.add_argument('source', nargs='?', default='ft50', choices=['ft50', 'cepm'])
     parser.add_argument('--output-dir', default=os.environ.get('DIGEST_OUTPUT_DIR', 'logs/digests'))
+    parser.add_argument('--user-state', default=os.environ.get('IDEA_SCOUT_USER_STATE_PATH', 'data/user_state.json'))
     args = parser.parse_args()
 
     latest_path = os.path.abspath(args.latest_path)
     seen_path = os.path.abspath(args.seen_path)
     output_dir = os.path.abspath(args.output_dir)
+    user_state_path = os.path.abspath(args.user_state) if args.user_state else ''
     mark_sent_script = os.path.abspath(os.path.join(os.path.dirname(__file__), 'mark_sent.py'))
     recipients = recipients_from_env('EMAIL_TO')
 
-    papers, _seen_dois = load_new_papers(latest_path, seen_path)
+    papers, _seen_dois = load_new_papers(latest_path, seen_path, user_state_path, args.source)
     source_label = source_label_for(args.source)
 
     from datetime import date
@@ -284,7 +344,7 @@ def main():
     subject = subject_for(args.source, today, total)
     seen_ids = sorted({p['doi'] for p in papers if p.get('doi')})
     can_send = bool(recipients)
-    reason = 'Ready for Codex Gmail plugin delivery.' if can_send else 'EMAIL_TO is empty; cannot send.'
+    reason = 'Ready for local Gmail API delivery.' if can_send else 'EMAIL_TO is empty; cannot send.'
 
     exported = write_digest(output_dir, args.source, {
         'send': can_send,
@@ -307,7 +367,7 @@ def main():
     print(f'HTML body: {exported["latest_html_path"]}')
     print(f'Mark sent after Gmail delivery: {exported["mark_sent_command"]}')
     if not can_send:
-        print('EMAIL_TO is empty; Codex Gmail delivery cannot proceed.', file=sys.stderr)
+        print('EMAIL_TO is empty; local Gmail delivery cannot proceed.', file=sys.stderr)
         return 1
     return 0
 

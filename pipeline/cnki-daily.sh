@@ -1,6 +1,6 @@
 #!/bin/bash
 # Journal Scout — CNKI Daily Pipeline
-# 由 Codex Automation 触发，通过 CNKI RSS 抓取
+# 由本地 launchd 触发，通过 CNKI RSS 抓取并用 Gmail API 发送
 
 REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 PIPELINE_DIR="$REPO_DIR/pipeline"
@@ -24,7 +24,12 @@ while ! mkdir "$LOCKDIR" 2>/dev/null; do
         exit 1
     fi
 done
-trap 'rmdir "$LOCKDIR" 2>/dev/null' EXIT
+SCAN_TMP=""
+cleanup() {
+    [ -n "$SCAN_TMP" ] && [ -f "$SCAN_TMP" ] && rm -f "$SCAN_TMP"
+    rmdir "$LOCKDIR" 2>/dev/null
+}
+trap cleanup EXIT
 
 LOG_DIR="${LOG_DIR:-$REPO_DIR/logs}"
 mkdir -p "$LOG_DIR"
@@ -35,7 +40,7 @@ DASHBOARD_URL="${DASHBOARD_URL:-http://127.0.0.1:5174}"
 # 设置 PATH
 export PATH="$HOME/anaconda3/bin:$HOME/.local/bin:$HOME/develop/flutter/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 
-# 加载本地配置（可选：用于 EMAIL_TO）
+# 加载本地配置（用于 EMAIL_TO / Gmail API）
 if [ -n "${EMAIL_CONFIG_PATH:-}" ]; then
     if [ ! -f "$EMAIL_CONFIG_PATH" ]; then
         echo "ERROR: EMAIL_CONFIG_PATH does not exist: $EMAIL_CONFIG_PATH" >> "$LOG_FILE"
@@ -48,6 +53,7 @@ if [ -n "${IDEA_SCOUT_EMAIL_TO:-}" ]; then
     CNKI_EMAIL_TO="$IDEA_SCOUT_EMAIL_TO"
 fi
 export EMAIL_TO CNKI_EMAIL_TO
+export GMAIL_TOKEN_PATH GMAIL_CREDENTIALS_PATH GMAIL_FROM GMAIL_SENDER_NAME SMTP_USER
 
 echo "=== CNKI Daily Scan ===" >> "$LOG_FILE"
 echo "Started: $(date)" >> "$LOG_FILE"
@@ -59,42 +65,74 @@ cd "$REPO_DIR" || exit 1
 rm -f /tmp/idea_scout_user_state.json
 cp data/user_state.json /tmp/idea_scout_user_state.json 2>/dev/null || true
 
+export_failure_digest() {
+    local reason="$1"
+    DIGEST_OUTPUT_DIR="${DIGEST_OUTPUT_DIR:-$LOG_DIR/digests}"
+    mkdir -p "$DIGEST_OUTPUT_DIR"
+    python3 "$PIPELINE_DIR/email/failure_digest.py" \
+        "cnki" \
+        --reason "$reason" \
+        --log-file "$LOG_FILE" \
+        --scan-date "$TODAY" \
+        --output-dir "$DIGEST_OUTPUT_DIR" \
+        >> "$LOG_FILE" 2>&1 || true
+}
+
+parse_success_count() {
+    echo "$1" | sed -n 's/.*Scan stats: \([0-9][0-9]*\)\/[0-9][0-9]* journals succeeded.*/\1/p' | tail -1
+}
+
 # ── 扫描（CNKI RSS，失败过半则重试一次） ──
 run_cnki_scan() {
+    local output_path="$1"
     set -o pipefail
     python3 "$PIPELINE_DIR/scanners/cnki_scanner.py" \
         --config "$REPO_DIR/config/cnki-journals.json" \
-        --output "data/cnki_latest.json" \
+        --output "$output_path" \
         --days 30 \
         2>&1 | tee -a "$LOG_FILE"
 }
 
-SCAN_OUTPUT=$(run_cnki_scan)
-EXIT_CODE=${PIPESTATUS[0]:-$?}
+SCAN_TMP=$(mktemp "$REPO_DIR/data/cnki_latest.json.tmp.XXXXXX") || exit 1
+SCAN_OUTPUT=$(run_cnki_scan "$SCAN_TMP")
+EXIT_CODE=$?
 echo "Scan finished: $(date), exit code: $EXIT_CODE" >> "$LOG_FILE"
 
 # 检查成功期刊数，不足 20 本则等 30 秒重试一次
-JOURNAL_COUNT=$(echo "$SCAN_OUTPUT" | sed -n 's/.*from \([0-9]*\) journals.*/\1/p' | tail -1)
+JOURNAL_COUNT=$(parse_success_count "$SCAN_OUTPUT")
 JOURNAL_COUNT=${JOURNAL_COUNT:-0}
+FINAL_COUNT=$JOURNAL_COUNT
 if [ "$JOURNAL_COUNT" -lt 20 ]; then
     echo "RETRY: only $JOURNAL_COUNT journals succeeded (<20), retrying in 30s..." >> "$LOG_FILE"
     sleep 30
-    SCAN_OUTPUT=$(run_cnki_scan)
-    EXIT_CODE=${PIPESTATUS[0]:-$?}
+    rm -f "$SCAN_TMP"
+    SCAN_TMP=$(mktemp "$REPO_DIR/data/cnki_latest.json.tmp.XXXXXX") || exit 1
+    SCAN_OUTPUT=$(run_cnki_scan "$SCAN_TMP")
+    EXIT_CODE=$?
     echo "Retry scan finished: $(date), exit code: $EXIT_CODE" >> "$LOG_FILE"
 
-    RETRY_COUNT=$(echo "$SCAN_OUTPUT" | sed -n 's/.*from \([0-9]*\) journals.*/\1/p' | tail -1)
+    RETRY_COUNT=$(parse_success_count "$SCAN_OUTPUT")
     RETRY_COUNT=${RETRY_COUNT:-0}
+    FINAL_COUNT=$RETRY_COUNT
     if [ "$RETRY_COUNT" -lt 20 ]; then
-        echo "WARN: retry still only $RETRY_COUNT journals; Codex Automation should send any Gmail alert" >> "$LOG_FILE"
+        REASON="CNKI scan failed: only $RETRY_COUNT journals succeeded after retry (minimum 20)."
+        echo "ERROR: $REASON" >> "$LOG_FILE"
+        export_failure_digest "$REASON"
+        osascript -e 'display notification "CNKI scan failed, check logs" with title "CNKI Scout" subtitle "Failed" sound name "Basso"' || true
+        exit 1
     fi
 fi
 
-if [ $EXIT_CODE -ne 0 ] || [ ! -s "data/cnki_latest.json" ]; then
-    echo "Scan failed, aborting" >> "$LOG_FILE"
-    osascript -e 'display notification "CNKI scan failed, check logs" with title "CNKI Scout" subtitle "Failed" sound name "Basso"'
+if [ "$EXIT_CODE" -ne 0 ] || [ ! -s "$SCAN_TMP" ] || [ "$FINAL_COUNT" -lt 20 ]; then
+    REASON="CNKI scan failed: exit_code=$EXIT_CODE, successful_journals=$FINAL_COUNT."
+    echo "$REASON" >> "$LOG_FILE"
+    export_failure_digest "$REASON"
+    osascript -e 'display notification "CNKI scan failed, check logs" with title "CNKI Scout" subtitle "Failed" sound name "Basso"' || true
     exit 1
 fi
+
+mv "$SCAN_TMP" "data/cnki_latest.json"
+SCAN_TMP=""
 
 # ── 合并数据（累积到 cnki_papers.json，与 FT50/CEPM 架构一致） ──
 python3 - "data/cnki_latest.json" "data/cnki_papers.json" "$TODAY" << 'PYEOF'
@@ -175,19 +213,36 @@ print(len(new))
 " 2>/dev/null || echo "0")
 echo "New papers (after dedup): $NEW_COUNT" >> "$LOG_FILE"
 
-# ── 日报导出（由 Codex Automation 调用 Gmail 插件发送） ──
+# ── 日报导出 + 本地 Gmail API 发送 ──
 DIGEST_OUTPUT_DIR="${DIGEST_OUTPUT_DIR:-$LOG_DIR/digests}"
 mkdir -p "$DIGEST_OUTPUT_DIR"
 export EMAIL_TO="${CNKI_EMAIL_TO:-$EMAIL_TO}"
-export DIGEST_OUTPUT_DIR
+export DIGEST_OUTPUT_DIR GMAIL_TOKEN_PATH GMAIL_CREDENTIALS_PATH GMAIL_FROM GMAIL_SENDER_NAME SMTP_USER
 
 if ! python3 "$PIPELINE_DIR/email/cnki_sender.py" \
     "data/cnki_latest.json" \
     "$TODAY" \
     "data/cnki_seen_titles.json" \
+    --user-state "/tmp/idea_scout_user_state.json" \
     --output-dir "$DIGEST_OUTPUT_DIR" \
     >> "$LOG_FILE" 2>&1; then
     echo "Digest export failed" >> "$LOG_FILE"
+    exit 1
+fi
+
+NEW_COUNT=$(python3 - "$DIGEST_OUTPUT_DIR/cnki-latest.json" << 'PYEOF'
+import json, sys
+try:
+    print(int(json.load(open(sys.argv[1])).get('papers_count', 0)))
+except Exception:
+    print(0)
+PYEOF
+)
+
+if ! python3 "$PIPELINE_DIR/email/send_manifest.py" \
+    "$DIGEST_OUTPUT_DIR/cnki-latest.json" \
+    >> "$LOG_FILE" 2>&1; then
+    echo "Digest delivery failed" >> "$LOG_FILE"
     exit 1
 fi
 

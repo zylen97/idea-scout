@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Report missed Idea Scout daily jobs for Codex Automation catch-up."""
+"""Report missed Idea Scout daily jobs for local delivery diagnostics."""
 
 from __future__ import annotations
 
@@ -102,15 +102,29 @@ def status_for(now: datetime, job: SourceJob, grace_minutes: int) -> dict:
 
     manifest = load_json(latest_manifest, None)
     if not isinstance(manifest, dict):
-        return {**base, "status": "needs_run", "reason": "No latest digest manifest for today."}
+        return {
+            **base,
+            "status": "blocked",
+            "reason": "Local launchd has not produced a latest digest manifest.",
+        }
 
     generated_at = parse_dt(manifest.get("generated_at"), now.tzinfo)
     if not generated_at or generated_at.date() != now.date():
         return {
             **base,
-            "status": "needs_run",
-            "reason": "Latest digest manifest is missing or not from today.",
+            "status": "blocked",
+            "reason": "Latest digest manifest is not from today; local launchd did not produce today's scan output.",
             "manifest_generated_at": manifest.get("generated_at"),
+        }
+
+    if manifest.get("status") == "failure":
+        return {
+            **base,
+            "status": "blocked",
+            "reason": str(manifest.get("reason", "Scan failed.")),
+            "manifest": latest_manifest,
+            "manifest_generated_at": generated_at.isoformat(timespec="seconds"),
+            "log_path": manifest.get("log_path", ""),
         }
 
     send = bool(manifest.get("send"))
@@ -138,7 +152,7 @@ def status_for(now: datetime, job: SourceJob, grace_minutes: int) -> dict:
     return {
         **base,
         "status": "needs_send",
-        "reason": "Digest generated today but Gmail delivery is not marked complete.",
+        "reason": "Digest generated today but local Gmail delivery is not marked complete.",
         "manifest": latest_manifest,
         "html_path": manifest.get("html_path", ""),
         "subject": manifest.get("subject", ""),

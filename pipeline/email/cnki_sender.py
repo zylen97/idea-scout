@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CNKI Scout digest exporter: load papers and write HTML/manifest for Codex Gmail delivery."""
+"""CNKI Scout digest exporter: load papers and write HTML/manifest for local Gmail delivery."""
 
 import argparse
 import json
@@ -11,7 +11,54 @@ from datetime import date
 from export_utils import recipients_from_env, write_digest
 
 
-def load_new_papers(latest_path, seen_path):
+def _stable_id(paper):
+    stable = str(paper.get('stable_id') or paper.get('stableId') or '').strip()
+    if stable:
+        return stable
+    import hashlib
+    raw = f"{paper.get('title') or paper.get('title_cn') or ''}|{paper.get('journal_id') or paper.get('journalId') or ''}"
+    return hashlib.md5(raw.encode('utf-8')).hexdigest()
+
+
+def _title_journal_key(paper):
+    title = str(paper.get('title') or paper.get('title_cn') or '').strip().lower()
+    journal = str(paper.get('journal_id') or paper.get('journalId') or '').strip().lower()
+    return f'{journal}::{title}' if title and journal else ''
+
+
+def _paper_keys(paper):
+    return {
+        str(paper.get('doi') or '').strip(),
+        str(paper.get('tracking_id') or '').strip(),
+        _stable_id(paper),
+        _title_journal_key(paper),
+    } - {''}
+
+
+def _hidden_keys_from_user_state(user_state_path):
+    hidden = set()
+    if not user_state_path:
+        return hidden
+    try:
+        with open(user_state_path, 'r') as f:
+            state = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return hidden
+
+    bucket = state.get('cnki', {}) if isinstance(state, dict) else {}
+    for item in bucket.get('deleted_dois', []):
+        if isinstance(item, dict):
+            hidden.add(str(item.get('id') or '').strip())
+        else:
+            hidden.add(str(item or '').strip())
+    for item in bucket.get('idea_papers', []):
+        if isinstance(item, dict):
+            hidden.update(_paper_keys(item))
+    hidden.discard('')
+    return hidden
+
+
+def load_new_papers(latest_path, seen_path, user_state_path=''):
     """加载论文，去掉已推送的（按标题去重，因为中文论文大多没有 DOI）"""
     with open(latest_path, 'r') as f:
         papers = json.load(f)
@@ -25,7 +72,21 @@ def load_new_papers(latest_path, seen_path):
     except (FileNotFoundError, json.JSONDecodeError):
         pass
 
-    new_papers = [p for p in papers if p.get('title') and p['title'] not in seen_titles]
+    hidden_keys = _hidden_keys_from_user_state(user_state_path)
+    new_papers = []
+    emitted = set()
+    for paper in papers:
+        title = paper.get('title')
+        if not title or title in seen_titles:
+            continue
+        keys = _paper_keys(paper)
+        if keys & hidden_keys:
+            continue
+        dedupe_key = _stable_id(paper) or _title_journal_key(paper)
+        if dedupe_key in emitted:
+            continue
+        emitted.add(dedupe_key)
+        new_papers.append(paper)
     return new_papers, seen_titles
 
 
@@ -224,15 +285,17 @@ def main():
     parser.add_argument('scan_date')
     parser.add_argument('seen_path', nargs='?', default='data/cnki_seen_titles.json')
     parser.add_argument('--output-dir', default=os.environ.get('DIGEST_OUTPUT_DIR', 'logs/digests'))
+    parser.add_argument('--user-state', default=os.environ.get('IDEA_SCOUT_USER_STATE_PATH', 'data/user_state.json'))
     args = parser.parse_args()
 
     latest_path = os.path.abspath(args.latest_path)
     seen_path = os.path.abspath(args.seen_path)
     output_dir = os.path.abspath(args.output_dir)
+    user_state_path = os.path.abspath(args.user_state) if args.user_state else ''
     mark_sent_script = os.path.abspath(os.path.join(os.path.dirname(__file__), 'mark_sent.py'))
     recipients = recipients_from_env('EMAIL_TO')
 
-    papers, _seen_titles = load_new_papers(latest_path, seen_path)
+    papers, _seen_titles = load_new_papers(latest_path, seen_path, user_state_path)
 
     if not papers:
         exported = write_digest(output_dir, 'cnki', {
@@ -259,7 +322,7 @@ def main():
     subject = f'CNKI Scout {today} - {total}篇中文新论文'
     seen_ids = sorted({p['title'] for p in papers if p.get('title')})
     can_send = bool(recipients)
-    reason = 'Ready for Codex Gmail plugin delivery.' if can_send else 'EMAIL_TO is empty; cannot send.'
+    reason = 'Ready for local Gmail API delivery.' if can_send else 'EMAIL_TO is empty; cannot send.'
 
     exported = write_digest(output_dir, 'cnki', {
         'send': can_send,
@@ -282,7 +345,7 @@ def main():
     print(f'HTML body: {exported["latest_html_path"]}')
     print(f'Mark sent after Gmail delivery: {exported["mark_sent_command"]}')
     if not can_send:
-        print('EMAIL_TO is empty; Codex Gmail delivery cannot proceed.', file=sys.stderr)
+        print('EMAIL_TO is empty; local Gmail delivery cannot proceed.', file=sys.stderr)
         return 1
     return 0
 

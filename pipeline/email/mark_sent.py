@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mark an exported Idea Scout digest as sent after Codex Gmail delivery succeeds."""
+"""Mark an exported Idea Scout digest as sent after Gmail delivery succeeds."""
 
 from __future__ import annotations
 

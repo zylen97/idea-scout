@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Utilities for exporting Idea Scout digests for Codex Gmail delivery."""
+"""Utilities for exporting Idea Scout digests for local Gmail API delivery."""
 
 from __future__ import annotations
 
@@ -70,7 +70,7 @@ def write_digest(output_dir: str, source: str, manifest: dict, html_body: str | 
     payload = {
         "schema": SCHEMA,
         "generated_at": generated_at,
-        "delivery": "codex-gmail-plugin",
+        "delivery": "local-gmail-api",
         **manifest,
         "source": source,
         "html_path": html_path,

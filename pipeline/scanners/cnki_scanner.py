@@ -18,6 +18,21 @@ def make_stable_id(title, journal_id):
     return hashlib.md5(raw.encode("utf-8")).hexdigest()
 
 
+NOISE_TITLE_PATTERNS = [
+    "征稿",
+    "征文",
+    "稿约",
+    "启事",
+    "目录",
+    "目次",
+]
+
+
+def is_noise_title(title):
+    text = (title or "").strip()
+    return any(pattern in text for pattern in NOISE_TITLE_PATTERNS)
+
+
 def fetch_rss(journal_id, journal_name, rss_base_url, rss_suffix=""):
     """Fetch and parse CNKI RSS for a journal."""
     url = f"{rss_base_url}{journal_id}{rss_suffix}"
@@ -29,7 +44,7 @@ def fetch_rss(journal_id, journal_name, rss_base_url, rss_suffix=""):
             content = resp.read().decode("utf-8", errors="replace")
     except Exception as e:
         print(f"  ERROR {journal_id} ({journal_name}): {e}", file=sys.stderr)
-        return []
+        return None
 
     items = re.findall(r"<item>(.*?)</item>", content, re.DOTALL)
     papers = []
@@ -43,6 +58,8 @@ def fetch_rss(journal_id, journal_name, rss_base_url, rss_suffix=""):
 
         title = html_lib.unescape(title_m.group(1).strip()) if title_m else ""
         if not title:
+            continue
+        if is_noise_title(title):
             continue
 
         link = html_lib.unescape(link_m.group(1).strip()) if link_m else ""
@@ -98,8 +115,15 @@ def main():
     tier_map = {"管理A": 1, "管理B1": 2, "管理B2": 3, "工程": 3, "其他": 3}
 
     all_papers = []
+    successful = 0
+    failed_journals = []
     for j in journals:
         papers = fetch_rss(j["id"], j["name"], rss_base, rss_suffix)
+        if papers is None:
+            failed_journals.append(j["id"])
+            time.sleep(0.3)
+            continue
+        successful += 1
         tier = tier_map.get(j.get("category", ""), 3)
         for p in papers:
             p["_tier"] = tier
@@ -109,7 +133,15 @@ def main():
         all_papers.extend(recent)
         time.sleep(0.3)
 
+    failed = len(failed_journals)
+    print(f"Scan stats: {successful}/{len(journals)} journals succeeded, {failed} failed")
+    if failed_journals:
+        print(f"Failed journals: {', '.join(failed_journals)}", file=sys.stderr)
     print(f"Fetched: {len(all_papers)} papers from {len(set(p['journal_id'] for p in all_papers))} journals")
+
+    if successful == 0:
+        print("ERROR: all journal requests failed; refusing to write empty output", file=sys.stderr)
+        sys.exit(2)
 
     if not all_papers:
         print("No papers found")
@@ -117,10 +149,12 @@ def main():
             json.dump([], f)
         return
 
-    # Normalize to App-compatible format (same as FT50/CE/PM Paper model)
-    normalized = []
+    # Normalize to App-compatible format (same as FT50/CE/PM Paper model).
+    # CNKI links are volatile, so stable_id is the canonical identity.
+    normalized_by_id = {}
     for p in all_papers:
-        normalized.append({
+        stable_id = make_stable_id(p["title"], p["journal_id"])
+        item = {
             "journal_id": p["journal_id"],
             "journal_name": p["journal_name"],
             "title": p["title"],
@@ -136,8 +170,17 @@ def main():
             "pdf_url": "",
             "tier": p.get("_tier", 3),
             "scan_date": datetime.now().strftime("%Y-%m-%d"),
-            "stable_id": make_stable_id(p["title"], p["journal_id"]),
-        })
+            "stable_id": stable_id,
+        }
+        previous = normalized_by_id.get(stable_id)
+        if not previous or item.get("date", "") > previous.get("date", ""):
+            normalized_by_id[stable_id] = item
+
+    normalized = sorted(
+        normalized_by_id.values(),
+        key=lambda item: (item.get("date", ""), item.get("journal_id", ""), item.get("title", "")),
+        reverse=True,
+    )
 
     with open(args.output, "w") as f:
         json.dump(normalized, f, ensure_ascii=False)

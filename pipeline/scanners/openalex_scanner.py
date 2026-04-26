@@ -53,12 +53,19 @@ def fetch_papers(config, from_date, to_date):
     mailto = config["openalex_mailto"]
     journals = config["journals"]
     all_papers = []
+    stats = {
+        "attempted": len(journals),
+        "successful": 0,
+        "failed": 0,
+        "failed_journals": [],
+    }
 
     for j in journals:
         jid = j["id"]
         jname = j["name"]
         tier = j.get("tier", 1)
         oa_id = j["openalex_id"]
+        journal_success = False
 
         url = (
             f"https://api.openalex.org/works?"
@@ -73,6 +80,7 @@ def fetch_papers(config, from_date, to_date):
                 req = urllib.request.Request(url, headers={"User-Agent": "IdeaScout/1.0"})
                 with urllib.request.urlopen(req, timeout=30) as resp:
                     data = json.loads(resp.read())
+                journal_success = True
             except Exception as e:
                 print(f"  ERROR {jid}: {e}", file=sys.stderr)
                 break
@@ -131,9 +139,14 @@ def fetch_papers(config, from_date, to_date):
         count = sum(1 for p in all_papers if p["journal_id"] == jid)
         if count > 0:
             print(f"  {jid}: {count} papers")
+        if journal_success:
+            stats["successful"] += 1
+        else:
+            stats["failed"] += 1
+            stats["failed_journals"].append(jid)
         time.sleep(0.3)
 
-    return all_papers
+    return all_papers, stats
 
 
 def translate_papers(papers, api_key):
@@ -205,8 +218,18 @@ def main():
     source = config.get("source", "unknown")
     print(f"Scanning {len(config['journals'])} {source} journals: {args.from_date} ~ {args.to_date}")
 
-    papers = fetch_papers(config, args.from_date, args.to_date)
+    papers, stats = fetch_papers(config, args.from_date, args.to_date)
+    print(
+        f"Scan stats: {stats['successful']}/{stats['attempted']} journals succeeded, "
+        f"{stats['failed']} failed"
+    )
+    if stats["failed_journals"]:
+        print(f"Failed journals: {', '.join(stats['failed_journals'])}", file=sys.stderr)
     print(f"Fetched: {len(papers)} papers from {len(set(p['journal_id'] for p in papers))} journals")
+
+    if stats["successful"] == 0:
+        print("ERROR: all journal requests failed; refusing to write empty output", file=sys.stderr)
+        sys.exit(2)
 
     if not papers:
         print("No papers found, writing empty output")
